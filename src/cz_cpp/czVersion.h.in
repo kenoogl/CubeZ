@@ -1,0 +1,22 @@
+/*
+###################################################################################
+#
+# CubeZ
+#
+# Copyright (C) 2018 Research Institute for Information Technology(RIIT), Kyushu University.
+# All rights reserved.
+#
+###################################################################################
+ */
+
+/**
+ * @file   czVersion.h
+ * バージョン情報のヘッダーファイル
+ */
+
+#ifndef _CZ_VERSION_H_
+#define _CZ_VERSION_H_
+
+#define CZ_VERSION   "@PROJECT_VERSION@"
+
+#endif /* _CZ_VERSION_H_ */

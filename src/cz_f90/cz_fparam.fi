@@ -1,0 +1,16 @@
+!###################################################################################
+!#
+!# CubeZ
+!#
+!# Copyright (C) 2018 Research Institute for Information Technology(RIIT), Kyushu University.
+!# All rights reserved.
+!#
+!###################################################################################
+
+INTEGER I_MINUS, J_MINUS, K_MINUS, I_PLUS, J_PLUS, K_PLUS
+PARAMETER ( I_MINUS = 0 )
+PARAMETER ( I_PLUS  = 1 )
+PARAMETER ( J_MINUS = 2 )
+PARAMETER ( J_PLUS  = 3 )
+PARAMETER ( K_MINUS = 4 )
+PARAMETER ( K_PLUS  = 5 )
