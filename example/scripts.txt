@@ -5,3 +5,6 @@ $ mpirun -np 2 ./cz-mpi 64 64 64 jacobi 2000
 
 // ２分割,  [64,64,64]要素, Jacobi法, 最大2000反復, 分割指定
 $ mpirun -np 2 ./cz-mpi 64 64 64 jacobi 2000 2 1 1
+
+// ２分割,  [65,65,65]要素, PBiCGSTAB法, 最大2000反復, 前処理sor2sma
+$ mpirun -np 2 ./cz-mpi 65 65 65 pbicgstab 1000 sor2sma

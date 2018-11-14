@@ -6,6 +6,11 @@
 ## REVISION HISTORY
 
 ---
+- 2018-11-13 Version 0.5.1
+  - examp[le/scripts
+
+
+---
 - 2018-11-13 Version 0.5.0
   - BiCGSTAB
   - 境界条件はディリクレで統一
