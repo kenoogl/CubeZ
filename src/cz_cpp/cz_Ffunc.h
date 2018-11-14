@@ -58,9 +58,9 @@ void psor2sma_core_ (REAL_TYPE* p,
 
 void src_dirichlet_ (REAL_TYPE* b,
                      int* sz,
-                     int* idx,
                      int* g,
-                     REAL_TYPE* dh);
+                     REAL_TYPE* dh,
+                     int* nID);
 
 
 
@@ -85,12 +85,14 @@ void blas_triad_    (REAL_TYPE* z,
                      REAL_TYPE* y,
                      double* a,
                      int* sz,
+                     int* idx,
                      int* g,
                      double* flop);
 
 void blas_dot1_     (double* r,
                      REAL_TYPE* p,
                      int* sz,
+                     int* idx,
                      int* g,
                      double* flop);
 
@@ -98,6 +100,7 @@ void blas_dot2_     (double* r,
                      REAL_TYPE* p,
                      REAL_TYPE* q,
                      int* sz,
+                     int* idx,
                      int* g,
                      double* flop);
 
@@ -107,6 +110,7 @@ void blas_bicg_1_ (REAL_TYPE* p,
                    double* beta,
                    double* omg,
                    int* sz,
+                   int* idx,
                    int* g,
                    double* flop);
 
@@ -116,12 +120,14 @@ void blas_bicg_2_   (REAL_TYPE* z,
                      double* a,
                      double* b,
                      int* sz,
+                     int* idx,
                      int* g,
                      double* flop);
 
 void blas_calc_ax_  (REAL_TYPE* ap,
                      REAL_TYPE* p,
                      int* sz,
+                     int* idx,
                      int* g,
                      REAL_TYPE* cf,
                      double* flop);
@@ -130,6 +136,7 @@ void blas_calc_rk_  (REAL_TYPE* r,
                      REAL_TYPE* p,
                      REAL_TYPE* b,
                      int* sz,
+                     int* idx,
                      int* g,
                      REAL_TYPE* cf,
                      double* flop);
@@ -138,21 +145,7 @@ void blas_calc_r2_  (double* res,
                      REAL_TYPE* p,
                      REAL_TYPE* b,
                      int* sz,
-                     int* g,
-                     REAL_TYPE* cf,
-                     double* flop);
-
-void blas_calc_rk_wob_  (REAL_TYPE* r,
-                     REAL_TYPE* p,
-                     int* sz,
-                     int* g,
-                     REAL_TYPE* cf,
-                     double* flop);
-
-void blas_calc_rk_1d_(REAL_TYPE* r,
-                     REAL_TYPE* p,
-                     REAL_TYPE* b,
-                     int* sz,
+                     int* idx,
                      int* g,
                      REAL_TYPE* cf,
                      double* flop);
@@ -172,6 +165,7 @@ void exact_   (int* sz,
                REAL_TYPE* org);
 
 void err_     (int* sz,
+               int* idx,
                int* g,
                double* d,
                REAL_TYPE* p,

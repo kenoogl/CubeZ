@@ -11,19 +11,20 @@
 
 #include "cz.h"
 
-// デバッグ時に定義
-#define __DEBUG
 
 int main(int argc, char *argv[]) {
 
   int myRank=0;
 
-  if (argc != 6 && argc != 9) {
+  if (argc != 6 && argc != 7 && argc != 9 && argc != 10) {
     if ( myRank == 0) {
-      printf("\tUsage : ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax [gdv_x, gdv_y, gdv_z]\n");
-      printf("\t$ ./cz 64 64 64 pbicgstab 1000 2 2 2\n");
-      printf("\t$ ./cz 64 64 64 pbicgstab 1000\n");
-      printf("\t\tlinear_solver = {jacobi | sor | sor2sma | pbicgstab | lsor}\n");
+      printf("\tUsage : ./cz-mpi gsz_x, gsz_y, gsz_z, linear_solver, IterationMax, [precond] [gdv_x, gdv_y, gdv_z]\n");
+      printf("\t\tlinear_solver = {jacobi | psor | sor2sma | pbicgstab | lsor}\n");
+      printf("\t\tprecond = {none | jacobi | psor | sor2sma}\n\n");
+      printf("\t$ ./cz-mpi 64 64 64 jacobi 4000 2 2 1\n");
+      printf("\t$ ./cz-mpi 64 64 64 psor 4000\n");
+      printf("\t$ ./cz-mpi 64 64 64 pbicgstab 4000 sor2sma\n");
+      printf("\t$ ./cz-mpi 64 64 64 pbicgstab 4000 sor2sma 2 1 3\n");
     }
     return 0;
   }
@@ -35,38 +36,15 @@ int main(int argc, char *argv[]) {
 #endif
 
   int mode = 0;
-
-#ifdef __DEBUG
-  mode = 1;
-#endif
+  mode = 1; // デバッグ時に定義
 
   CZ cz;
   cz.debug(mode);
 
 
-  if( 0==cz.Init(argc, argv) )
+  if( 0==cz.Evaluate(argc, argv) )
   {
-    if ( myRank == 0) printf("\n\tSolver initialize error.\n\n");
-    #ifndef DISABLE_MPI
-    MPI_Finalize();
-    #endif
-    return -1;
-  }
-
-
-  if ( 0==cz.Loop() )
-  {
-    if ( myRank == 0) printf("\n\tSolver MainLoop error.\n");
-    #ifndef DISABLE_MPI
-    MPI_Finalize();
-    #endif
-    return -1;
-  }
-
-
-  if( 0==cz.Post() )
-  {
-    if ( myRank == 0) printf("\n\tSolver post error.\n");
+    if ( myRank == 0) printf("\n\tSolver error.\n\n");
     #ifndef DISABLE_MPI
     MPI_Finalize();
     #endif

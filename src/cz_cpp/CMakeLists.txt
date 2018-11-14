@@ -40,9 +40,8 @@ endif()
 
 
 set(cz_files
-       cz_Init.cpp
-       cz_Loop.cpp
-       cz_Post.cpp
+       cz_Evaluate.cpp
+       cz_miscel.cpp
        cz_Poisson.cpp
        cz_comm.cpp
 )

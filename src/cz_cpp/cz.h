@@ -56,6 +56,7 @@ private:
   REAL_TYPE ac2;           ///< acceleration coef. for jacobi relaxation
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
+  int KindOfPrecondition;  ///< 前処理の種類
 
   // PMlib
   pm_lib::PerfMonitor PM;  ///< 性能モニタクラス
@@ -104,6 +105,7 @@ public:
     ac1 = 1.1;
     ac2 = 0.8;
     res_normal = 0.0;
+    KindOfPrecondition = -1;
 
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -125,9 +127,7 @@ public:
 
 
 public:
-  int Init(int argc, char **argv);
-  int Loop();
-  int Post();
+  int Evaluate(int argc, char **argv);
   void debug(int m_mode) {
       debug_mode = m_mode;
   }
@@ -149,38 +149,40 @@ private:
   // 計算する内点のインデクス範囲と点数
   double range_inner_index();
 
+  int JACOBI(double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itrMax,
+             double& flop,
+             bool converge_check=true);
 
+  int PSOR  (double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itrMax,
+             double& flop,
+             bool converge_check=true);
 
+  int RBSOR (double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itrMax,
+             double& flop,
+             bool converge_check=true);
 
-  int JACOBI(double& res, REAL_TYPE* X, REAL_TYPE* B);
-  int PSOR  (double& res, REAL_TYPE* X, REAL_TYPE* B);
-  int RBSOR (double& res, REAL_TYPE* X, REAL_TYPE* B);
-  int PBiCGstab(double& res, REAL_TYPE* X, REAL_TYPE* B);
+  int PBiCGSTAB(double& res,
+                REAL_TYPE* X,
+                REAL_TYPE* B,
+                double& flop);
 
-  /**
-   * @brief Fdot for 1 array
-   * @retval  内積値
-   * @param [in]   x   vector1
-   *
-  double Fdot1(REAL_TYPE* x);
+  double Fdot1(REAL_TYPE* x, double& flop);
 
+  double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
 
-  /**
-   * @brief Fdot for 2 arrays
-   * @retval  内積値
-   * @param [in]   x   vector1
-   * @param [in]   y   vector2
-   *
-  double Fdot2(REAL_TYPE* x, REAL_TYPE* y);
+  void Preconditioner(REAL_TYPE* xx,
+                      REAL_TYPE* bb,
+                      double& flop);
 
-
-  /**
-   * @brief Preconditioner
-   * @param [in,out] X  解ベクトル
-   * @param [in]     B  RHS vector
-   *
-  void Preconditioner(REAL_TYPE* X, REAL_TYPE* B);
-*/
 
   // タイミング測定区間にラベルを与えるラッパー
   void set_label(const string label, pm_lib::PerfMonitor::Type type, bool exclusive=true);
@@ -237,8 +239,6 @@ private:
   }
 
 
-
-
 void setParallelism()
 {
   if( numProc > 1 )
@@ -281,6 +281,26 @@ std::string GetHostName()
   memset(name, 0x00, sizeof(char)*512);
   if( gethostname(name, 512) != 0 ) return std::string("");
   return std::string(name);
+}
+
+void setPrecond(char* w)
+{
+  if ( !strcasecmp(w, "jacobi") ) {
+    KindOfPrecondition = 1;
+  }
+  else if ( !strcasecmp(w, "psor") ) {
+    KindOfPrecondition = 2;
+  }
+  else if ( !strcasecmp(w, "sor2sma") ) {
+    KindOfPrecondition = 3;
+  }
+  else if ( !strcasecmp(w, "none") ) {
+    KindOfPrecondition = 0;
+  }
+  else {
+    Hostonly_ printf("Error : preconditioner=%s\n", w);
+    exit(0);
+  }
 }
 
 };
