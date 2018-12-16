@@ -453,7 +453,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
-     //REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -461,14 +461,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[0]+2*gc];
-     b = new REAL_TYPE [size[0]+2*gc];
-     c = new REAL_TYPE [size[0]+2*gc];
+     a = czAllocR(size[0]+2*gc, var_type);
+     b = czAllocR(size[0]+2*gc, var_type);
+     c = czAllocR(size[0]+2*gc, var_type);
 
      for (int i=0; i<size[0]+2*gc; i++) {
        a[i] = 0.0;
@@ -511,11 +511,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -539,12 +539,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      double flop_count = 0.0;
      int gc = GUIDE;
      REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
+
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
@@ -573,8 +575,8 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
+     czDelete(q);
+     czDelete(w);
 
      return itr;
    }
@@ -595,6 +597,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      double flop_count = 0.0;
      int gc = GUIDE;
      REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -602,14 +605,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[0]+2*gc];
-     b = new REAL_TYPE [size[0]+2*gc];
-     c = new REAL_TYPE [size[0]+2*gc];
+     a = czAllocR(size[0]+2*gc, var_type);
+     b = czAllocR(size[0]+2*gc, var_type);
+     c = czAllocR(size[0]+2*gc, var_type);
 
      for (int i=0; i<size[0]+2*gc; i++) {
        a[i] = 0.0;
@@ -652,11 +655,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -676,7 +679,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
-     //REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -684,14 +687,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -734,11 +737,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -758,7 +761,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
-     //REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -766,16 +769,16 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
      ));
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -818,11 +821,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -842,7 +845,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
-     //REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -851,17 +854,17 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* c;
      REAL_TYPE* e;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
      ));
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
-     e = new REAL_TYPE [size[2]+2*gc];
-     w = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
+     e = czAllocR(size[2]+2*gc, var_type);
+     w = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -906,11 +909,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -930,6 +933,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -937,14 +941,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -987,11 +991,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -1011,6 +1015,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1018,14 +1023,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -1067,11 +1072,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -1092,6 +1097,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1099,14 +1105,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -1170,11 +1176,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -1194,6 +1200,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1201,17 +1208,17 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      //blas_copy_(q, B, size, &gc);
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
      ));
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -1275,11 +1282,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }
@@ -1299,6 +1306,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1307,15 +1315,15 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* c;
      REAL_TYPE* e;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      blas_copy_(q, B, size, &gc);
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
-     e = new REAL_TYPE [size[2]+2*gc];
-     w = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
+     e = czAllocR(size[2]+2*gc, var_type);
+     w = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -1383,12 +1391,12 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      } // Iteration
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
-     if (e) delete [] e;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
+     czDelete(e);
 
      return itr;
    }
@@ -1407,6 +1415,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
+     REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1414,16 +1423,16 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* b;
      REAL_TYPE* c;
 
-     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
      ));
 
-     a = new REAL_TYPE [size[2]+2*gc];
-     b = new REAL_TYPE [size[2]+2*gc];
-     c = new REAL_TYPE [size[2]+2*gc];
+     a = czAllocR(size[2]+2*gc, var_type);
+     b = czAllocR(size[2]+2*gc, var_type);
+     c = czAllocR(size[2]+2*gc, var_type);
 
      for (int i=0; i<size[2]+2*gc; i++) {
        a[i] = 0.0;
@@ -1466,11 +1475,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      } // Iteration
      TIMING_stop("LSOR_simd_Itr");
 
-     if (q) delete [] q;
-     if (w) delete [] w;
-     if (a) delete [] a;
-     if (b) delete [] b;
-     if (c) delete [] c;
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(b);
+     czDelete(c);
 
      return itr;
    }

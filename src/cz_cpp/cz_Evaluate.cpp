@@ -309,16 +309,19 @@ int CZ::Evaluate(int argc, char **argv)
 
   L_Memory += ( array_size * 3 ) * (double)sizeof(REAL_TYPE);
 
-  if( (RHS = Alloc_Real_S3D(size)) == NULL ) return 0;
-  if( (P   = Alloc_Real_S3D(size)) == NULL ) return 0;
-  if( (WRK = Alloc_Real_S3D(size)) == NULL ) return 0;
-  if( (MSK = Alloc_Real_S3D(size)) == NULL ) return 0;
+  // アロケートのためのダミー型
+  REAL_TYPE var_type=0;
+
+  if( (RHS = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  if( (P   = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  if( (WRK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  if( (MSK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
 
-    //if( (EXS = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (ERR = Alloc_Real_S3D(size)) == NULL ) return 0;
+    //if( (EXS = czAllocR_S3D(size)) == NULL ) return 0;
+    if( (ERR = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   }
 
 
@@ -326,15 +329,15 @@ int CZ::Evaluate(int argc, char **argv)
   {
     L_Memory += ( array_size * 9 ) * (double)sizeof(REAL_TYPE);
 
-    if( (pcg_p  = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_p_ = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_r  = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_r0 = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_q  = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_s  = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_s_ = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_t  = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (pcg_t_ = Alloc_Real_S3D(size)) == NULL ) return 0;
+    if( (pcg_p  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_p_ = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_r  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_r0 = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_q  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_s  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_s_ = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_t  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+    if( (pcg_t_ = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   }
 
 

@@ -41,13 +41,11 @@
 static constexpr int ALIGN = alignof(__m512);
 #elif defined(ENABLE_AVX2)
 static constexpr int ALIGN = alignof(__m256);
-#elif defined(ENABLE_SSE)
-static constexpr int ALIGN = alignof(__m128);
 #elif defined(ENABLE_NEON)
 static constexpr int ALIGN = alignof(float32x4_t);
 #else
 static constexpr int ALIGN = 8;
-#endif  // defined(ENABLE_AVX512)
+#endif
 //////
 
 // FX10 profiler
@@ -75,7 +73,7 @@ private:
   REAL_TYPE ac1;           ///< acceleration coef.
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
-  std::string precon;
+  std::string precon;      ///< 前処理文字列
 
 
   // PMlib
@@ -356,7 +354,7 @@ private:
                const int itr_max,
                double& flop,
                bool converge_check=true);
-  
+
   int LSOR_F(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
@@ -520,6 +518,79 @@ std::string GetHostName()
   memset(name, 0x00, sizeof(char)*512);
   if( gethostname(name, 512) != 0 ) return std::string("");
   return std::string(name);
+}
+
+// #################################################################
+/**
+ * @brief S3D配列のアロケート
+ * @param [in] sz 配列サイズ
+ * @ret pointer
+ */
+template <typename T>
+T* czAllocR_S3D(const int* sz, T type)
+{
+  if ( !sz ) return NULL;
+
+  size_t dims[3], nx;
+
+  dims[0] = (size_t)(sz[0] + 2*GUIDE);
+  dims[1] = (size_t)(sz[1] + 2*GUIDE);
+  dims[2] = (size_t)(sz[2] + 2*GUIDE);
+
+  nx = dims[0] * dims[1] * dims[2];
+
+#if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
+  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN);
+#elif
+  T* var = new T[nx];
+#endif
+
+#pragma omp parallel for
+  for (int i=0; i<nx; i++) var[i]=0;
+
+  return var;
+}
+
+
+template <typename T>
+T* czAllocR(const int sz, T type)
+{
+  if ( !sz ) return NULL;
+
+  size_t nx = sz;
+
+#if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
+  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN);
+#elif
+  T* var = new T[nx];
+#endif
+
+#pragma omp parallel for
+  for (int i=0; i<nx; i++) var[i]=0;
+
+  return var;
+}
+
+
+template <typename T>
+void czDelete(T* ptr)
+{
+  if (ptr) {
+    #if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
+      _mm_free(ptr);
+    #elif
+      delete [] ptr;
+    #endif
+    ptr = NULL;
+  }
+}
+
+template <typename T>
+void check_align (T* var, std::string str)
+{
+  long int li = (long int)var;
+  printf("\t%10s : addrs= %08x align(4=%2u, 8=%2u, 16=%2u, 32=%2d, 64=%2d)\n\n",
+                str.c_str(),li, li%4, li%8, li%16, li%32, li%64);
 }
 
 };
