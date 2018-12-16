@@ -25,13 +25,18 @@ macro (AddOptimizeOption)
     # -Xg   : gcc compatible flag
     # -fPIC : PIC flag
 
+  elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xCOMMON-AVX512 -qopt-report=3 -qopt-zmm-usage=high")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xCOMMON-AVX512 -qopt-report=3 -qopt-zmm-usage=high")
+    set(CMAKE_Fortran_FLAGS "-O3 -no-prec-div -fp-model fast=2 -xCOMMON-AVX512 -qopt-report=3 -qopt-zmm-usage=high")
+
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall")
     set(CMAKE_Fortran_FLAGS "-O3 -Wall")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=3 -DMPICH_IGNORE_CXX_SEEK")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=3")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHOST -O3 -qopt-report=3")
     set(CMAKE_Fortran_FLAGS "-xHOST -O3 -qopt-report=3")
 
@@ -52,6 +57,9 @@ macro (FreeForm)
 
   elseif(TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")
+
+  elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -free")
 
   elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-form")
@@ -89,18 +97,27 @@ macro(checkOpenMP)
       set(OpenMP_C_FLAGS "-Kopenmp")
       set(OpenMP_CXX_FLAGS "-Kopenmp")
       set(OpenMP_Fortran_FLAGS "-Kopenmp")
+
+    elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
+      set(OpenMP_C_FLAGS "-qopenmp")
+      set(OpenMP_CXX_FLAGS "-qopenmp")
+      set(OpenMP_Fortran_FLAGS "-qopenmp")
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       set(OpenMP_C_FLAGS "-fopenmp")
       set(OpenMP_CXX_FLAGS "-fopenmp")
       set(OpenMP_Fortran_FLAGS "-fopenmp")
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
       set(OpenMP_C_FLAGS "-qopenmp")
       set(OpenMP_CXX_FLAGS "-qopenmp")
       set(OpenMP_Fortran_FLAGS "-qopenmp")
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
       set(OpenMP_C_FLAGS "-mp")
       set(OpenMP_CXX_FLAGS "-mp")
       set(OpenMP_Fortran_FLAGS "-mp")
+
     else()
       find_package(OpenMP REQUIRED)
     endif()
@@ -128,6 +145,9 @@ macro(precision)
 
     if(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -CcdRR8")
+
+    elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8")
 
     elseif(CMAKE_Fortran_COMPILER MATCHES ".*frt$")
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -CcdRR8")

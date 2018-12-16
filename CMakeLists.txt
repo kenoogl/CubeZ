@@ -66,8 +66,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.6.1")
-set(LIB_REVISION "20181209_1900")
+set(PROJECT_VERSION "0.6.2")
+set(LIB_REVISION "20181209_2330")
 #######
 
 
@@ -98,12 +98,6 @@ checkOpenMP()
 # Real type
 precision()
 
-
-# Diagonal FLAGS
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DIAGONAL_COMM")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-zmm-usage=high")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
 
 
 # Serial flag
@@ -136,6 +130,7 @@ message(" ")
 
 
 if(USE_F_TCS STREQUAL "YES")
+elseif(TARGET_ARCH STREQUAL "INTEL_SKL")
 else()
   if(with_MPI)
     include(FindMPI)
@@ -151,7 +146,7 @@ else()
 endif()
 
 message(" ")
-message("PROJECT : RIAM-Compact " ${PROJECT_VERSION} " : " ${LIB_REVISION})
+message("PROJECT : CubeZ " ${PROJECT_VERSION} " : " ${LIB_REVISION})
 message(" ")
 
 
