@@ -357,7 +357,7 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
-flop = flop + dble(ix) * dble(jx) * dble(kx) * 4.0d0
+flop = flop + dble(ix) * dble(jx) * dble(kx) * 6.0d0
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked

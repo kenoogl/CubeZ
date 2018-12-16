@@ -12,6 +12,12 @@
 #include "cz.h"
 #include <climits>
 
+/*
+  \nabla^2 p = 0 を解く
+   Z=0, 1に境界条件を与える
+*/
+
+
 int CZ::Evaluate(int argc, char **argv)
 {
   int div_type = 0;         ///< 分割指定 (0-自動、1-指定)
@@ -51,19 +57,12 @@ int CZ::Evaluate(int argc, char **argv)
   char* q = argv[4];
   if ( !strcasecmp(q, "pbicgstab") )
   {
-    if (argc!=7 && argc!=10) {
+    if (argc!=8 && argc!=11) {
       Hostonly_ printf("command line error : pbicgstab\n");
       exit(0);
     }
-    char* w = argv[6];
+    char* w = argv[7];
     setPrecond(w);
-  }
-
-  if (argc == 9) {
-    div_type=1;
-    G_div[0] = atoi(argv[6]);
-    G_div[1] = atoi(argv[7]);
-    G_div[2] = atoi(argv[8]);
   }
 
   if (argc == 10) {
@@ -71,6 +70,13 @@ int CZ::Evaluate(int argc, char **argv)
     G_div[0] = atoi(argv[7]);
     G_div[1] = atoi(argv[8]);
     G_div[2] = atoi(argv[9]);
+  }
+
+  if (argc == 11) {
+    div_type=1;
+    G_div[0] = atoi(argv[8]);
+    G_div[1] = atoi(argv[9]);
+    G_div[2] = atoi(argv[10]);
   }
 
   // 等方
@@ -83,7 +89,8 @@ int CZ::Evaluate(int argc, char **argv)
     return 0;
   }
 
-
+  // 係数
+  ac1 = atof(argv[6]);
 
   // 領域分割
 
@@ -200,9 +207,29 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "pbicgstab.txt");
   }
 
-  else if ( !strcasecmp(q, "ljacobi") ) {
-    ls_type = LS_LJACOBI;
-    strcpy(fname, "ljacobi.txt");
+  else if ( !strcasecmp(q, "lsorms") ) {
+    ls_type = LS_LSORMS;
+    strcpy(fname, "lsorms.txt");
+  }
+
+  else if ( !strcasecmp(q, "lsormsb") ) {
+    ls_type = LS_LSORMSB;
+    strcpy(fname, "lsormsb.txt");
+  }
+
+  else if ( !strcasecmp(q, "lsormsc") ) {
+    ls_type = LS_LSORMSC;
+    strcpy(fname, "lsormsc.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcbmsd") ) {
+    ls_type = LS_LJCBMSD;
+    strcpy(fname, "ljcbmsd.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcbmse") ) {
+    ls_type = LS_LJCBMSE;
+    strcpy(fname, "ljcbmse.txt");
   }
 
   else{
@@ -232,7 +259,7 @@ int CZ::Evaluate(int argc, char **argv)
   if( (RHS = Alloc_Real_S3D(size)) == NULL ) return 0;
   if( (P   = Alloc_Real_S3D(size)) == NULL ) return 0;
   if( (WRK = Alloc_Real_S3D(size)) == NULL ) return 0;
-  //if( (MSK = Alloc_Real_S3D(size)) == NULL ) return 0;
+  if( (MSK = Alloc_Real_S3D(size)) == NULL ) return 0;
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
@@ -273,7 +300,7 @@ int CZ::Evaluate(int argc, char **argv)
   double sum_r = range_inner_index();
   if ( !Comm_SUM_1(&sum_r) ) return 0;
   res_normal = 1.0/(double)sum_r;
-  Hostonly_ printf("Sum of inner = %e\n", sum_r);
+  //Hostonly_ printf("Sum of inner = %e\n", sum_r);
 
   // 最大反復回数
   ItrMax = atoi(argv[5]);
@@ -281,11 +308,12 @@ int CZ::Evaluate(int argc, char **argv)
   // Apply BC
   bc_(size, &gc, P, pitch, origin, nID);
 
-  // source term
+  // source term >> ソース項ゼロ
   //src_dirichlet_(RHS, size, &gc, pitch, nID);
+  //if ( !Comm_S(RHS, 1) ) return 0;
 
-  if ( !Comm_S(RHS, 1) ) return 0;
 
+  init_mask_(MSK, size, innerFidx, &gc);
 
 
   // タイミング測定の初期化
@@ -300,13 +328,10 @@ int CZ::Evaluate(int argc, char **argv)
   /////////////////////////////////////////////////////////////
   // Loop
 
-  double  res=0.0;
+  double res=0.0;
   int itr=0;
   double flop=0.0; // dummy
 
-  TIMING_start("BoundaryCondition");
-  bc_(size, &gc, P, pitch, origin, nID);
-  TIMING_stop("BoundaryCondition");
 
   switch (ls_type)
   {
@@ -340,10 +365,34 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("LSOR", flop);
       break;
 
-    case LS_LJACOBI:
-      TIMING_start("LJacobi");
-      if ( 0 == (itr=LJacobi(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJacobi", flop);
+    case LS_LSORMS:
+      TIMING_start("LSOR_MS");
+      if ( 0 == (itr=LSOR_MS(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_MS", flop);
+      break;
+
+    case LS_LSORMSB:
+      TIMING_start("LSOR_MSB");
+      if ( 0 == (itr=LSOR_MSB(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_MSB", flop);
+      break;
+
+    case LS_LSORMSC:
+      TIMING_start("LSOR_MSC");
+      if ( 0 == (itr=LSOR_MSC(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_MSC", flop);
+      break;
+
+    case LS_LJCBMSD:
+      TIMING_start("LJCB_MSD");
+      if ( 0 == (itr=LJCB_MSD(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_MSD", flop);
+      break;
+
+    case LS_LJCBMSE:
+      TIMING_start("LJCB_MSE");
+      if ( 0 == (itr=LJCB_MSE(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_MSE", flop);
       break;
 
     default:
@@ -360,9 +409,12 @@ int CZ::Evaluate(int argc, char **argv)
   /////////////////////////////////////////////////////////////
   // post
 
-  if (!fph) fclose(fph);
+  Hostonly_ {
+    if (!fph) fclose(fph);
+  }
 
   char tmp_fname[30];
+  int loc[3];
 
   if (debug_mode==1) {
     sprintf( tmp_fname, "p_%05d.sph", myRank );
@@ -370,9 +422,9 @@ int CZ::Evaluate(int argc, char **argv)
 
     exact_(size, &gc, ERR, pitch, origin);
     double errmax = 0.0;
-    err_  (size, innerFidx, &gc, &errmax, P, ERR);
+    err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
     if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-    Hostonly_ printf("Error max = %e\n", errmax);
+    Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
     sprintf( tmp_fname, "e_%05d.sph", myRank );
     fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
   }

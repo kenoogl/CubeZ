@@ -66,8 +66,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.6.0")
-set(LIB_REVISION "20181123_1330")
+set(PROJECT_VERSION "0.6.1")
+set(LIB_REVISION "20181209_1900")
 #######
 
 
@@ -101,6 +101,9 @@ precision()
 
 # Diagonal FLAGS
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DIAGONAL_COMM")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-zmm-usage=high")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
 
 
 # Serial flag

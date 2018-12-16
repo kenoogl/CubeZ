@@ -16,6 +16,13 @@
 extern "C" {
 
 // cz_lsolver.f90
+void bc_src_  (int* sz,
+               int* g,
+               REAL_TYPE* d,
+               REAL_TYPE* dh,
+               REAL_TYPE* org,
+               int* nID);
+
 void bc_      (int* sz,
                int* g,
                REAL_TYPE* e,
@@ -112,6 +119,71 @@ void tdma_lsor2sma_(REAL_TYPE* d,
                 int* color,
                 double* flop);
 
+void tdma_lsor_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_lsor_b_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_lsor_c_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_ljcb_d_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_ljcb_e_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* m,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
 
 // cz_blas.f90
 void init_mask_     (REAL_TYPE* x,
@@ -217,7 +289,8 @@ void err_     (int* sz,
                int* g,
                double* d,
                REAL_TYPE* p,
-               REAL_TYPE* e);
+               REAL_TYPE* e,
+               int* loc);
 }
 
 

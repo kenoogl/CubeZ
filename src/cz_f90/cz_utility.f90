@@ -76,39 +76,38 @@ end subroutine exact
 
 
 !> *******************************
-subroutine err (sz, idx, g, d, p, e)
+subroutine err (sz, idx, g, d, p, e, loc)
 implicit none
 integer                                                ::  i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  ::  sz
-integer                                                ::  ist, jst, kst
-integer                                                ::  ied, jed, ked
+integer, dimension(3)                                  ::  sz, loc
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, e
 real                                                   ::  r
-double precision                                       ::  d
+double precision                                       ::  d, q
 
 ix = sz(1)
 jx = sz(2)
 kx = sz(3)
 
-ist = idx(0)
-ied = idx(1)
-jst = idx(2)
-jed = idx(3)
-kst = idx(4)
-ked = idx(5)
-
-d=0.0d0
+d=0.0
+loc(1)=-1
+loc(2)=-1
+loc(3)=-1
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(max:d) &
-!$OMP PRIVATE(r)
-do k = kst, ked
-do j = jst, jed
-do i = ist, ied
-  r = p(i,j,k) -  e(i,j,k)
-  !e(i,j,k) = r
-  d = max(d, abs(dble(r)))
+!$OMP PRIVATE(r, q)
+do k = 1,kx
+do j = 1,jx
+do i = 1,ix
+  r = p(i,j,k) - e(i,j,k)
+  e(i,j,k) = r
+  q = abs(dble(r))
+  if (d < q) then
+    d = q
+    loc(1) = i
+    loc(2) = j
+    loc(3) = k
+  endif
 end do
 end do
 end do

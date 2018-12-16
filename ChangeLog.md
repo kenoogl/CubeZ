@@ -8,6 +8,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-11-23 Version 0.6.1
+  - LSORのk-loopをTDMA
+
+---
 - 2018-11-23 Version 0.6.0
   - PCR
 

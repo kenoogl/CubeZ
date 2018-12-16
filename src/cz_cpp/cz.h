@@ -52,8 +52,7 @@ private:
   int ItrMax;              ///< 最大反復回数
   int ls_type;             ///< 線形ソルバ種類
   double eps;              ///< convergence criteria
-  REAL_TYPE ac1;           ///< acceleration coef. for SOR
-  REAL_TYPE ac2;           ///< acceleration coef. for jacobi relaxation
+  REAL_TYPE ac1;           ///< acceleration coef.
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   int KindOfPrecondition;  ///< 前処理の種類
@@ -102,8 +101,7 @@ public:
     ItrMax = 0;
     ls_type = 0;
     eps = 1.0e-5;
-    ac1 = 1.1;
-    ac2 = 0.8;
+    ac1 = 0.0;
     res_normal = 0.0;
     KindOfPrecondition = -1;
 
@@ -147,6 +145,19 @@ public:
             REAL_TYPE* b,
             REAL_TYPE* c,
             REAL_TYPE* w);
+
+  void tdma_s(int nx,
+              REAL_TYPE* d,
+              const REAL_TYPE a,
+              const REAL_TYPE b,
+              const REAL_TYPE c,
+              REAL_TYPE* w);
+
+  void lsor_ms(REAL_TYPE* d,
+               REAL_TYPE* x,
+               REAL_TYPE* w,
+               double &res,
+               double &flop);
 
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
@@ -282,13 +293,49 @@ private:
              REAL_TYPE* X,
              REAL_TYPE* B,
              const int itrMax,
-             double& flop);
+             double& flop,
+             bool converge_check=true);
 
-  int LJacobi(double& res,
+  int LSOR_RB (double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itrMax,
+               double& flop);
+
+  int LSOR_MS(double& res,
               REAL_TYPE* X,
               REAL_TYPE* B,
               const int itr_max,
-              double& flop);
+              double& flop,
+              bool converge_check=true);
+
+  int LSOR_MSB(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+
+  int LSOR_MSC(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+
+  int LJCB_MSD(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+
+  int LJCB_MSE(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
 
   double Fdot1(REAL_TYPE* x, double& flop);
 
@@ -409,6 +456,9 @@ void setPrecond(char* w)
   }
   else if ( !strcasecmp(w, "sor2sma") ) {
     KindOfPrecondition = 3;
+  }
+  else if ( !strcasecmp(w, "lsor") ) {
+    KindOfPrecondition = 4;
   }
   else if ( !strcasecmp(w, "none") ) {
     KindOfPrecondition = 0;

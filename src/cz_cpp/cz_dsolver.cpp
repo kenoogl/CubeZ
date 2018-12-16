@@ -13,6 +13,169 @@
 // @file cm_blas.cpp
 
 /*
+ * @brief LSOR Multi-System
+ * @param [in]     d    RHS vector
+ * @param [in,out] x    solution vector
+ * @param [in]     w    work vector (U_1)
+ * @param [out]    res  residual
+ */
+void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, double &res, double &flop)
+{
+  int gc = GUIDE;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+
+  int ist = innerFidx[I_minus];
+  int ied = innerFidx[I_plus];
+  int jst = innerFidx[J_minus];
+  int jed = innerFidx[J_plus];
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+
+  int nn = ied - ist + 1;
+
+  REAL_TYPE dd = 6.0;
+  REAL_TYPE r = 1.0/6.0;
+  REAL_TYPE a = -1.0/6.0;
+  REAL_TYPE b = 1.0;
+  REAL_TYPE c = -1.0/6.0;
+  REAL_TYPE omg = ac1;
+  REAL_TYPE pp, dp, pn;
+
+  flop += (4.0 + 16.0 + 5.0)
+        * (double)( (ied-ist+1)*(jed-jst+1)*(ked-kst+1) );
+  res = 0.0;
+
+  #pragma omp parallel for private(pp,dp,pn) reduction(+:res) collapse(2)
+  for (int k=kst-1; k<ked; k++) {
+  for (int j=jst-1; j<jed; j++) {
+
+    #pragma vector always
+    #pragma ivdep
+    for (int i=ist-1; i<ied; i++) {
+      d[_IDX_S3D(i,j,k,NI, NJ, gc)] = ( x[_IDX_S3D(i,j-1,k  ,NI, NJ, gc)]
+                                     +  x[_IDX_S3D(i,j+1,k  ,NI, NJ, gc)]
+                                     +  x[_IDX_S3D(i,j  ,k-1,NI, NJ, gc)]
+                                     +  x[_IDX_S3D(i,j  ,k+1,NI, NJ, gc)]
+                                   ) * r;
+    }
+
+    
+    tdma_s(nn,
+           &d[_IDX_S3D(ist-1,j,k,NI,NJ,gc)],
+           a, b, c,
+           &w[_IDX_S3D(ist-1,j,k,NI,NJ,gc)]);
+
+
+    //tdma_m(nn, d, a, b, c, w);
+
+    #pragma vector always
+    #pragma ivdep
+    for (int i=ist-1; i<ied; i++) {
+      pp = x[_IDX_S3D(i,j,k,NI,NJ,gc)];
+      dp = ( d[_IDX_S3D(i,j,k,NI,NJ,gc)] - pp ) * omg;
+      pn = pp + dp;
+      x[_IDX_S3D(i,j,k,NI,NJ,gc)] = pn;
+      res += dp * dp;
+    }
+
+  }}
+
+}
+
+
+/*
+ * @brief Thomas Algorithm
+ * @param [in      nx   配列長
+ * @param [in,out] d    RHS/解ベクトル X[nx]
+ * @param [in]     a    係数 L_1
+ * @param [in]     b    係数 D
+ * @param [in]     c    係数 U_1
+ * @param [in]     w    work vector (U_1)
+ * @note i方向に領域分割なしを想定
+ *       cz_dsolver tdma_1 と同等
+
+void CZ::tdma_m(int nx,
+                REAL_TYPE* d,
+                const REAL_TYPE a,
+                const REAL_TYPE b,
+                const REAL_TYPE c,
+                REAL_TYPE* w)
+{
+  int ist = innerFidx[I_minus];
+  int ied = innerFidx[I_plus];
+  int jst = innerFidx[J_minus];
+  int jed = innerFidx[J_plus];
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+
+  REAL_TYPE e;
+  size_t m;
+
+  #pragma omp parallel for collapse(2) private(m)
+  for (int k=kst-1; k<ked; k++) {
+  for (int j=jst-1; j<jed; j++) {
+    m = _IDX_S3D(0,j,k,NI,NJ,gc);
+    d[m] = d[m]/b;
+    w[m] = c/b;
+  }}
+
+
+  for (int i=1; i<nx; i++)
+  {
+    e = 1.0 / (b - a * w[i-1]);
+    w[i] = e * c;
+    d[i] = (d[i] - a * d[i-1]) * e;
+  }
+
+  for (int i=nx-2; i>=0; i--)
+  {
+    d[i] = d[i] - w[i] * d[i+1];
+  }
+
+}*/
+
+
+/*
+ * @brief Thomas Algorithm
+ * @param [in      nx   配列長
+ * @param [in,out] d    RHS/解ベクトル X[nx]
+ * @param [in]     a    係数 L_1
+ * @param [in]     b    係数 D
+ * @param [in]     c    係数 U_1
+ * @param [in]     w    work vector (U_1)
+ * @note i方向に領域分割なしを想定
+ *       cz_dsolver tdma_1 と同等
+ */
+void CZ::tdma_s(int nx,
+                REAL_TYPE* d,
+                const REAL_TYPE a,
+                const REAL_TYPE b,
+                const REAL_TYPE c,
+                REAL_TYPE* w)
+{
+  REAL_TYPE e;
+
+  d[0] = d[0]/b;
+  w[0] = c/b;
+
+  for (int i=1; i<nx; i++)
+  {
+    e = 1.0 / (b - a * w[i-1]);
+    w[i] = e * c;
+    d[i] = (d[i] - a * d[i-1]) * e;
+  }
+
+  for (int i=nx-2; i>=0; i--)
+  {
+    d[i] = d[i] - w[i] * d[i+1];
+  }
+
+}
+
+
+/*
  * @brief Thomas Algorithm
  * @param [in      nx   配列長
  * @param [in,out] d    RHS/解ベクトル X[nx]
