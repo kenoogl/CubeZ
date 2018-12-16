@@ -107,7 +107,7 @@ do k = kst, ked
 do j = jst, jed
 do i = ist, ied
   r = p(i,j,k) -  e(i,j,k)
-  e(i,j,k) = r
+  !e(i,j,k) = r
   d = max(d, abs(dble(r)))
 end do
 end do

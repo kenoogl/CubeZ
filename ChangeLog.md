@@ -1,9 +1,15 @@
 # CubeZ
 
-
+## todo
+BiCGSTABのノイマン条件が入らない？
 
 
 ## REVISION HISTORY
+
+---
+- 2018-11-13 Version 0.5.2
+  - PBiCGSTAB bug fix
+
 
 ---
 - 2018-11-13 Version 0.5.1

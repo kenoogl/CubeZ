@@ -350,6 +350,8 @@ int CZ::Evaluate(int argc, char **argv)
     exact_(size, &gc, ERR, pitch, origin);
     double errmax = 0.0;
     err_  (size, innerFidx, &gc, &errmax, P, ERR);
+    if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+    Hostonly_ printf("Error max = %e\n", errmax);
     sprintf( tmp_fname, "e_%05d.sph", myRank );
     fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
   }

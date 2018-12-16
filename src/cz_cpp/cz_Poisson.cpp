@@ -284,9 +284,8 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    double alpha = 0.0;
    double omega  = 1.0;
    double r_omega = -omega;
-   int lc=0;                      /// ループカウント
 
-   for (itr=1; lc<ItrMax; itr++)
+   for (itr=1; itr<ItrMax; itr++)
    {
      flop_count = 0.0;
      double rho = Fdot2(pcg_r, pcg_r0, flop_count);

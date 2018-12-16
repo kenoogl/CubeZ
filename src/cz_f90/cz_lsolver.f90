@@ -67,7 +67,7 @@ if( nID(I_MINUS) < 0 ) then
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1,kx
 do j=1,jx
-  p(1,j,k) = 0.0 !p(2, j,k)
+  p(1,j,k) = p(2, j,k)
 end do
 end do
 !$OMP END PARALLEL DO
@@ -79,7 +79,7 @@ if( nID(I_PLUS) < 0 ) then
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1,kx
 do j=1,jx
-  p(ix,j,k) = 0.0 !p(ix-1,j,k)
+  p(ix,j,k) = p(ix-1,j,k)
 end do
 end do
 !$OMP END PARALLEL DO
@@ -91,7 +91,7 @@ if( nID(J_MINUS) < 0 ) then
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1,kx
 do i=1,ix
-  p(i,1, k) = 0.0 !p(i,2, k)
+  p(i,1, k) = p(i,2, k)
 end do
 end do
 !$OMP END PARALLEL DO
@@ -103,7 +103,7 @@ if( nID(J_PLUS) < 0 ) then
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1,kx
 do i=1,ix
-  p(i,jx,k) = 0.0 !p(i,jx-1,k)
+  p(i,jx,k) = p(i,jx-1,k)
 end do
 end do
 !$OMP END PARALLEL DO
