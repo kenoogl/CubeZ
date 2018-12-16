@@ -59,3 +59,6 @@ add_executable(${tgt6} "${tgt6}.cpp")
 target_link_libraries(${tgt6} CZ)
 
 ###
+
+install(TARGETS ${tgt1} ${tgt2} ${tgt3} ${tgt3} ${tgt4} ${tgt5} ${tgt6}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/example)

@@ -5,9 +5,10 @@
 !! @param [in]     idx  インデクス範囲
 !! @param [in]     g    ガイドセル長
 !! @param [in]     x    解ベクトル
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in,out] flop flop count
 !<
-subroutine ljcb_f0 (d, sz, idx, g, x, flop)
+subroutine ljcb_f0 (d, sz, idx, g, x, rhs, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -15,9 +16,9 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, rhs
 real                                                   ::  r
-!dir$ assume_aligned d:64,x:64
+!dir$ assume_aligned d:64,x:64,rhs:64
 
 ist = idx(0)
 ied = idx(1)
@@ -28,7 +29,7 @@ ked = idx(5)
 
 r = 1.0/6.0
 
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*4.0
+flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*5.0
 
 !$OMP PARALLEL DO SCHEDULE(static)
 do k = kst, ked
@@ -37,7 +38,7 @@ do i = ist, ied
   d(i,j,k) = ( x(i-1,j  ,k  ) &
            +   x(i+1,j  ,k  ) &
            +   x(i  ,j-1,k  ) &
-           +   x(i  ,j+1,k  ) ) * r
+           +   x(i  ,j+1,k  ) ) * r + rhs(i,j,k)
 end do
 end do
 end do
@@ -56,9 +57,10 @@ end subroutine ljcb_f0
 !! @param [in]     w    work
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in,out] flop flop count
 !<
-subroutine ljcb_f1 (d, sz, idx, g, w, b, c, flop)
+subroutine ljcb_f1 (d, sz, idx, g, w, b, c, rhs, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -66,10 +68,10 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, w
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, w, rhs
 real                                                   ::  r, z, y
 real, dimension(1-g:sz(3)+g)                           ::  b, c
-!dir$ assume_aligned d:64,w:64,b:64,c:64
+!dir$ assume_aligned d:64,w:64,b:64,c:64,rhs:64
 
 ist = idx(0)
 ied = idx(1)
@@ -88,7 +90,7 @@ z = c(kst) * y
 !$OMP PARALLEL DO SCHEDULE(static)
 do j = jst, jed
 do i = ist, ied
-  d(i,j,kst) = ( d(i,j,kst) + d(i,j,kst-1)*r ) * y
+  d(i,j,kst) = ( d(i,j,kst) + rhs(i,j,kst-1)*r ) * y
 end do
 end do
 !$OMP END PARALLEL DO
@@ -96,7 +98,7 @@ end do
 !$OMP PARALLEL DO SCHEDULE(static)
 do j = jst, jed
 do i = ist, ied
-  d(i,j,ked) = d(i,j,ked) + d(i,j,ked+1)*r
+  d(i,j,ked) = d(i,j,ked) + rhs(i,j,ked+1)*r
 end do
 end do
 !$OMP END PARALLEL DO
@@ -279,11 +281,12 @@ end subroutine ljcb_f4
 !! @param [in]     a    coef
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in]     omg  加速係数
 !! @param [out]    res  残差
 !! @param [in,out] flop flop count
 !<
-subroutine tdma_ljcb_d (d, sz, idx, g, x, w, a, b, c, omg, res, flop)
+subroutine tdma_ljcb_d (d, sz, idx, g, x, w, a, b, c, rhs, omg, res, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -292,10 +295,10 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop, res
 real                                                   ::  omg, dp, pp, pn
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w, rhs
 real                                                   ::  r, e, y
 real, dimension(1-g:sz(3)+g)                           ::  a, b, c
-!dir$ assume_aligned d:64,x:64,w:64,a:64,b:64,c:64
+!dir$ assume_aligned d:64,x:64,w:64,a:64,b:64,c:64,rhs:64
 
 ist = idx(0)
 ied = idx(1)
@@ -314,12 +317,12 @@ y = 1.0 / b(kst)
 !$OMP PARALLEL DO SCHEDULE(static)
 do k = kst, ked
 do j = jst, jed
-!dir$ simd vectorlength(8)
+!dir$ simd vectorlength(16)
 do i = ist, ied
   d(i,j,k) = ( x(i-1,j  ,k  ) &
            +   x(i+1,j  ,k  ) &
            +   x(i  ,j-1,k  ) &
-           +   x(i  ,j+1,k  ) ) * r
+           +   x(i  ,j+1,k  ) ) * r + rhs(i,j,k)
 end do
 end do
 end do
@@ -329,8 +332,8 @@ end do
 do j = jst, jed
 !dir$ simd vectorlength(16)
 do i = ist, ied
-  d(i,j,kst) = d(i,j,kst) + d(i,j,kst-1)*r
-  d(i,j,ked) = d(i,j,ked) + d(i,j,ked+1)*r
+  d(i,j,kst) = d(i,j,kst) + rhs(i,j,kst-1)*r
+  d(i,j,ked) = d(i,j,ked) + rhs(i,j,ked+1)*r
 
   ! TDMA
   d(i,j,kst) = d(i,j,kst) * y
@@ -344,7 +347,7 @@ do k=kst+1, ked
 
 !$OMP PARALLEL DO SCHEDULE(static) PRIVATE(e)
 do j = jst, jed
-!dir$ simd vectorlength(8)
+!dir$ simd vectorlength(16)
 do i = ist, ied
   e = 1.0 / (b(k) - a(k) * w(i,j,k-1))
   w(i,j,k) = e * c(k)
@@ -361,7 +364,7 @@ do k=ked-1, kst, -1
 
 !$OMP PARALLEL DO SCHEDULE(static)
 do j = jst, jed
-!dir$ simd vectorlength(8)
+!dir$ simd vectorlength(16)
 do i = ist, ied
   d(i,j,k) = d(i,j,k) - w(i,j,k) * d(i,j,k+1)
 end do
@@ -375,7 +378,7 @@ end do
 !$OMP REDUCTION(+:res) PRIVATE(pp, dp, pn)
 do k = kst, ked
 do j = jst, jed
-!dir$ simd vectorlength(8)
+!dir$ simd vectorlength(16)
 do i = ist, ied
   pp = x(i,j,k)
   dp = ( d(i,j,k) - pp ) * omg

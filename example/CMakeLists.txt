@@ -6,9 +6,3 @@
 # All rights reserved.
 #
 ###################################################################################
-
-# Install files
-
-install(FILES
-        DESTINATION example
-)

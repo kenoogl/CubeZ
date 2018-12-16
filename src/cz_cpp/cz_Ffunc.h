@@ -16,12 +16,6 @@
 extern "C" {
 
 // cz_lsolver.f90
-void bc_src_  (int* sz,
-               int* g,
-               REAL_TYPE* d,
-               REAL_TYPE* dh,
-               REAL_TYPE* org,
-               int* nID);
 
 void bc_      (int* sz,
                int* g,
@@ -63,12 +57,6 @@ void psor2sma_core_ (REAL_TYPE* p,
                      double* res,
                      double* flop);
 
-void src_dirichlet_ (REAL_TYPE* b,
-                     int* sz,
-                     int* g,
-                     REAL_TYPE* dh,
-                     int* nID);
-
 void tdma_0_ (int* nx,
               REAL_TYPE* d,
               REAL_TYPE* a,
@@ -80,30 +68,6 @@ void tdma_1_ (int* nx,
               REAL_TYPE* d,
               REAL_TYPE* cf,
               REAL_TYPE* w,
-              double* flop);
-
-void tdma_rhs_ (REAL_TYPE* q,
-                int* sz,
-                int* idx,
-                int* g,
-                REAL_TYPE* x,
-                double* flop);
-
-void tdma_wrap_ (REAL_TYPE* d,
-                 int* sz,
-                 int* idx,
-                 int* g,
-                 REAL_TYPE* w,
-                 REAL_TYPE* cf,
-                 double* flop);
-
-void tdma_sor_(REAL_TYPE* x,
-              int* sz,
-              int* idx,
-              int* g,
-              REAL_TYPE* omg,
-              REAL_TYPE* q,
-              double* res,
               double* flop);
 
 void tdma_lsor2sma_(REAL_TYPE* d,
@@ -128,6 +92,7 @@ void tdma_lsor_(REAL_TYPE* d,
                 REAL_TYPE* a,
                 REAL_TYPE* b,
                 REAL_TYPE* c,
+                REAL_TYPE* rhs,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
@@ -141,6 +106,7 @@ void tdma_lsor_b_(REAL_TYPE* d,
                 REAL_TYPE* a,
                 REAL_TYPE* b,
                 REAL_TYPE* c,
+                REAL_TYPE* rhs,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
@@ -154,6 +120,7 @@ void tdma_lsor_c_(REAL_TYPE* d,
                 REAL_TYPE* a,
                 REAL_TYPE* b,
                 REAL_TYPE* c,
+                REAL_TYPE* rhs,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
@@ -167,6 +134,7 @@ void tdma_ljcb_e_(REAL_TYPE* d,
                 REAL_TYPE* a,
                 REAL_TYPE* b,
                 REAL_TYPE* c,
+                REAL_TYPE* rhs,
                 REAL_TYPE* m,
                 REAL_TYPE* omg,
                 double* res,
@@ -182,6 +150,7 @@ void tdma_ljcb_d_(REAL_TYPE* d,
                 REAL_TYPE* a,
                 REAL_TYPE* b,
                 REAL_TYPE* c,
+                REAL_TYPE* rhs,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
@@ -191,6 +160,7 @@ void ljcb_f0_(REAL_TYPE* d,
               int* idx,
               int* g,
               REAL_TYPE* x,
+              REAL_TYPE* rhs,
               double* flop);
 
 void ljcb_f1_(REAL_TYPE* d,
@@ -200,6 +170,7 @@ void ljcb_f1_(REAL_TYPE* d,
               REAL_TYPE* w,
               REAL_TYPE* b,
               REAL_TYPE* c,
+              REAL_TYPE* rhs,
               double* flop);
 
 void ljcb_f2_(REAL_TYPE* d,
@@ -223,7 +194,7 @@ void ljcb_f4_(REAL_TYPE* d,
               int* sz,
               int* idx,
               int* g,
-              REAL_TYPE* x, 
+              REAL_TYPE* x,
               REAL_TYPE* omg,
               double* res,
               double* flop);

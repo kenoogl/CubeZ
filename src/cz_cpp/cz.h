@@ -156,6 +156,7 @@ public:
   void lsor_ms(REAL_TYPE* d,
                REAL_TYPE* x,
                REAL_TYPE* w,
+               REAL_TYPE* rhs,
                double &res,
                double &flop);
 
@@ -341,7 +342,7 @@ private:
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
-               double& flop, 
+               double& flop,
                bool converge_check=true);
 
 
@@ -467,6 +468,9 @@ void setPrecond(char* w)
   }
   else if ( !strcasecmp(w, "lsor") ) {
     KindOfPrecondition = 4;
+  }
+  else if ( !strcasecmp(w, "ljcb") ) {
+    KindOfPrecondition = 5;
   }
   else if ( !strcasecmp(w, "none") ) {
     KindOfPrecondition = 0;

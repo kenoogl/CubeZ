@@ -246,7 +246,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        break;
 
      case 4:
-       LJCB_MSD(res, xx, bb, lc_max, flop, false);
+       LSOR_MSB(res, xx, bb, lc_max, flop, false);
+       break;
+
+     case 5:
+       LJCB_MSF(res, xx, bb, lc_max, flop, false);
        break;
    }
 
@@ -405,81 +409,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  }
 
 
- /* #################################################################
- * @brief Line Jacobi反復
- * @param [in,out] res    残差
- * @param [in,out] X      解ベクトル
- * @param [in]     B      RHSベクトル
- * @param [in]     itr_max 最大反復数
- * @param [in]     flop   浮動小数点演算数
-
- int CZ::LJacobi(double& res, REAL_TYPE* X, REAL_TYPE* B,
-              const int itr_max, double& flop, bool converge_check)
-  {
-    int itr;
-    double flop_count = 0.0;
-    int gc = GUIDE;
-    REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
-
-    REAL_TYPE* q;  // RHS
-    REAL_TYPE* w;  // work
-
-    if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
-    if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
-
-    TIMING_start("BoundaryCondition");
-    bc_(size, &gc, q, pitch, origin, nID);
-    TIMING_stop("BoundaryCondition");
-
-
-    for (itr=1; itr<=itr_max; itr++)
-    {
-      res = 0.0;
-
-      /*
-      TIMING_start("TDMA_rhs");
-      flop_count = 0.0;
-      tdma_rhs_(q, size, innerFidx, &gc, X, &flop_count);
-      TIMING_stop("TDMA_rhs", flop_count);
-
-      TIMING_start("TDMA_kernel");
-      flop_count = 0.0;
-      tdma_wrap_(q, size, innerFidx, &gc, w, mat, &flop_count);
-      TIMING_stop("TDMA_kernel", flop_count);
-
-      TIMING_start("LJacobi_kernel");
-      flop_count = 0.0;
-      tdma_sor_(X, size, innerFidx, &gc, &ac1, q, &res, &flop_count);
-      TIMING_stop("LJacobi_kernel", flop_count);
-
-
-      TIMING_start("LJacobi_kernel");
-      flop_count = 0.0;
-      tdma_ljcb_(q, size, innerFidx, &gc, X, w, mat, &ac1, &res, &flop_count);
-      TIMING_stop("LJacobi_kernel", flop_count);
-
-      if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-      if ( converge_check ) {
-        if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-        res *= res_normal;
-        res = sqrt(res);
-        Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-        // BCはq[]に与えられているので、不要
-
-        if ( res < eps ) break;
-      }
-
-    } // Iteration
-
-    if (q) delete [] q;
-    if (w) delete [] w;
-
-    return itr;
-  }*/
-
   /* #################################################################
   * @brief Line SOR反復
   * @param [in,out] res    残差
@@ -504,6 +433,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[0]+2*gc];
      b = new REAL_TYPE [size[0]+2*gc];
      c = new REAL_TYPE [size[0]+2*gc];
@@ -523,9 +455,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_src_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -534,7 +463,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_kernel");
        flop_count = 0.0;
-       tdma_lsor_(q, size, innerFidx, &gc, X, w, a, b, c, &ac1, &res, &flop_count);
+       tdma_lsor_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LSOR_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -584,9 +513,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
+     blas_copy_(q, B, size, &gc);
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -595,7 +522,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_MS_kernel");
        flop_count = 0.0;
-       lsor_ms(q, X, w, res, flop_count);
+       lsor_ms(q, X, w, B, res, flop_count);
        TIMING_stop("LSOR_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -643,6 +570,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[0]+2*gc];
      b = new REAL_TYPE [size[0]+2*gc];
      c = new REAL_TYPE [size[0]+2*gc];
@@ -662,9 +592,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_src_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -673,7 +600,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_MS_kernel");
        flop_count = 0.0;
-       tdma_lsor_b_(q, size, innerFidx, &gc, X, w, a, b, c, &ac1, &res, &flop_count);
+       tdma_lsor_b_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LSOR_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -724,6 +651,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[2]+2*gc];
      b = new REAL_TYPE [size[2]+2*gc];
      c = new REAL_TYPE [size[2]+2*gc];
@@ -743,9 +673,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc-1] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -754,7 +681,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_MS_kernel");
        flop_count = 0.0;
-       tdma_lsor_c_(q, size, innerFidx, &gc, X, w, a, b, c, &ac1, &res, &flop_count);
+       tdma_lsor_c_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LSOR_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -804,6 +731,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[2]+2*gc];
      b = new REAL_TYPE [size[2]+2*gc];
      c = new REAL_TYPE [size[2]+2*gc];
@@ -823,9 +753,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc-1] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -834,7 +761,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LJCB_MS_kernel");
        flop_count = 0.0;
-       tdma_ljcb_d_(q, size, innerFidx, &gc, X, w, a, b, c, &ac1, &res, &flop_count);
+       tdma_ljcb_d_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LJCB_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -884,6 +811,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[2]+2*gc];
      b = new REAL_TYPE [size[2]+2*gc];
      c = new REAL_TYPE [size[2]+2*gc];
@@ -903,10 +833,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc-1] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
-
 
      for (itr=1; itr<=itr_max; itr++)
      {
@@ -914,7 +840,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LJCB_MS_kernel");
        flop_count = 0.0;
-       tdma_ljcb_e_(q, size, innerFidx, &gc, X, w, a, b, c, MSK, &ac1, &res, &flop_count);
+       tdma_ljcb_e_(q, size, innerFidx, &gc, X, w, a, b, c, B, MSK, &ac1, &res, &flop_count);
        TIMING_stop("LJCB_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -965,6 +891,9 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
      if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     blas_copy_(q, B, size, &gc);
+
      a = new REAL_TYPE [size[2]+2*gc];
      b = new REAL_TYPE [size[2]+2*gc];
      c = new REAL_TYPE [size[2]+2*gc];
@@ -984,9 +913,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        c[i+gc-1] = -1.0/6.0;
      }
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, q, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
 
      for (itr=1; itr<=itr_max; itr++)
@@ -995,12 +921,12 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LJCB_f0_kernel");
        flop_count = 0.0;
-       ljcb_f0_(q, size, innerFidx, &gc, X, &flop_count);
+       ljcb_f0_(q, size, innerFidx, &gc, X, B, &flop_count);
        TIMING_stop("LJCB_f0_kernel", flop_count);
 
        TIMING_start("LJCB_f1_kernel");
        flop_count = 0.0;
-       ljcb_f1_(q, size, innerFidx, &gc, w, b, c, &flop_count);
+       ljcb_f1_(q, size, innerFidx, &gc, w, b, c, B, &flop_count);
        TIMING_stop("LJCB_f1_kernel", flop_count);
 
        TIMING_start("LJCB_f2_kernel");

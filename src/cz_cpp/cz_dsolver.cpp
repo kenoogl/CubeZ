@@ -17,9 +17,10 @@
  * @param [in]     d    RHS vector
  * @param [in,out] x    solution vector
  * @param [in]     w    work vector (U_1)
+ * @param [in]     rhs
  * @param [out]    res  residual
  */
-void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, double &res, double &flop)
+void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, double &res, double &flop)
 {
   int gc = GUIDE;
   int NI = size[0];
@@ -58,10 +59,10 @@ void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, double &res, double &
                                      +  x[_IDX_S3D(i,j+1,k  ,NI, NJ, gc)]
                                      +  x[_IDX_S3D(i,j  ,k-1,NI, NJ, gc)]
                                      +  x[_IDX_S3D(i,j  ,k+1,NI, NJ, gc)]
-                                   ) * r;
+                                   ) * r + rhs[_IDX_S3D(i,j,k,NI, NJ, gc)];
     }
 
-    
+
     tdma_s(nn,
            &d[_IDX_S3D(ist-1,j,k,NI,NJ,gc)],
            a, b, c,

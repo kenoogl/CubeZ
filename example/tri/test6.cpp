@@ -488,10 +488,15 @@ int main(int argc, char *argv[])
 
   // ===================
 
+  FILE* fp;
+  fp=fopen("prof.txt", "w");
+
   char str[100];
   sprintf(str, "SIMD test");
   PM.print(stdout, "hoge", str);
-  //PM.printThreads(stdout, 1, 0); // time cost order
+  PM.print(fp, "hoge", str);
+  PM.printThreads(fp, 1, 0); // time cost order
+  fclose(fp);
 
   return 0;
 }

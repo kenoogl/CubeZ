@@ -312,10 +312,11 @@ int CZ::Evaluate(int argc, char **argv)
 
   // Apply BC
   bc_(size, &gc, P, pitch, origin, nID);
+  if ( !Comm_S(P, 1) ) return 0;
 
   // source term >> ソース項ゼロ
-  //src_dirichlet_(RHS, size, &gc, pitch, nID);
-  //if ( !Comm_S(RHS, 1) ) return 0;
+  bc_(size, &gc, RHS, pitch, origin, nID);
+  if ( !Comm_S(RHS, 1) ) return 0;
 
 
   init_mask_(MSK, size, innerFidx, &gc);

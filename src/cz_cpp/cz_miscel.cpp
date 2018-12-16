@@ -195,7 +195,6 @@ using namespace pm_lib;
   set_label("LSOR2SMA_kernel",  PerfMonitor::CALC, true);
   set_label("LSOR_MS_kernel",   PerfMonitor::CALC, true);
   set_label("TDMA_kernel",      PerfMonitor::CALC, true);
-  set_label("TDMA_rhs",         PerfMonitor::CALC, true);
   set_label("TDMA_readback",    PerfMonitor::CALC, true);
   set_label("TDMA_trsps",       PerfMonitor::CALC, true);
   set_label("LSOR_kernel",      PerfMonitor::CALC, true);
@@ -224,5 +223,4 @@ using namespace pm_lib;
   set_label("LJCB_MSD",         PerfMonitor::CALC, false);
   set_label("LJCB_MSE",         PerfMonitor::CALC, false);
   set_label("LJCB_MSF",         PerfMonitor::CALC, false);
-  set_label("Line_Method",      PerfMonitor::CALC, false);
 }

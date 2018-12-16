@@ -7,116 +7,6 @@
 !#
 !###################################################################################
 
-!> ********************************************************************
-!! @brief Boundary conditionをソース項に入れる
-!! @param [in]     sz    配列長
-!! @param [in]     g     ガイドセル長
-!! @param [in]     d     source
-!! @param [out]    dh    grid width
-!! @param [in]     org   起点
-!! @param [in]     nID   隣接ランクテーブル
-!! @note resは積算
-!!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
-!<
-subroutine bc_src (sz, g, d, dh, org, nID)
-implicit none
-include 'cz_fparam.fi'
-integer                                                :: i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  :: sz
-integer, dimension(0:5)                                :: nID
-real, dimension(3)                                     :: org
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) :: d
-real                                                   :: pi, x, y, dh
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-pi = 2.0*asin(1.0)
-
-! ZMINUS Dirichlet
-if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  d(i,j,1) =  sin(pi*x)*sin(pi*y)
-  d(i,j,2) = -sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! ZPLUS Dirichlet
-if( nID(K_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  d(i,j,kx)   =  sin(pi*x)*sin(pi*y)
-  d(i,j,kx-1) = -sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XMINUS
-if( nID(I_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  d(1,j,k) = 0.0 !p(2, j,k)
-  d(2,j,k) = 0.0 !p(2, j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XPLUS
-if( nID(I_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  d(ix,j,k) = 0.0 !p(ix-1,j,k)
-  d(ix-1,j,k) = 0.0 !p(ix-1,j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YMINUS
-if( nID(J_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  d(i,1, k) = 0.0 !p(i,2, k)
-  d(i,2, k) = 0.0 !p(i,2, k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YPLUS
-if( nID(J_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  d(i,jx,k) = 0.0 !p(i,jx-1,k)
-  d(i,jx-1,k) = 0.0 !p(i,jx-1,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-return
-end subroutine bc_src
 
 !> ********************************************************************
 !! @brief Boundary condition
@@ -467,119 +357,6 @@ end subroutine psor2sma_core
 
 
 !> ********************************************************************
-!! @brief Dirichlet source
-!! @param [in]     b     RHS vector
-!! @param [in]     sz    配列長
-!! @param [in]     g     ガイドセル長
-!! @param [out]    dh    grid width
-!! @param [in]     nID   隣接ランクテーブル
-!! @note resは積算
-!<
-subroutine src_dirichlet (b, sz, g, dh, nID)
-implicit none
-include 'cz_fparam.fi'
-integer                                                ::  i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  ::  sz
-integer, dimension(0:5)                                ::  nID
-real                                                   ::  dh, x, y, pi, dh2
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  b
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-pi = 2.0*asin(1.0)
-dh2 = dh*dh
-
-if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j = 1, jx
-do i = 1, ix
-  x = dh*real(i)
-  y = dh*real(j)
-  b(i,j,1 ) = - sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-if( nID(K_PLUS) < 0 ) then
-  !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-  do j = 1, jx
-  do i = 1, ix
-    x = dh*real(i)
-    y = dh*real(j)
-    b(i,j,kx) = - sin(pi*x)*sin(pi*y)
-  end do
-  end do
-  !$OMP END PARALLEL DO
-endif
-
-return
-end subroutine src_dirichlet
-
-
-!> ********************************************************************
-!! @brief Line SOR法
-!! @param [in,out] x    解ベクトル
-!! @param [in]     sz   配列長
-!! @param [in]     idx  インデクス範囲
-!! @param [in]     g    ガイドセル長
-!! @param [in]     omg  加速係数
-!! @param [in]     q    TDMAの解
-!! @param [out]    res  residual
-!! @param [in,out] flop flop count
-!<
-subroutine tdma_sor (x, sz, idx, g, omg, q, res, flop)
-implicit none
-integer                                                ::  i, j, k, g
-integer                                                ::  ist, jst, kst
-integer                                                ::  ied, jed, ked
-integer, dimension(3)                                  ::  sz
-integer, dimension(0:5)                                ::  idx
-double precision                                       ::  flop, de, res
-real                                                   ::  omg, dd, ss, dp, pp, pn
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  x, q
-
-ist = idx(0)
-ied = idx(1)
-jst = idx(2)
-jed = idx(3)
-kst = idx(4)
-ked = idx(5)
-dd = 6.0
-
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*26.0
-
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(+:res) &
-!$OMP PRIVATE(pp, ss, dp, de, pn)
-do k = kst, ked
-do j = jst, jed
-do i = ist, ied
-  pp = q(i,j,k) ! Jacobi的なので最新の値がよい
-  ss = q(i+1,j  ,k  ) &
-     + q(i-1,j  ,k  ) &
-     + x(i  ,j+1,k  ) &
-     + x(i  ,j-1,k  ) &
-     + x(i  ,j  ,k+1) &
-     + x(i  ,j  ,k-1)
-  dp = ( ss/dd - pp ) * omg
-  pn = pp + dp
-  x(i,j,k) = pn
-
-  de  = dble( - (ss - pn * dd) )
-  res = res + de*de
-end do
-end do
-end do
-!$OMP END PARALLEL DO
-
-return
-end subroutine tdma_sor
-
-
-!> ********************************************************************
 !! @brief TDMA
 !! @param [in]     nx   配列長
 !! @param [in,out] d    RHS vector -> 解ベクトル (in-place)
@@ -681,95 +458,6 @@ end subroutine tdma_1
 
 
 !> ********************************************************************
-!! @brief TDMAの右辺項
-!! @param [in,out] d    ソース項
-!! @param [in]     sz   配列長
-!! @param [in]     idx  インデクス範囲
-!! @param [in]     g    ガイドセル長
-!! @param [in]     x    解ベクトル
-!! @param [in,out] flop flop count
-!<
-subroutine tdma_rhs (d, sz, idx, g, x, flop)
-implicit none
-integer                                                ::  i, j, k, g
-integer                                                ::  ist, jst, kst
-integer                                                ::  ied, jed, ked
-integer, dimension(3)                                  ::  sz
-integer, dimension(0:5)                                ::  idx
-double precision                                       ::  flop
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x
-real                                                   ::  r
-
-ist = idx(0)
-ied = idx(1)
-jst = idx(2)
-jed = idx(3)
-kst = idx(4)
-ked = idx(5)
-r = 1.0/6.0
-
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*4.0
-
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k = kst, ked
-do j = jst, jed
-do i = ist, ied
-  d(i,j,k) = ( x(i  ,j+1,k  ) &
-           +   x(i  ,j-1,k  ) &
-           +   x(i  ,j  ,k+1) &
-           +   x(i  ,j  ,k-1) ) * r
-end do
-end do
-end do
-!$OMP END PARALLEL DO
-
-return
-end subroutine tdma_rhs
-
-
-!> ********************************************************************
-!! @brief Line SOR法
-!! @param [in,out] d    RHS / X
-!! @param [in]     sz   配列長
-!! @param [in]     idx  インデクス範囲
-!! @param [in]     g    ガイドセル長
-!! @param [in]     w    work
-!! @param [in]     cf   coef
-!! @param [in,out] flop flop count
-!<
-subroutine tdma_wrap (d, sz, idx, g, w, cf, flop)
-implicit none
-integer                                                ::  i, j, k, g, nn
-integer                                                ::  ist, jst, kst
-integer                                                ::  ied, jed, ked
-integer, dimension(3)                                  ::  sz
-integer, dimension(0:5)                                ::  idx
-double precision                                       ::  flop, dummy
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, w
-real, dimension(3)                                     ::  cf
-
-ist = idx(0)
-ied = idx(1)
-jst = idx(2)
-jed = idx(3)
-kst = idx(4)
-ked = idx(5)
-nn = ied - ist + 1
-
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*16.0
-
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k = kst, ked
-do j = jst, jed
-  call tdma_1(nn, d(ist,j,k), cf, w(ist,j,k), dummy)
-end do
-end do
-!$OMP END PARALLEL DO
-
-return
-end subroutine tdma_wrap
-
-!> ********************************************************************
 !! @brief lsor
 !! @param [in,out] d    ソース項
 !! @param [in]     sz   配列長
@@ -857,11 +545,12 @@ end subroutine tdma_lsor2sma
 !! @param [in]     a    coef
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in]     omg  加速係数
 !! @param [out]    res  残差
 !! @param [in,out] flop flop count
 !<
-subroutine tdma_lsor (d, sz, idx, g, x, w, a, b, c, omg, res, flop)
+subroutine tdma_lsor (d, sz, idx, g, x, w, a, b, c, rhs, omg, res, flop)
 implicit none
 integer                                                ::  i, j, k, g, nn
 integer                                                ::  ist, jst, kst
@@ -870,7 +559,7 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop, dummy, res
 real                                                   ::  omg, dp, pp, pn
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w, rhs
 real                                                   ::  r
 real, dimension(1-g:sz(1)+g)                           ::  a, b, c
 
@@ -896,7 +585,7 @@ do j = jst, jed
     d(i,j,k) = ( x(i  ,j+1,k  ) &
              +   x(i  ,j-1,k  ) &
              +   x(i  ,j  ,k+1) &
-             +   x(i  ,j  ,k-1) ) * r
+             +   x(i  ,j  ,k-1) ) * r + rhs(i,j,k)
   end do
 
   call tdma_0(nn, d(ist,j,k), a(ist), b(ist), c(ist), w(ist,j,k))
@@ -930,11 +619,12 @@ end subroutine tdma_lsor
 !! @param [in]     a    coef
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in]     omg  加速係数
 !! @param [out]    res  残差
 !! @param [in,out] flop flop count
 !<
-subroutine tdma_lsor_b (d, sz, idx, g, x, w, a, b, c, omg, res, flop)
+subroutine tdma_lsor_b (d, sz, idx, g, x, w, a, b, c, rhs, omg, res, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -943,7 +633,7 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop, res
 real                                                   ::  omg, dp, pp, pn
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w, rhs
 real                                                   ::  r, e, y
 real, dimension(1-g:sz(1)+g)                           ::  a, b, c
 
@@ -956,7 +646,7 @@ ked = idx(5)
 
 r = 1.0/6.0
 
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*(4.0+16.0+5.0) &
+flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*(5.0+16.0+5.0) &
             + dble((ked-kst+1)*(jed-jst+1)) * 10.0;
 
 !$OMP PARALLEL DO SCHEDULE(static) &
@@ -969,7 +659,7 @@ do j = jst, jed
     d(i,j,k) = ( x(i  ,j-1,k  ) &
              +   x(i  ,j+1,k  ) &
              +   x(i  ,j  ,k-1) &
-             +   x(i  ,j  ,k+1) ) * r
+             +   x(i  ,j  ,k+1) ) * r + rhs(i,j,k)
   end do
 
   ! TDMA
@@ -1018,13 +708,12 @@ end subroutine tdma_lsor_b
 !! @param [in]     a    coef
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in]     omg  加速係数
 !! @param [out]    res  残差
-!! @param [in]     ofst 開始点補正
-!! @param [in]     color グループ
 !! @param [in,out] flop flop count
 !<
-subroutine tdma_lsor_c (d, sz, idx, g, x, w, a, b, c, omg, res, flop)
+subroutine tdma_lsor_c (d, sz, idx, g, x, w, a, b, c, rhs, omg, res, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -1033,7 +722,7 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop, res
 real                                                   ::  omg, dp, pp, pn
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  d, x, w, rhs
 real                                                   ::  r, e, y
 real, dimension(1-g:sz(3)+g)                           ::  a, b, c
 
@@ -1061,10 +750,10 @@ do i = ist, ied
      d(i,j,k) = ( x(i-1,j  ,k  ) &
               +   x(i+1,j  ,k  ) &
               +   x(i  ,j-1,k  ) &
-              +   x(i  ,j+1,k  ) ) * r
+              +   x(i  ,j+1,k  ) ) * r + rhs(i,j,k)
   end do
-  d(i,j,kst) = d(i,j,kst) + d(i,j,kst-1)*r
-  d(i,j,ked) = d(i,j,ked) + d(i,j,ked+1)*r
+  d(i,j,kst) = d(i,j,kst) + rhs(i,j,kst-1)*r
+  d(i,j,ked) = d(i,j,ked) + rhs(i,j,ked+1)*r
 
   ! TDMA
   d(i,j,kst) = d(i,j,kst) * y
@@ -1112,12 +801,13 @@ end subroutine tdma_lsor_c
 !! @param [in]     a    coef
 !! @param [in]     b    coef
 !! @param [in]     c    coef
+!! @param [in]     rhs  オリジナルの線形方程式の右辺項
 !! @param [in]     m    mask
 !! @param [in]     omg  加速係数
 !! @param [out]    res  残差
 !! @param [in,out] flop flop count
 !<
-subroutine tdma_ljcb_e (d, sz, idx, g, x, w, a, b, c, m, omg, res, flop)
+subroutine tdma_ljcb_e (d, sz, idx, g, x, w, a, b, c, rhs, m, omg, res, flop)
 implicit none
 integer                                                ::  i, k, g, js
 integer                                                ::  ist, jst, kst, st
@@ -1126,10 +816,10 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop, res
 real                                                   ::  omg, dp, pp, pn
-real, dimension((sz(1)+2*g)*(sz(2)+2*g), 1-g:sz(3)+g)  ::  d, x, w, m
+real, dimension((sz(1)+2*g)*(sz(2)+2*g), 1-g:sz(3)+g)  ::  d, x, w, m, rhs
 real                                                   ::  r, e, y ,z
 real, dimension(1-g:sz(3)+g)                           ::  a, b, c
-!dir$ assume_aligned d:64,x:64,w:64,m:64,a:64,b:64,c:64
+!dir$ assume_aligned d:64,x:64,w:64,m:64,a:64,b:64,c:64,rhs:64
 
 ist = idx(0)
 ied = idx(1)
@@ -1144,7 +834,7 @@ ed  = ied+g + js * (jed+g-1)
 
 r = 1.0/6.0
 
-flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*(4.0+16.0+5.0) &
+flop = flop + dble((ied-ist+1)*(jed-jst+1)*(ked-kst+1))*(5.0+16.0+5.0) &
             + dble((ied-ist+1)*(jed-jst+1)) * 6.0;
 
 y = 1.0 / b(kst)
@@ -1154,10 +844,10 @@ z = c(kst) * y
 do k = kst, ked
 ! !dir$ simd vectorlength(16)
 do i = st, ed
-  d(i,k) = ( x(i-1 ,k  ) &
+  d(i,k) =(( x(i-1 ,k  ) &
          +   x(i+1 ,k  ) &
          +   x(i-js,k  ) &
-         +   x(i+js,k  ) ) * r * m(i,k)
+         +   x(i+js,k  ) ) * r + rhs(i,k) )* m(i,k)
 end do
 end do
 !$OMP END PARALLEL DO
@@ -1166,8 +856,8 @@ end do
 
 !$OMP PARALLEL DO
 do i = st, ed
-  d(i,kst) = ( (d(i,kst) + d(i,kst-1)*r) * m(i,kst) ) * y
-  d(i,ked) = (d(i,ked) + d(i,ked+1)*r) * m(i,ked)
+  d(i,kst) = ( (d(i,kst) + rhs(i,kst-1)*r) * m(i,kst) ) * y
+  d(i,ked) = (  d(i,ked) + rhs(i,ked+1)*r) * m(i,ked)
 
   ! TDMA
   !d(i,kst) = d(i,kst) * y
