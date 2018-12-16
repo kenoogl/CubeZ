@@ -1,10 +1,16 @@
 # CubeZ
 
 ## todo
-BiCGSTABのノイマン条件が入らない？
+BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入できない
+現状はディリクレ条件でのテストのみ
 
 
 ## REVISION HISTORY
+
+---
+- 2018-11-13 Version 0.5.3
+  - LSOR
+  - test2 マスク付き、D, N境界条件
 
 ---
 - 2018-11-13 Version 0.5.2

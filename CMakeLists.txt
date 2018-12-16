@@ -66,8 +66,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.5.2")
-set(LIB_REVISION "20181116_0930")
+set(PROJECT_VERSION "0.5.3")
+set(LIB_REVISION "20181123_1030")
 #######
 
 
@@ -221,6 +221,12 @@ install(FILES  ChangeLog.md
                ${PROJECT_BINARY_DIR}/CMakeCache.txt
         DESTINATION share)
 
+
+#######
+# Example
+#######
+
+add_subdirectory(example/tri)
 
 
 #######

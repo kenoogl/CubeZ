@@ -62,7 +62,55 @@ void src_dirichlet_ (REAL_TYPE* b,
                      REAL_TYPE* dh,
                      int* nID);
 
+void tdma_0_ (int* nx,
+              REAL_TYPE* d,
+              REAL_TYPE* a,
+              REAL_TYPE* b,
+              REAL_TYPE* c,
+              REAL_TYPE* w);
 
+void tdma_1_ (int* nx,
+              REAL_TYPE* d,
+              REAL_TYPE* cf,
+              REAL_TYPE* w,
+              double* flop);
+
+void tdma_rhs_ (REAL_TYPE* q,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                double* flop);
+
+void tdma_wrap_ (REAL_TYPE* d,
+                 int* sz,
+                 int* idx,
+                 int* g,
+                 REAL_TYPE* w,
+                 REAL_TYPE* cf,
+                 double* flop);
+
+void tdma_sor_(REAL_TYPE* x,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* omg,
+              REAL_TYPE* q,
+              double* res,
+              double* flop);
+
+void tdma_lsor2sma_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* cf,
+                REAL_TYPE* omg,
+                double* res,
+                int* ip,
+                int* color,
+                double* flop);
 
 
 // cz_blas.f90

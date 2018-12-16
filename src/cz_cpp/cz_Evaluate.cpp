@@ -200,6 +200,11 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "pbicgstab.txt");
   }
 
+  else if ( !strcasecmp(q, "ljacobi") ) {
+    ls_type = LS_LJACOBI;
+    strcpy(fname, "ljacobi.txt");
+  }
+
   else{
     printf("Invalid solver\n");
     exit(0);
@@ -277,7 +282,7 @@ int CZ::Evaluate(int argc, char **argv)
   bc_(size, &gc, P, pitch, origin, nID);
 
   // source term
-  src_dirichlet_(RHS, size, &gc, pitch, nID);
+  //src_dirichlet_(RHS, size, &gc, pitch, nID);
 
   if ( !Comm_S(RHS, 1) ) return 0;
 
@@ -298,6 +303,10 @@ int CZ::Evaluate(int argc, char **argv)
   double  res=0.0;
   int itr=0;
   double flop=0.0; // dummy
+
+  TIMING_start("BoundaryCondition");
+  bc_(size, &gc, P, pitch, origin, nID);
+  TIMING_stop("BoundaryCondition");
 
   switch (ls_type)
   {
@@ -323,6 +332,18 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_start("PBiCGSTAB");
       if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop)) ) return 0;
       TIMING_stop("PBiCGSTAB", flop);
+      break;
+
+    case LS_LSOR:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+
+    case LS_LJACOBI:
+      TIMING_start("LJacobi");
+      if ( 0 == (itr=LJacobi(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJacobi", flop);
       break;
 
     default:

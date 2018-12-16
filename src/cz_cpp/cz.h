@@ -132,6 +132,26 @@ public:
       debug_mode = m_mode;
   }
 
+  void pcr(int nx, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* b, REAL_TYPE* c, REAL_TYPE* w);
+
+  void tdma(int nx,
+            REAL_TYPE* d,
+            REAL_TYPE* a,
+            REAL_TYPE* b,
+            REAL_TYPE* c,
+            REAL_TYPE* w);
+
+  // @param [in] n 方程式の次元数
+  // @retval nを超える最小の2べきの乗数
+  int getNumStage(int n) {
+    int b = 1;
+    for (int i=1; i<16; i++) {
+      b *= 2;
+      if (n<b) return i;
+    }
+    return -1;
+  }
+
 
 
 private:
@@ -175,6 +195,18 @@ private:
                 REAL_TYPE* B,
                 double& flop);
 
+  int LSOR  (double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itrMax,
+             double& flop);
+
+  int LJacobi(double& res,
+              REAL_TYPE* X,
+              REAL_TYPE* B,
+              const int itr_max,
+              double& flop);
+
   double Fdot1(REAL_TYPE* x, double& flop);
 
   double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
@@ -182,6 +214,7 @@ private:
   void Preconditioner(REAL_TYPE* xx,
                       REAL_TYPE* bb,
                       double& flop);
+
 
 
   // タイミング測定区間にラベルを与えるラッパー

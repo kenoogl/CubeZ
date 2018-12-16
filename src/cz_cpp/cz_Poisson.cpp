@@ -378,9 +378,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      res = Fdot1(pcg_r, flop_count);
      flop += flop_count;
 
-     TIMING_start("BoundaryCondition");
-     bc_(size, &gc, X, pitch, origin, nID);
-     TIMING_stop("BoundaryCondition");
 
      if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
 
@@ -395,5 +392,149 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      rho_old = rho;
    } // itr
 
+   TIMING_start("BoundaryCondition");
+   bc_(size, &gc, X, pitch, origin, nID);
+   TIMING_stop("BoundaryCondition");
+
    return itr;
  }
+
+
+ /* #################################################################
+ * @brief Line Jacobi反復
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+ int CZ::LJacobi(double& res, REAL_TYPE* X, REAL_TYPE* B,
+              const int itr_max, double& flop)
+  {
+    int itr;
+    double flop_count = 0.0;
+    int gc = GUIDE;
+    REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+
+    REAL_TYPE* q;  // RHS
+    REAL_TYPE* w;  // work
+
+    if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
+    if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+    TIMING_start("BoundaryCondition");
+    bc_(size, &gc, q, pitch, origin, nID);
+    TIMING_stop("BoundaryCondition");
+
+
+    for (itr=1; itr<=itr_max; itr++)
+    {
+      res = 0.0;
+
+      TIMING_start("Line_Method");
+
+      TIMING_start("TDMA_rhs");
+      flop_count = 0.0;
+      tdma_rhs_(q, size, innerFidx, &gc, X, &flop_count);
+      TIMING_stop("TDMA_rhs", flop_count);
+
+      TIMING_start("TDMA_kernel");
+      flop_count = 0.0;
+      tdma_wrap_(q, size, innerFidx, &gc, w, mat, &flop_count);
+      TIMING_stop("TDMA_kernel", flop_count);
+
+      TIMING_start("LJacobi_kernel");
+      flop_count = 0.0;
+      tdma_sor_(X, size, innerFidx, &gc, &ac1, q, &res, &flop_count);
+      TIMING_stop("LJacobi_kernel", flop_count);
+
+      if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ fprintf(fph, "%6d  %13.6e\n", itr, res);
+
+      // BCはq[]に与えられているので、不要
+
+      TIMING_stop("Line_Method");
+
+      if ( res < eps ) break;
+
+    } // Iteration
+
+    if (q) delete [] q;
+    if (w) delete [] w;
+
+    return itr;
+  }
+
+  /* #################################################################
+  * @brief Line SOR反復
+  * @param [in,out] res    残差
+  * @param [in,out] X      解ベクトル
+  * @param [in]     B      RHSベクトル
+  * @param [in]     itr_max 最大反復数
+  * @param [in]     flop   浮動小数点演算数
+  */
+  int CZ::LSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
+               const int itr_max, double& flop)
+   {
+     int itr;
+     double flop_count = 0.0;
+     int gc = GUIDE;
+     REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
+
+     REAL_TYPE* q;  // RHS
+     REAL_TYPE* w;  // work
+
+     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+
+     TIMING_start("BoundaryCondition");
+     bc_(size, &gc, q, pitch, origin, nID);
+     TIMING_stop("BoundaryCondition");
+
+
+     for (itr=1; itr<=itr_max; itr++)
+     {
+       res = 0.0;
+
+       int ip=0;
+       if ( numProc > 1 )
+       {
+         ip = (head[1] + head[2]+1) % 2;
+       }
+       else
+       {
+         ip = 0;
+       }
+
+
+       TIMING_start("LSOR2SMA_kernel");
+       flop_count = 0.0;
+       for (int color=0; color<2; color++)
+       {
+         tdma_lsor2sma_(q, size, innerFidx, &gc, X, w, mat, &ac1, &res, &ip, &color, &flop_count);
+         if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+       }
+       TIMING_stop("LSOR2SMA_kernel", flop_count);
+
+       if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+
+       res *= res_normal;
+       res = sqrt(res);
+       Hostonly_ fprintf(fph, "%6d  %13.6e\n", itr, res);
+
+       // BCはq[]に与えられているので、不要
+
+
+       if ( res < eps ) break;
+
+     } // Iteration
+
+     if (q) delete [] q;
+     if (w) delete [] w;
+
+     return itr;
+   }

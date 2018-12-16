@@ -7,9 +7,6 @@
 #
 ###################################################################################
 
-add_subdirectory(cz_cpp)
-add_subdirectory(cz_f90)
-
 include_directories(
        ${PROJECT_BINARY_DIR}/src/cz_cpp  # czVersion.h
        ${PROJECT_SOURCE_DIR}/src/cz_cpp
@@ -20,7 +17,6 @@ link_directories(
        ${PROJECT_BINARY_DIR}/src/cz_cpp
        ${PROJECT_BINARY_DIR}/src/cz_f90
 )
-
 
 IF(with_PM)
   include_directories(${PM_INC})
@@ -39,20 +35,13 @@ if(with_CBR)
 endif()
 
 
-set(cz_src main.cpp)
+add_executable("test1" "test1.cpp")
+target_link_libraries("test1" CZ FCORE)
 
-if(with_MPI)
-  set(cz_target "cz-mpi")
-else()
-  set(cz_target "cz")
-endif()
+add_executable("test2" "test2.cpp")
+target_link_libraries("test2" CZ FCORE)
 
-
-
-add_executable(${cz_target} ${cz_src})
-target_link_libraries(${cz_target} CZ FCORE)
-
-install(TARGETS ${cz_target} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
+add_executable("test3" "test3.cpp")
+target_link_libraries("test3" CZ FCORE)
 
 ###

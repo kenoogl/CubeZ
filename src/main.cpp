@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   if (argc != 6 && argc != 7 && argc != 9 && argc != 10) {
     if ( myRank == 0) {
       printf("\tUsage : ./cz-mpi gsz_x, gsz_y, gsz_z, linear_solver, IterationMax, [precond] [gdv_x, gdv_y, gdv_z]\n");
-      printf("\t\tlinear_solver = {jacobi | psor | sor2sma | pbicgstab | lsor}\n");
+      printf("\t\tlinear_solver = {jacobi | psor | sor2sma | pbicgstab | lsor | ljacobi}\n");
       printf("\t\tprecond = {none | jacobi | psor | sor2sma}\n\n");
       printf("\t$ ./cz-mpi 64 64 64 jacobi 4000 2 2 1\n");
       printf("\t$ ./cz-mpi 64 64 64 psor 4000\n");

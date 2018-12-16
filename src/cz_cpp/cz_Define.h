@@ -61,7 +61,8 @@ enum LinearSolver
   LS_SOR2SMA,
   LS_BICGSTAB,
   LS_JACOBI,
-  LS_LSOR
+  LS_LSOR,
+  LS_LJACOBI
 };
 
 
