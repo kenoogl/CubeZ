@@ -20,15 +20,25 @@
 #include <CB_Define.h>
 
 #ifdef DISABLE_MPI
+  typedef int MPI_Op;
+  typedef int MPI_Comm;
+  typedef int MPI_Request;
+  typedef int MPI_Datatype;
+
   #define MPI_COMM_WORLD 0
   #define MPI_INT  1
   #define MPI_CHAR 2
   #define MPI_SUCCESS true
   #define MPI_MAX 100
   #define MPI_MIN 101
-  #define MPI_SUM 102
-  typedef int MPI_Comm;
-  typedef int MPI_Request;
+  #define MPI_SUM (MPI_Op)(0x58000003) // defined in PMlib
+
+  inline int MPI_Allreduce(void *sendbuf, void *recvbuf, int count,
+                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+  {
+    return 0;
+  }
+
 #endif
 
 #define GUIDE 2  ///< ガイドセル数
@@ -70,7 +80,8 @@ enum LinearSolver
   LS_LSORMSB,
   LS_LSORMSC,
   LS_LJCBMSD,
-  LS_LJCBMSE
+  LS_LJCBMSE,
+  LS_LJCBMSF
 };
 
 

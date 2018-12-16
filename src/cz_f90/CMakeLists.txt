@@ -15,6 +15,7 @@ set(cz_files
        cz_lsolver.f90
        cz_blas.f90
        cz_utility.f90
+       cz_ljcb.f90
 )
 
 add_library(FCORE STATIC ${cz_files})

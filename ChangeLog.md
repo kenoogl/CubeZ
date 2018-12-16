@@ -8,6 +8,19 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-13 Version 0.6.4
+  - SIMD test
+
+---
+- 2018-12-10 Version 0.6.3
+  - Serial 対応
+  - Ljcb分割 MSF
+
+---
+- 2018-12-09 Version 0.6.2
+  - SKL オプション
+
+---
 - 2018-11-23 Version 0.6.1
   - LSORのk-loopをTDMA
 

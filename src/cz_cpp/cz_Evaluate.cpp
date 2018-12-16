@@ -232,6 +232,11 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "ljcbmse.txt");
   }
 
+  else if ( !strcasecmp(q, "ljcbmsf") ) {
+    ls_type = LS_LJCBMSF;
+    strcpy(fname, "ljcbmsf.txt");
+  }
+
   else{
     printf("Invalid solver\n");
     exit(0);
@@ -393,6 +398,12 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_start("LJCB_MSE");
       if ( 0 == (itr=LJCB_MSE(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LJCB_MSE", flop);
+      break;
+
+    case LS_LJCBMSF:
+      TIMING_start("LJCB_MSF");
+      if ( 0 == (itr=LJCB_MSF(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_MSF", flop);
       break;
 
     default:

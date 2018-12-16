@@ -54,4 +54,8 @@ set(tgt5 "test5")
 add_executable(${tgt5} "${tgt5}.cpp")
 target_link_libraries(${tgt5} CZ FCORE)
 
+set(tgt6 "test6")
+add_executable(${tgt6} "${tgt6}.cpp")
+target_link_libraries(${tgt6} CZ)
+
 ###

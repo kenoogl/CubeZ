@@ -337,6 +337,14 @@ private:
                double& flop,
                bool converge_check=true);
 
+  int LJCB_MSF(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop, 
+               bool converge_check=true);
+
+
   double Fdot1(REAL_TYPE* x, double& flop);
 
   double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);

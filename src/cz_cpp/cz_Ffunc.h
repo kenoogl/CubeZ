@@ -158,19 +158,6 @@ void tdma_lsor_c_(REAL_TYPE* d,
                 double* res,
                 double* flop);
 
-void tdma_ljcb_d_(REAL_TYPE* d,
-                int* sz,
-                int* idx,
-                int* g,
-                REAL_TYPE* x,
-                REAL_TYPE* w,
-                REAL_TYPE* a,
-                REAL_TYPE* b,
-                REAL_TYPE* c,
-                REAL_TYPE* omg,
-                double* res,
-                double* flop);
-
 void tdma_ljcb_e_(REAL_TYPE* d,
                 int* sz,
                 int* idx,
@@ -184,6 +171,62 @@ void tdma_ljcb_e_(REAL_TYPE* d,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
+
+// cz_ljcb.f90
+void tdma_ljcb_d_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void ljcb_f0_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* x,
+              double* flop);
+
+void ljcb_f1_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              REAL_TYPE* b,
+              REAL_TYPE* c,
+              double* flop);
+
+void ljcb_f2_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* b,
+              REAL_TYPE* c,
+              double* flop);
+
+void ljcb_f3_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              double* flop);
+
+void ljcb_f4_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* x, 
+              REAL_TYPE* omg,
+              double* res,
+              double* flop);
 
 // cz_blas.f90
 void init_mask_     (REAL_TYPE* x,

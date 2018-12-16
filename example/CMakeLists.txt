@@ -10,8 +10,5 @@
 # Install files
 
 install(FILES
-        test.tp
-        terrain.tp
-        isopeak.tp
         DESTINATION example
 )

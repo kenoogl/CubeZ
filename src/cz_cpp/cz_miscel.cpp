@@ -200,6 +200,11 @@ using namespace pm_lib;
   set_label("TDMA_trsps",       PerfMonitor::CALC, true);
   set_label("LSOR_kernel",      PerfMonitor::CALC, true);
   set_label("LJCB_MS_kernel",   PerfMonitor::CALC, true);
+  set_label("LJCB_f0_kernel",   PerfMonitor::CALC, true);
+  set_label("LJCB_f1_kernel",   PerfMonitor::CALC, true);
+  set_label("LJCB_f2_kernel",   PerfMonitor::CALC, true);
+  set_label("LJCB_f3_kernel",   PerfMonitor::CALC, true);
+  set_label("LJCB_f4_kernel",   PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
@@ -218,5 +223,6 @@ using namespace pm_lib;
   set_label("LSOR_MSC",         PerfMonitor::CALC, false);
   set_label("LJCB_MSD",         PerfMonitor::CALC, false);
   set_label("LJCB_MSE",         PerfMonitor::CALC, false);
+  set_label("LJCB_MSF",         PerfMonitor::CALC, false);
   set_label("Line_Method",      PerfMonitor::CALC, false);
 }

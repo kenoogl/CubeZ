@@ -940,3 +940,105 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      return itr;
    }
+
+
+   /* #################################################################
+   * @brief Line JACOBI Multi System
+   * @param [in,out] res    残差
+   * @param [in,out] X      解ベクトル
+   * @param [in]     B      RHSベクトル
+   * @param [in]     itr_max 最大反復数
+   * @param [in]     flop   浮動小数点演算数
+   */
+   int CZ::LJCB_MSF(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+   {
+     int itr;
+     double flop_count = 0.0;
+     int gc = GUIDE;
+
+     REAL_TYPE* q;  // RHS
+     REAL_TYPE* w;  // work
+     REAL_TYPE* a;
+     REAL_TYPE* b;
+     REAL_TYPE* c;
+
+     if( (q = Alloc_Real_S3D(size)) == NULL ) return 0;
+     if( (w = Alloc_Real_S3D(size)) == NULL ) return 0;
+     a = new REAL_TYPE [size[2]+2*gc];
+     b = new REAL_TYPE [size[2]+2*gc];
+     c = new REAL_TYPE [size[2]+2*gc];
+
+     for (int i=0; i<size[2]+2*gc; i++) {
+       a[i] = 0.0;
+       b[i] = 0.0;
+       c[i] = 0.0;
+     }
+     for (int i=3; i<=size[2]-1; i++) {
+       a[i+gc-1] = -1.0/6.0;
+     }
+     for (int i=2; i<=size[2]-1; i++) {
+       b[i+gc-1] = 1.0;
+     }
+     for (int i=2; i<=size[2]-2; i++) {
+       c[i+gc-1] = -1.0/6.0;
+     }
+
+     TIMING_start("BoundaryCondition");
+     bc_(size, &gc, q, pitch, origin, nID);
+     TIMING_stop("BoundaryCondition");
+
+
+     for (itr=1; itr<=itr_max; itr++)
+     {
+       res = 0.0;
+
+       TIMING_start("LJCB_f0_kernel");
+       flop_count = 0.0;
+       ljcb_f0_(q, size, innerFidx, &gc, X, &flop_count);
+       TIMING_stop("LJCB_f0_kernel", flop_count);
+
+       TIMING_start("LJCB_f1_kernel");
+       flop_count = 0.0;
+       ljcb_f1_(q, size, innerFidx, &gc, w, b, c, &flop_count);
+       TIMING_stop("LJCB_f1_kernel", flop_count);
+
+       TIMING_start("LJCB_f2_kernel");
+       flop_count = 0.0;
+       ljcb_f2_(q, size, innerFidx, &gc, w, a, b, c, &flop_count);
+       TIMING_stop("LJCB_f2_kernel", flop_count);
+
+       TIMING_start("LJCB_f3_kernel");
+       flop_count = 0.0;
+       ljcb_f3_(q, size, innerFidx, &gc, w, &flop_count);
+       TIMING_stop("LJCB_f3_kernel", flop_count);
+
+       TIMING_start("LJCB_f4_kernel");
+       flop_count = 0.0;
+       ljcb_f4_(q, size, innerFidx, &gc, X, &ac1, &res, &flop_count);
+       TIMING_stop("LJCB_f4_kernel", flop_count);
+
+
+       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+
+       if ( converge_check ) {
+         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+
+         res *= res_normal;
+         res = sqrt(res);
+         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+
+         // BCはq[]に与えられているので、不要
+         if ( res < eps ) break;
+       }
+
+     } // Iteration
+
+     if (q) delete [] q;
+     if (w) delete [] w;
+     if (a) delete [] a;
+     if (b) delete [] b;
+     if (c) delete [] c;
+
+     return itr;
+   }
