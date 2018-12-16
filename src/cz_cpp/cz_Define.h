@@ -48,6 +48,10 @@
 #endif
 
 
+// PCRのアクセス
+#define _IDX_(_I,_SS)  ( _I+_SS ) // SSは最大ストライド幅
+
+
 // PMlibの登録ラベル個数
 #define PM_NUM_MAX 100
 

@@ -34,14 +34,24 @@ if(with_CBR)
   link_directories(${CBR_LIB})
 endif()
 
+set(tgt1 "test1")
+add_executable(${tgt1} "${tgt1}.cpp")
+target_link_libraries(${tgt1} CZ FCORE)
 
-add_executable("test1" "test1.cpp")
-target_link_libraries("test1" CZ FCORE)
+set(tgt2 "test2")
+add_executable(${tgt2} "${tgt2}.cpp")
+target_link_libraries(${tgt2} CZ FCORE)
 
-add_executable("test2" "test2.cpp")
-target_link_libraries("test2" CZ FCORE)
+set(tgt3 "test3")
+add_executable(${tgt3} "${tgt3}.cpp")
+target_link_libraries(${tgt3} CZ FCORE)
 
-add_executable("test3" "test3.cpp")
-target_link_libraries("test3" CZ FCORE)
+set(tgt4 "test4")
+add_executable(${tgt4} "${tgt4}.cpp")
+target_link_libraries(${tgt4} CZ FCORE)
+
+set(tgt5 "test5")
+add_executable(${tgt5} "${tgt5}.cpp")
+target_link_libraries(${tgt5} CZ FCORE)
 
 ###

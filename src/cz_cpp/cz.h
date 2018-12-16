@@ -132,7 +132,14 @@ public:
       debug_mode = m_mode;
   }
 
-  void pcr(int nx, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* b, REAL_TYPE* c, REAL_TYPE* w);
+  void pcr(const int nx,
+           const int pn,
+           REAL_TYPE* d,
+           REAL_TYPE* a,
+           REAL_TYPE* c,
+           REAL_TYPE* d1,
+           REAL_TYPE* a1,
+           REAL_TYPE* c1);
 
   void tdma(int nx,
             REAL_TYPE* d,
@@ -142,19 +149,63 @@ public:
             REAL_TYPE* w);
 
   // @param [in] n 方程式の次元数
-  // @retval nを超える最小の2べきの乗数
+  // @retval nを超える最小の2べき数の乗数
   int getNumStage(int n) {
     int b = 1;
-    for (int i=1; i<16; i++) {
+    for (int i=1; i<20; i++) { // とりあえず20乗まで試しておけば十分
       b *= 2;
       if (n<b) return i;
     }
     return -1;
   }
 
+  void printA(int nx, int ss, REAL_TYPE* a, char* s);
+  void printB(int nx, REAL_TYPE* a, char* s);
 
+  void pcr2(const int nx,
+           const int pn,
+           REAL_TYPE* d,
+           REAL_TYPE* a,
+           REAL_TYPE* c);
 
 private:
+  inline void matx2(REAL_TYPE* d, REAL_TYPE a, REAL_TYPE c)
+  {
+    /*   Ax = d    8+8 fp
+
+         A=|1 c|   x={x1, x2}, d={d1, d2}
+           |a 1| ,
+     */
+
+     REAL_TYPE J = 1.0 / (1.0 - a * c);
+     REAL_TYPE d1 = d[0];
+     REAL_TYPE d2 = d[1];
+     d[0] = (d1 - c * d2) * J;
+     d[1] = (d2 - a * d1) * J;
+  }
+
+  inline void matx3(REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c)
+  {
+    /*  |  1 c1  0 |  8+24 fp
+        | a2  1 c2 |
+        |  0 a3  1 |
+    */
+
+     REAL_TYPE a2 = a[1];
+     REAL_TYPE a3 = a[2];
+     REAL_TYPE c1 = c[0];
+     REAL_TYPE c2 = c[1];
+     REAL_TYPE d1 = d[0];
+     REAL_TYPE d2 = d[1];
+     REAL_TYPE d3 = d[2];
+     REAL_TYPE J = 1.0 / (1.0 - c2 * a3 - c1 * a2);
+     d[0] = ( d1 * (3.0-c2*a3) - c1*d2 ) * J;
+     d[1] = (1.0 - d1*a2 + 2.0*d2 - c2*d3) * J;
+     d[2] = (1.0 + 2.0*d3 - a3*d2 - a2*c1) * J;
+  }
+
+
+
   bool Comm_S(REAL_TYPE* sa, const int gc, const string label="");
   bool Comm_V(REAL_TYPE* va, const int gc, const string label="");
   bool Comm_SUM_1(int* var, const string label="");
@@ -168,6 +219,38 @@ private:
 
   // 計算する内点のインデクス範囲と点数
   double range_inner_index();
+
+  void pcr_kernel_1(const int nx,
+                    const int s,
+                    const int ss,
+                    REAL_TYPE* d,
+                    REAL_TYPE* a,
+                    REAL_TYPE* c);
+
+  void pcr_kernel_2(const int nx,
+                    const int s,
+                    const int ss,
+                    const int ip,
+                    REAL_TYPE* d,
+                    REAL_TYPE* a,
+                    REAL_TYPE* c);
+
+  void pcr_kernel_3(const int nx,
+                    const int s,
+                    const int ss,
+                    REAL_TYPE* d,
+                    REAL_TYPE* a,
+                    REAL_TYPE* c);
+
+
+  void pcr_merge(const int nx,
+                 const int ss,
+                 REAL_TYPE* d,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* d1,
+                 REAL_TYPE* a1,
+                 REAL_TYPE* c1);
 
   int JACOBI(double& res,
              REAL_TYPE* X,
