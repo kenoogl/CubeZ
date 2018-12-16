@@ -74,6 +74,8 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
+  int NumSW;               ///< SIMD幅
+  int NumSB;               ///< SIMD body loopの回数
 
 
   // PMlib
@@ -122,6 +124,8 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
+    NumSW = 0;
+    NumSB = 0;
 
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -158,6 +162,13 @@ public:
            REAL_TYPE* c1);
 
   void tdma(int nx,
+            REAL_TYPE* d,
+            REAL_TYPE* a,
+            REAL_TYPE* b,
+            REAL_TYPE* c,
+            REAL_TYPE* w);
+  
+  void tdma2(int nx,
             REAL_TYPE* d,
             REAL_TYPE* a,
             REAL_TYPE* b,

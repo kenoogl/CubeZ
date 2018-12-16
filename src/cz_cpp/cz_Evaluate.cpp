@@ -266,18 +266,18 @@ int CZ::Evaluate(int argc, char **argv)
   // 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
 
-    int simd_len= ALIGN / sizeof(REAL_TYPE);
-    int tmp = (size[2] - 2*(simd_len-GUIDE));
-    int tn = tmp/simd_len+2;
+    NumSW = ALIGN / sizeof(REAL_TYPE);
+    int tmp = (size[2] - 2*(NumSW-GUIDE));
+    NumSB = tmp/NumSW;
 
-    printf("\nALIGN = %d\n", ALIGN);
-    printf("SIMD_len = %d\n", simd_len);
-    printf("SIMD loop= %d\n", tn);
+    printf("\nALIGN          = %d\n", ALIGN);
+    printf("SIMD width     = %d\n", NumSW);
+    printf("SIMD body loop = %d\n", NumSB);
 
 
-    if ((tmp/simd_len)*simd_len != tmp || tmp<2) {
+    if ((tmp/NumSW)*NumSW != tmp || tmp<2) {
       printf("NK is not appropriate N=%d > NK=%d\n",
-      tn, simd_len*(tn-2) + 2*(simd_len-GUIDE));
+      NumSB, NumSW*(NumSB-2) + 2*(NumSW-GUIDE));
       exit(1);
     }
 

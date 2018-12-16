@@ -76,20 +76,14 @@ void CZ::lsor_simd(REAL_TYPE* d,
     d[_IDX_S3D(ked-1,i,j,NK,NI,gc)] +=  rhs[_IDX_S3D(ked,i,j,NK,NI,gc)]*r;
 
     TIMING_start("LSOR_simd_f2");
-    /*
-    tdma(nn,
+
+    tdma2(nn,
            &d[_IDX_S3D(kst-1,i,j,NK,NI,gc)],
-           a,
-           b,
-           c,
+           &a[kst+gc-1],
+           &b[kst+gc-1],
+           &c[kst+gc-1],
            &w[_IDX_S3D(kst-1,i,j,NK,NI,gc)]);
-           */
-    tdma_0_(&nn,
-            &d[_IDX_S3D(kst-1,i,j,NK,NI,gc)],
-            &a[kst+gc-1],
-            &b[kst+gc-1],
-            &c[kst+gc-1],
-            &w[_IDX_S3D(kst-1,i,j,NK,NI,gc)]);
+
     TIMING_stop("LSOR_simd_f2", f2);
 
     TIMING_start("LSOR_simd_f3");
@@ -106,5 +100,73 @@ void CZ::lsor_simd(REAL_TYPE* d,
     TIMING_stop("LSOR_simd_f3", f3);
 
   }}
+
+}
+
+/*
+ * @brief Thomas Algorithm
+ * @param [in      nx   配列長
+ * @param [in,out] d    RHS/解ベクトル X[nx]
+ * @param [in]     a    L_1 vector
+ * @param [in]     b    D vector
+ * @param [in]     c    U_1 vector
+ * @param [in]     w    work vector (U_1)
+ * @note i方向に領域分割なしを想定
+ *       cz_dsolver tdma_0 と同等
+ */
+void CZ::tdma2(int nx, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* b, REAL_TYPE* c, REAL_TYPE* w)
+{
+  REAL_TYPE e;
+  int gc = GUIDE;
+
+  int bst = NumSW-gc-1;
+  int bed = NumSW*(NumSB+1)-gc-1;
+  //printf("st=%d ed =%d\n", bst, bed);
+
+  d[0] = d[0]/b[0];
+  w[0] = c[0]/b[0];
+
+  // Forward:Peel
+  for (int i=1; i<bst; i++)
+  {
+    e = 1.0 / (b[i] - a[i] * w[i-1]);
+    w[i] = e * c[i];
+    d[i] = (d[i] - a[i] * d[i-1]) * e;
+  }
+
+  // Forward:SIMD body
+  for (int i=bst; i<bed; i++)
+  {
+    e = 1.0 / (b[i] - a[i] * w[i-1]);
+    w[i] = e * c[i];
+    d[i] = (d[i] - a[i] * d[i-1]) * e;
+  }
+
+  // Forward:Reminder
+  for (int i=bed; i<nx; i++)
+  {
+    e = 1.0 / (b[i] - a[i] * w[i-1]);
+    w[i] = e * c[i];
+    d[i] = (d[i] - a[i] * d[i-1]) * e;
+  }
+
+
+  // Backward:Reminder
+  for (int i=nx-2; i>=bed; i--)
+  {
+    d[i] = d[i] - w[i] * d[i+1];
+  }
+
+  // Backward:SIMD body
+  for (int i=bed-1; i>=bst; i--)
+  {
+    d[i] = d[i] - w[i] * d[i+1];
+  }
+
+  // Backward:Peel
+  for (int i=bst-1; i>=0; i--)
+  {
+    d[i] = d[i] - w[i] * d[i+1];
+  }
 
 }
