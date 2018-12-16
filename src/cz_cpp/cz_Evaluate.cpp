@@ -53,17 +53,18 @@ int CZ::Evaluate(int argc, char **argv)
   G_size[1] = atoi(argv[2]);
   G_size[2] = atoi(argv[3]);
 
-  // 分割数が指定されている場合
+  // pbicgstab preconditoner
   char* q = argv[4];
+
   if ( !strcasecmp(q, "pbicgstab") )
-  {
-    if (argc!=8 && argc!=11) {
-      Hostonly_ printf("command line error : pbicgstab\n");
-      exit(0);
+    {
+      if (argc!=8 && argc!=11) {
+        Hostonly_ printf("command line error : pbicgstab\n");
+        exit(0);
+      }
+      precon = argv[7];
     }
-    char* w = argv[7];
-    setPrecond(w);
-  }
+
 
   if (argc == 10) {
     div_type=1;
@@ -207,39 +208,81 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "pbicgstab.txt");
   }
 
-  else if ( !strcasecmp(q, "lsorms") ) {
-    ls_type = LS_LSORMS;
-    strcpy(fname, "lsorms.txt");
+  else if ( !strcasecmp(q, "lsor_a") ) {
+    ls_type = LS_LSOR_A;
+    strcpy(fname, "lsor_a.txt");
   }
 
-  else if ( !strcasecmp(q, "lsormsb") ) {
-    ls_type = LS_LSORMSB;
-    strcpy(fname, "lsormsb.txt");
+  else if ( !strcasecmp(q, "lsor_b") ) {
+    ls_type = LS_LSOR_B;
+    strcpy(fname, "lsor_b.txt");
   }
 
-  else if ( !strcasecmp(q, "lsormsc") ) {
-    ls_type = LS_LSORMSC;
-    strcpy(fname, "lsormsc.txt");
+  else if ( !strcasecmp(q, "lsor_c") ) {
+    ls_type = LS_LSOR_C;
+    strcpy(fname, "lsor_c.txt");
   }
 
-  else if ( !strcasecmp(q, "ljcbmsd") ) {
-    ls_type = LS_LJCBMSD;
-    strcpy(fname, "ljcbmsd.txt");
+  else if ( !strcasecmp(q, "lsor_d") ) {
+    ls_type = LS_LSOR_D;
+    strcpy(fname, "lsor_d.txt");
   }
 
-  else if ( !strcasecmp(q, "ljcbmse") ) {
-    ls_type = LS_LJCBMSE;
-    strcpy(fname, "ljcbmse.txt");
+  else if ( !strcasecmp(q, "lsor_e") ) {
+    ls_type = LS_LSOR_E;
+    strcpy(fname, "lsor_e.txt");
   }
 
-  else if ( !strcasecmp(q, "ljcbmsf") ) {
-    ls_type = LS_LJCBMSF;
-    strcpy(fname, "ljcbmsf.txt");
+  else if ( !strcasecmp(q, "lsor_f") ) {
+    ls_type = LS_LSOR_F;
+    strcpy(fname, "lsor_f.txt");
   }
 
-  else if ( !strcasecmp(q, "ljcbmsg") ) {
-    ls_type = LS_LJCBMSG;
-    strcpy(fname, "ljcbmsg.txt");
+  else if ( !strcasecmp(q, "ljcb_a") ) {
+    ls_type = LS_LJCB_A;
+    strcpy(fname, "ljcb_a.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcb_b") ) {
+    ls_type = LS_LJCB_B;
+    strcpy(fname, "ljcb_b.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcb_c") ) {
+    ls_type = LS_LJCB_C;
+    strcpy(fname, "ljcb_c.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcb_d") ) {
+    ls_type = LS_LJCB_D;
+    strcpy(fname, "ljcb_d.txt");
+  }
+
+  else if ( !strcasecmp(q, "ljcb_e") ) {
+    ls_type = LS_LJCB_E;
+    strcpy(fname, "ljcb_e.txt");
+  }
+
+  // 逐次のみ、k方向を内側にしているので通信面を変更
+  else if ( !strcasecmp(q, "lsor_simd") ) {
+
+    int simd_len= ALIGN / sizeof(REAL_TYPE);
+    int tmp = (size[2] - 2*(simd_len-GUIDE));
+    int tn = tmp/simd_len+2;
+
+    printf("\nALIGN = %d\n", ALIGN);
+    printf("SIMD_len = %d\n", simd_len);
+    printf("SIMD loop= %d\n", tn);
+
+
+    if ((tmp/simd_len)*simd_len != tmp || tmp<2) {
+      printf("NK is not appropriate N=%d > NK=%d\n",
+      tn, simd_len*(tn-2) + 2*(simd_len-GUIDE));
+      exit(1);
+    }
+
+    ls_type = LS_LSOR_SIMD;
+    strcpy(fname, "lsor_simd.txt");
   }
 
   else{
@@ -315,13 +358,34 @@ int CZ::Evaluate(int argc, char **argv)
   // 最大反復回数
   ItrMax = atoi(argv[5]);
 
-  // Apply BC
-  bc_(size, &gc, P, pitch, origin, nID);
-  if ( !Comm_S(P, 1) ) return 0;
+  switch (ls_type)
+  {
+    case LS_LSOR_SIMD:
+    case LS_LJCB_D:
+    case LS_LSOR_E:
+    case LS_LSOR_F:
+      // Apply BC
+      bc_k_(size, &gc, P, pitch, origin, nID);
+      if ( !Comm_S(P, 1) ) return 0;
 
-  // source term >> ソース項ゼロ
-  bc_(size, &gc, RHS, pitch, origin, nID);
-  if ( !Comm_S(RHS, 1) ) return 0;
+      // source term >> ソース項ゼロ
+      bc_k_(size, &gc, RHS, pitch, origin, nID);
+      if ( !Comm_S(RHS, 1) ) return 0;
+
+      break;
+
+    default:
+      // Apply BC
+      bc_(size, &gc, P, pitch, origin, nID);
+      if ( !Comm_S(P, 1) ) return 0;
+
+      // source term >> ソース項ゼロ
+      bc_(size, &gc, RHS, pitch, origin, nID);
+      if ( !Comm_S(RHS, 1) ) return 0;
+
+      break;
+  }
+
 
 
   init_mask_(MSK, size, innerFidx, &gc);
@@ -370,52 +434,76 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("PBiCGSTAB", flop);
       break;
 
-    case LS_LSOR:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
+    case LS_LSOR_A:
+      TIMING_start("LSOR_A");
+      if ( 0 == (itr=LSOR_A(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_A", flop);
       break;
 
-    case LS_LSORMS:
-      TIMING_start("LSOR_MS");
-      if ( 0 == (itr=LSOR_MS(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_MS", flop);
+    case LS_LSOR_B:
+      TIMING_start("LSOR_B");
+      if ( 0 == (itr=LSOR_B(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_B", flop);
       break;
 
-    case LS_LSORMSB:
-      TIMING_start("LSOR_MSB");
-      if ( 0 == (itr=LSOR_MSB(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_MSB", flop);
+    case LS_LSOR_C:
+      TIMING_start("LSOR_C");
+      if ( 0 == (itr=LSOR_C(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_C", flop);
       break;
 
-    case LS_LSORMSC:
-      TIMING_start("LSOR_MSC");
-      if ( 0 == (itr=LSOR_MSC(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_MSC", flop);
+    case LS_LSOR_D:
+      TIMING_start("LSOR_D");
+      if ( 0 == (itr=LSOR_D(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_D", flop);
       break;
 
-    case LS_LJCBMSD:
-      TIMING_start("LJCB_MSD");
-      if ( 0 == (itr=LJCB_MSD(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_MSD", flop);
+    case LS_LSOR_E:
+      TIMING_start("LSOR_E");
+      if ( 0 == (itr=LSOR_E(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_E", flop);
       break;
 
-    case LS_LJCBMSE:
-      TIMING_start("LJCB_MSE");
-      if ( 0 == (itr=LJCB_MSE(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_MSE", flop);
+    case LS_LSOR_F:
+      TIMING_start("LSOR_F");
+      if ( 0 == (itr=LSOR_F(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_F", flop);
       break;
 
-    case LS_LJCBMSF:
-      TIMING_start("LJCB_MSF");
-      if ( 0 == (itr=LJCB_MSF(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_MSF", flop);
+    case LS_LJCB_A:
+      TIMING_start("LJCB_A");
+      if ( 0 == (itr=LJCB_A(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_A", flop);
       break;
 
-    case LS_LJCBMSG:
-      TIMING_start("LJCB_MSG");
-      if ( 0 == (itr=LJCB_MSG(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_MSG", flop);
+    case LS_LJCB_B:
+      TIMING_start("LJCB_B");
+      if ( 0 == (itr=LJCB_B(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_B", flop);
+      break;
+
+    case LS_LJCB_C:
+      TIMING_start("LJCB_C");
+      if ( 0 == (itr=LJCB_C(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_C", flop);
+      break;
+
+    case LS_LJCB_D:
+      TIMING_start("LJCB_D");
+      if ( 0 == (itr=LJCB_D(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_D", flop);
+      break;
+
+    case LS_LJCB_E:
+      TIMING_start("LJCB_E");
+      if ( 0 == (itr=LJCB_E(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LJCB_E", flop);
+      break;
+
+    case LS_LSOR_SIMD:
+      TIMING_start("LSOR_SIMD");
+      if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_SIMD", flop);
       break;
 
     default:
@@ -440,16 +528,38 @@ int CZ::Evaluate(int argc, char **argv)
   int loc[3];
 
   if (debug_mode==1) {
-    sprintf( tmp_fname, "p_%05d.sph", myRank );
-    fileout_(size, &gc, P, pitch, origin, tmp_fname);
 
-    exact_(size, &gc, ERR, pitch, origin);
+
     double errmax = 0.0;
-    err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-    if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-    Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
-    sprintf( tmp_fname, "e_%05d.sph", myRank );
-    fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
+    switch (ls_type)
+    {
+      case LS_LSOR_SIMD:
+      case LS_LJCB_D:
+      case LS_LSOR_E:
+      case LS_LSOR_F:
+        sprintf( tmp_fname, "p_%05d.sph", myRank );
+        fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
+        exact_t_(size, &gc, ERR, pitch, origin);
+        err_t_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+        Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
+        sprintf( tmp_fname, "e_%05d.sph", myRank );
+        fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
+        break;
+
+      default:
+        sprintf( tmp_fname, "p_%05d.sph", myRank );
+        fileout_(size, &gc, P, pitch, origin, tmp_fname);
+        exact_(size, &gc, ERR, pitch, origin);
+        err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+        Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
+        sprintf( tmp_fname, "e_%05d.sph", myRank );
+        fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
+        break;
+    }
+
+
   }
 
 

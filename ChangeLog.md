@@ -8,6 +8,12 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-16 Version 0.6.7
+  - lsor_simdにk方向内側ループ実装
+  - ENABLE_AVX2/AVX512
+  - ケースの整理
+
+---
 - 2018-12-14 Version 0.6.6
   - MSG テスト
 

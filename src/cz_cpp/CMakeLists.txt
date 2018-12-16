@@ -45,6 +45,7 @@ set(cz_files
        cz_Poisson.cpp
        cz_comm.cpp
        cz_dsolver.cpp
+       cz_simd.cpp
 )
 
 add_library(CZ STATIC ${cz_files})

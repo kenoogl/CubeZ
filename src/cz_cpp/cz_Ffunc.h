@@ -24,6 +24,13 @@ void bc_      (int* sz,
                REAL_TYPE* org,
                int* nID);
 
+void bc_k_    (int* sz,
+               int* g,
+               REAL_TYPE* e,
+               REAL_TYPE* dh,
+               REAL_TYPE* org,
+               int* nID);
+
 void jacobi_        (REAL_TYPE* p,
                      int* sz,
                      int* idx,
@@ -70,20 +77,7 @@ void tdma_1_ (int* nx,
               REAL_TYPE* w,
               double* flop);
 
-void tdma_lsor2sma_(REAL_TYPE* d,
-                int* sz,
-                int* idx,
-                int* g,
-                REAL_TYPE* x,
-                REAL_TYPE* w,
-                REAL_TYPE* cf,
-                REAL_TYPE* omg,
-                double* res,
-                int* ip,
-                int* color,
-                double* flop);
-
-void tdma_lsor_(REAL_TYPE* d,
+void tdma_lsor_a_(REAL_TYPE* d,
                 int* sz,
                 int* idx,
                 int* g,
@@ -111,7 +105,7 @@ void tdma_lsor_b_(REAL_TYPE* d,
                 double* res,
                 double* flop);
 
-void tdma_lsor_c_(REAL_TYPE* d,
+void tdma_lsor_d_(REAL_TYPE* d,
                 int* sz,
                 int* idx,
                 int* g,
@@ -125,7 +119,49 @@ void tdma_lsor_c_(REAL_TYPE* d,
                 double* res,
                 double* flop);
 
-void tdma_ljcb_e_(REAL_TYPE* d,
+void tdma_lsor_e_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* rhs,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_lsor_f_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* e,
+                REAL_TYPE* a,
+                REAL_TYPE* rhs,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+// cz_ljcb.f90
+void tdma_ljcb_a_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* b,
+                REAL_TYPE* c,
+                REAL_TYPE* rhs,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void tdma_ljcb_b_(REAL_TYPE* d,
                 int* sz,
                 int* idx,
                 int* g,
@@ -136,21 +172,6 @@ void tdma_ljcb_e_(REAL_TYPE* d,
                 REAL_TYPE* c,
                 REAL_TYPE* rhs,
                 REAL_TYPE* m,
-                REAL_TYPE* omg,
-                double* res,
-                double* flop);
-
-// cz_ljcb.f90
-void tdma_ljcb_d_(REAL_TYPE* d,
-                int* sz,
-                int* idx,
-                int* g,
-                REAL_TYPE* x,
-                REAL_TYPE* w,
-                REAL_TYPE* a,
-                REAL_TYPE* b,
-                REAL_TYPE* c,
-                REAL_TYPE* rhs,
                 REAL_TYPE* omg,
                 double* res,
                 double* flop);
@@ -191,6 +212,50 @@ void ljcb_f3_(REAL_TYPE* d,
               double* flop);
 
 void ljcb_f4_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* x,
+              REAL_TYPE* omg,
+              double* res,
+              double* flop);
+
+void ljcb_f0t_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* x,
+              REAL_TYPE* rhs,
+              double* flop);
+
+void ljcb_f1t_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              REAL_TYPE* b,
+              REAL_TYPE* c,
+              REAL_TYPE* rhs,
+              double* flop);
+
+void ljcb_f2t_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* b,
+              REAL_TYPE* c,
+              double* flop);
+
+void ljcb_f3t_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              double* flop);
+
+void ljcb_f4t_(REAL_TYPE* d,
               int* sz,
               int* idx,
               int* g,
@@ -331,6 +396,27 @@ void exact_   (int* sz,
                REAL_TYPE* org);
 
 void err_     (int* sz,
+               int* idx,
+               int* g,
+               double* d,
+               REAL_TYPE* p,
+               REAL_TYPE* e,
+               int* loc);
+
+void fileout_t_ (int* sz,
+               int* g,
+               REAL_TYPE* s,
+               REAL_TYPE* dh,
+               REAL_TYPE* org,
+               char* fname);
+
+void exact_t_ (int* sz,
+               int* g,
+               REAL_TYPE* e,
+               REAL_TYPE* dh,
+               REAL_TYPE* org);
+
+void err_t_   (int* sz,
                int* idx,
                int* g,
                double* d,

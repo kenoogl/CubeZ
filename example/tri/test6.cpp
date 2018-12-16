@@ -20,14 +20,9 @@ int order_of_PM_key=0;
 pm_lib::PerfMonitor PM;
 
 // c11のコンパイルオプションが必要
-#ifndef _NOAVX512
-static constexpr int ALIGN = alignof(__m512);
-#endif
-
-/*
 #if defined(ENABLE_AVX512)
 static constexpr int ALIGN = alignof(__m512);
-#elif defined(ENABLE_AVX)
+#elif defined(ENABLE_AVX2)
 static constexpr int ALIGN = alignof(__m256);
 #elif defined(ENABLE_SSE)
 static constexpr int ALIGN = alignof(__m128);
@@ -36,7 +31,7 @@ static constexpr int ALIGN = alignof(float32x4_t);
 #else
 static constexpr int ALIGN = 8;
 #endif  // defined(ENABLE_AVX512)
-*/
+
 
 void set_label(const std::string label, pm_lib::PerfMonitor::Type type)
 {
@@ -230,7 +225,7 @@ float dot_2_avx_fma(const unsigned n, const float *vec1, const float *vec2, doub
 }
 
 
-#ifndef _NOAVX512
+#ifdef ENABLE_AVX512
 float dot_2_avx512(const unsigned n, const float *vec1, const float *vec2, double& flop)
 {
   static constexpr std::size_t INTERVAL = sizeof(__m512) / sizeof(float);
@@ -460,7 +455,7 @@ int main(int argc, char *argv[])
   }
   printf("Dot2 AVX_FMA\t= %10.1f %10.1f %10.1f\n", sum2, sum, sum2-sum);
 
-#ifndef _NOAVX512
+#ifdef ENABLE_AVX512
   for (int m=0; m<NN; m++)
   {
     flop = 0.0;

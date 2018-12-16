@@ -29,6 +29,26 @@
 #include "czVersion.h"
 #include "DomainInfo.h"
 
+///// SIMD intrinsic
+// std::inner_product, accumulate
+#include <numeric>
+
+#include <xmmintrin.h>
+#include <immintrin.h>
+
+// c11のコンパイルオプションが必要
+#if defined(ENABLE_AVX512)
+static constexpr int ALIGN = alignof(__m512);
+#elif defined(ENABLE_AVX2)
+static constexpr int ALIGN = alignof(__m256);
+#elif defined(ENABLE_SSE)
+static constexpr int ALIGN = alignof(__m128);
+#elif defined(ENABLE_NEON)
+static constexpr int ALIGN = alignof(float32x4_t);
+#else
+static constexpr int ALIGN = 8;
+#endif  // defined(ENABLE_AVX512)
+//////
 
 // FX10 profiler
 #if defined __K_FPCOLL
@@ -55,7 +75,8 @@ private:
   REAL_TYPE ac1;           ///< acceleration coef.
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
-  int KindOfPrecondition;  ///< 前処理の種類
+  std::string precon;
+
 
   // PMlib
   pm_lib::PerfMonitor PM;  ///< 性能モニタクラス
@@ -103,7 +124,6 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
-    KindOfPrecondition = -1;
 
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -159,6 +179,18 @@ public:
                REAL_TYPE* rhs,
                double &res,
                double &flop);
+
+
+  void lsor_simd(REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* w,
+                 REAL_TYPE* a,
+                 REAL_TYPE* b,
+                 REAL_TYPE* c,
+                 REAL_TYPE* rhs,
+                 double &res,
+                 double &flop);
+
 
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
@@ -290,67 +322,96 @@ private:
                 REAL_TYPE* B,
                 double& flop);
 
-  int LSOR  (double& res,
+  int LSOR_A(double& res,
              REAL_TYPE* X,
              REAL_TYPE* B,
              const int itrMax,
              double& flop,
              bool converge_check=true);
 
-  int LSOR_RB (double& res,
+  int LSOR_B (double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itrMax,
-               double& flop);
+               double& flop,
+             bool converge_check=true);
 
-  int LSOR_MS(double& res,
+  int LSOR_C(double& res,
               REAL_TYPE* X,
               REAL_TYPE* B,
               const int itr_max,
               double& flop,
               bool converge_check=true);
 
-  int LSOR_MSB(double& res,
+  int LSOR_D(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
 
-  int LSOR_MSC(double& res,
+  int LSOR_E(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+  
+  int LSOR_F(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
 
-  int LJCB_MSD(double& res,
+  int LJCB_A(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
 
-  int LJCB_MSE(double& res,
+  int LJCB_B(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
 
-  int LJCB_MSF(double& res,
+  int LJCB_C(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
 
-  int LJCB_MSG(double& res,
+  int LJCB_D(double& res,
                REAL_TYPE* X,
                REAL_TYPE* B,
                const int itr_max,
                double& flop,
                bool converge_check=true);
+
+  int LJCB_E(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+
+  int LJCB_F(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
+
+  int LSOR_SIMD(double& res,
+                REAL_TYPE* X,
+                REAL_TYPE* B,
+                const int itr_max,
+                double& flop,
+                bool converge_check=true);
 
   double Fdot1(REAL_TYPE* x, double& flop);
 
@@ -459,32 +520,6 @@ std::string GetHostName()
   memset(name, 0x00, sizeof(char)*512);
   if( gethostname(name, 512) != 0 ) return std::string("");
   return std::string(name);
-}
-
-void setPrecond(char* w)
-{
-  if ( !strcasecmp(w, "jacobi") ) {
-    KindOfPrecondition = 1;
-  }
-  else if ( !strcasecmp(w, "psor") ) {
-    KindOfPrecondition = 2;
-  }
-  else if ( !strcasecmp(w, "sor2sma") ) {
-    KindOfPrecondition = 3;
-  }
-  else if ( !strcasecmp(w, "lsor") ) {
-    KindOfPrecondition = 4;
-  }
-  else if ( !strcasecmp(w, "ljcb") ) {
-    KindOfPrecondition = 5;
-  }
-  else if ( !strcasecmp(w, "none") ) {
-    KindOfPrecondition = 0;
-  }
-  else {
-    Hostonly_ printf("Error : preconditioner=%s\n", w);
-    exit(0);
-  }
 }
 
 };

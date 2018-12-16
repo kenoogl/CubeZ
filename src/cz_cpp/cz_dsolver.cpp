@@ -62,6 +62,8 @@ void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, doubl
                                    ) * r + rhs[_IDX_S3D(i,j,k,NI, NJ, gc)];
     }
 
+    d[_IDX_S3D(ist,j,k,NI,NJ,gc)] +=  rhs[_IDX_S3D(ist-1,j,k,NI,NJ,gc)]*r;
+    d[_IDX_S3D(ied,j,k,NI,NJ,gc)] +=  rhs[_IDX_S3D(ied+1,j,k,NI,NJ,gc)]*r;
 
     tdma_s(nn,
            &d[_IDX_S3D(ist-1,j,k,NI,NJ,gc)],

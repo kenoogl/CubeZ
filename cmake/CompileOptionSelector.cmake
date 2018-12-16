@@ -26,9 +26,9 @@ macro (AddOptimizeOption)
     # -fPIC : PIC flag
 
   elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -qopt-zmm-usage=high -std=c++11")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -qopt-zmm-usage=high")
-    set(CMAKE_Fortran_FLAGS "-O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -qopt-zmm-usage=high")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -std=c++11")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5")
+    set(CMAKE_Fortran_FLAGS "-O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
@@ -36,7 +36,7 @@ macro (AddOptimizeOption)
     set(CMAKE_Fortran_FLAGS "-O3 -Wall")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=3 -std=c++11")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHOST -O3 -qopt-report=3")
     set(CMAKE_Fortran_FLAGS "-xHOST -O3 -qopt-report=3")
 

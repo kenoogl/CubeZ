@@ -41,6 +41,8 @@ option(with_MPI "Enable MPI" "ON")
 option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
+option(enable_AVX2 "Enable AVX2" "ON")
+option(enable_AVX512 "Enable AVX512" "OFF")
 
 #######
 # Project setting
@@ -66,8 +68,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.6.6")
-set(LIB_REVISION "20181214_2130")
+set(PROJECT_VERSION "0.6.7")
+set(LIB_REVISION "20181216_1230")
 #######
 
 
@@ -107,6 +109,17 @@ if(NOT with_MPI)
 endif()
 
 
+if(enable_AVX2)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AVX2")
+endif()
+
+if(enable_AVX512)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_AVX512 -qopt-zmm-usage=high")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qopt-zmm-usage=high")
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
+endif()
+
+
 #######
 # Display options
 #######
@@ -126,6 +139,8 @@ message( STATUS "Type of floating point: "      ${real_type})
 message( STATUS "PMlib support         : "      ${with_PM})
 message( STATUS "PAPI support          : "      ${with_PAPI})
 message( STATUS "CBrick support        : "      ${with_CBR})
+message( STATUS "AVX2 support          : "      ${enable_AVX2})
+message( STATUS "AVX512 support        : "      ${enable_AVX512})
 message(" ")
 
 
