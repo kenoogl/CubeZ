@@ -199,6 +199,38 @@ void ljcb_f4_(REAL_TYPE* d,
               double* res,
               double* flop);
 
+void ljcb_g0_(REAL_TYPE* e,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* b,
+              REAL_TYPE* c);
+
+void ljcb_g1_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* b,
+              REAL_TYPE* rhs,
+              double* flop);
+
+void ljcb_g2_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* e,
+              REAL_TYPE* a,
+              double* flop);
+
+void ljcb_g3_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              REAL_TYPE* w,
+              double* flop);
+
 // cz_blas.f90
 void init_mask_     (REAL_TYPE* x,
                      int* sz,

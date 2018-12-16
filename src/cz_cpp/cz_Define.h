@@ -81,7 +81,8 @@ enum LinearSolver
   LS_LSORMSC,
   LS_LJCBMSD,
   LS_LJCBMSE,
-  LS_LJCBMSF
+  LS_LJCBMSF,
+  LS_LJCBMSG
 };
 
 

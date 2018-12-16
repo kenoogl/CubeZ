@@ -345,6 +345,12 @@ private:
                double& flop,
                bool converge_check=true);
 
+  int LJCB_MSG(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               bool converge_check=true);
 
   double Fdot1(REAL_TYPE* x, double& flop);
 

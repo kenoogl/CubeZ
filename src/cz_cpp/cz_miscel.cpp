@@ -223,4 +223,5 @@ using namespace pm_lib;
   set_label("LJCB_MSD",         PerfMonitor::CALC, false);
   set_label("LJCB_MSE",         PerfMonitor::CALC, false);
   set_label("LJCB_MSF",         PerfMonitor::CALC, false);
+  set_label("LJCB_MSG",         PerfMonitor::CALC, false);
 }
