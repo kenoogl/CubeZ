@@ -1407,7 +1407,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int itr;
      double flop_count = 0.0;
      int gc = GUIDE;
-     //REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
@@ -1461,7 +1460,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
          res = sqrt(res);
          Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
 
-         // BCはq[]に与えられているので、不要
          if ( res < eps ) break;
        }
 
