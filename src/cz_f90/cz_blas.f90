@@ -21,6 +21,56 @@
 !! @param [in]     idx         インデクス範囲
 !! @param [in]     g  ガイドセル
 !<
+subroutine imask_k(x, sz, idx, g)
+implicit none
+integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  ist, jst, kst
+integer                                                ::  ied, jed, ked
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x
+
+ix = sz(1)
+jx = sz(2)
+kx = sz(3)
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do k=1-g,kx+g
+do j=1-g,jx+g
+do i=1-g,ix+g
+  x(k, i, j) = 0.0
+end do
+end do
+end do
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do k = kst, ked
+do j = jst, jed
+do i = ist, ied
+  x(k, i, j) = 1.0
+end do
+end do
+end do
+!$OMP END PARALLEL DO
+
+return
+end subroutine imask_k
+
+!> ********************************************************************
+!! @brief 要素のマスク
+!! @param [in,out] x  スカラー
+!! @param [in]     sz 配列長
+!! @param [in]     idx         インデクス範囲
+!! @param [in]     g  ガイドセル
+!<
 subroutine init_mask(x, sz, idx, g)
 implicit none
 integer                                                ::  i, j, k, ix, jx, kx, g

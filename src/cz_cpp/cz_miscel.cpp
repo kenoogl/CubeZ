@@ -205,8 +205,16 @@ using namespace pm_lib;
   set_label("LJCB_f3_kernel",   PerfMonitor::CALC, true);
   set_label("LJCB_f4_kernel",   PerfMonitor::CALC, true);
   set_label("LSOR_simd_f1",     PerfMonitor::CALC, true);
+  set_label("LSOR_simd_bc",     PerfMonitor::CALC, true);
   set_label("LSOR_simd_f2",     PerfMonitor::CALC, true);
+  set_label("LSOR_simd_f2_tdma",     PerfMonitor::CALC, false);
   set_label("LSOR_simd_f3",     PerfMonitor::CALC, true);
+  set_label("TDMA_simd_F_peel",      PerfMonitor::CALC, true);
+  set_label("TDMA_simd_F_body",      PerfMonitor::CALC, true);
+  set_label("TDMA_simd_F_remainder", PerfMonitor::CALC, true);
+  set_label("TDMA_simd_R_peel",      PerfMonitor::CALC, true);
+  set_label("TDMA_simd_R_body",      PerfMonitor::CALC, true);
+  set_label("TDMA_simd_R_remainder", PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);

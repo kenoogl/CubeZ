@@ -22,7 +22,6 @@
  */
 void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, double &res, double &flop)
 {
-  int gc = GUIDE;
   int NI = size[0];
   int NJ = size[1];
   int NK = size[2];
@@ -55,20 +54,20 @@ void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, doubl
     #pragma vector always
     #pragma ivdep
     for (int i=ist-1; i<ied; i++) {
-      d[_IDX_S3D(i,j,k,NI, NJ, gc)] = ( x[_IDX_S3D(i,j-1,k  ,NI, NJ, gc)]
-                                     +  x[_IDX_S3D(i,j+1,k  ,NI, NJ, gc)]
-                                     +  x[_IDX_S3D(i,j  ,k-1,NI, NJ, gc)]
-                                     +  x[_IDX_S3D(i,j  ,k+1,NI, NJ, gc)]
-                                   ) * r + rhs[_IDX_S3D(i,j,k,NI, NJ, gc)];
+      d[_IDX_S3D(i,j,k,NI, NJ, GUIDE)] = ( x[_IDX_S3D(i,j-1,k  ,NI, NJ, GUIDE)]
+                                        +  x[_IDX_S3D(i,j+1,k  ,NI, NJ, GUIDE)]
+                                        +  x[_IDX_S3D(i,j  ,k-1,NI, NJ, GUIDE)]
+                                        +  x[_IDX_S3D(i,j  ,k+1,NI, NJ, GUIDE)]
+                                 ) * r + rhs[_IDX_S3D(i,j  ,k  ,NI, NJ, GUIDE)];
     }
 
-    d[_IDX_S3D(ist-1,j,k,NI,NJ,gc)] +=  rhs[_IDX_S3D(ist-2,j,k,NI,NJ,gc)]*r;
-    d[_IDX_S3D(ied-1,j,k,NI,NJ,gc)] +=  rhs[_IDX_S3D(ied,j,k,NI,NJ,gc)]*r;
+    d[_IDX_S3D(ist-1,j,k,NI,NJ,GUIDE)] +=  rhs[_IDX_S3D(ist-2,j,k,NI,NJ,GUIDE)]*r;
+    d[_IDX_S3D(ied-1,j,k,NI,NJ,GUIDE)] +=  rhs[_IDX_S3D(ied,  j,k,NI,NJ,GUIDE)]*r;
 
     tdma_s(nn,
-           &d[_IDX_S3D(ist-1,j,k,NI,NJ,gc)],
+           &d[_IDX_S3D(ist-1,j,k,NI,NJ,GUIDE)],
            a, b, c,
-           &w[_IDX_S3D(ist-1,j,k,NI,NJ,gc)]);
+           &w[_IDX_S3D(ist-1,j,k,NI,NJ,GUIDE)]);
 
 
     //tdma_m(nn, d, a, b, c, w);
@@ -76,10 +75,10 @@ void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, doubl
     #pragma vector always
     #pragma ivdep
     for (int i=ist-1; i<ied; i++) {
-      pp = x[_IDX_S3D(i,j,k,NI,NJ,gc)];
-      dp = ( d[_IDX_S3D(i,j,k,NI,NJ,gc)] - pp ) * omg;
+      pp = x[_IDX_S3D(i,j,k,NI,NJ,GUIDE)];
+      dp = ( d[_IDX_S3D(i,j,k,NI,NJ,GUIDE)] - pp ) * omg;
       pn = pp + dp;
-      x[_IDX_S3D(i,j,k,NI,NJ,gc)] = pn;
+      x[_IDX_S3D(i,j,k,NI,NJ,GUIDE)] = pn;
       res += dp * dp;
     }
 
@@ -119,7 +118,7 @@ void CZ::tdma_m(int nx,
   #pragma omp parallel for collapse(2) private(m)
   for (int k=kst-1; k<ked; k++) {
   for (int j=jst-1; j<jed; j++) {
-    m = _IDX_S3D(0,j,k,NI,NJ,gc);
+    m = _IDX_S3D(0,j,k,NI,NJ,GUIDE);
     d[m] = d[m]/b;
     w[m] = c/b;
   }}

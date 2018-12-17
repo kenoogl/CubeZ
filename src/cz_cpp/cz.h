@@ -48,6 +48,9 @@ static constexpr int ALIGN = 8;
 #endif
 //////
 
+// SIMD幅 word数
+static constexpr int SdW = ALIGN / sizeof(REAL_TYPE);
+
 // FX10 profiler
 #if defined __K_FPCOLL
 #include <fjcoll.h>
@@ -74,8 +77,7 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
-  int NumSW;               ///< SIMD幅
-  int NumSB;               ///< SIMD body loopの回数
+  int SdB;                 ///< SIMD body loopの回数
 
 
   // PMlib
@@ -124,8 +126,7 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
-    NumSW = 0;
-    NumSB = 0;
+    SdB = 0;
 
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -167,11 +168,17 @@ public:
             REAL_TYPE* b,
             REAL_TYPE* c,
             REAL_TYPE* w);
-  
+
   void tdma2(int nx,
             REAL_TYPE* d,
             REAL_TYPE* a,
             REAL_TYPE* b,
+            REAL_TYPE* c,
+            REAL_TYPE* w);
+
+  void tdma3(int nx,
+            REAL_TYPE* d,
+            REAL_TYPE* a,
             REAL_TYPE* c,
             REAL_TYPE* w);
 
@@ -200,6 +207,15 @@ public:
                  double &res,
                  double &flop);
 
+  void lsor_simd2(REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* w,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* rhs,
+                 REAL_TYPE* msk,
+                 double &res,
+                 double &flop);
 
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数

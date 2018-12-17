@@ -266,18 +266,18 @@ int CZ::Evaluate(int argc, char **argv)
   // 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
 
-    NumSW = ALIGN / sizeof(REAL_TYPE);
-    int tmp = (size[2] - 2*(NumSW-GUIDE));
-    NumSB = tmp/NumSW;
+    //SdW = ALIGN / sizeof(REAL_TYPE);
+    int tmp = (size[2] - 2*(SdW-GUIDE));
+    SdB = tmp/SdW;
 
     printf("\nALIGN          = %d\n", ALIGN);
-    printf("SIMD width     = %d\n", NumSW);
-    printf("SIMD body loop = %d\n", NumSB);
+    printf("SIMD width     = %d\n", SdW);
+    printf("SIMD body loop = %d\n", SdB);
 
 
-    if ((tmp/NumSW)*NumSW != tmp || tmp<2) {
+    if ((tmp/SdW)*SdW != tmp || tmp<2) {
       printf("NK is not appropriate N=%d > NK=%d\n",
-      NumSB, NumSW*(NumSB-2) + 2*(NumSW-GUIDE));
+      SdB, SdW*(SdB-2) + 2*(SdW-GUIDE));
       exit(1);
     }
 
@@ -375,6 +375,8 @@ int CZ::Evaluate(int argc, char **argv)
       bc_k_(size, &gc, RHS, pitch, origin, nID);
       if ( !Comm_S(RHS, 1) ) return 0;
 
+      imask_k_(MSK, size, innerFidx, &gc);
+
       break;
 
     default:
@@ -386,12 +388,14 @@ int CZ::Evaluate(int argc, char **argv)
       bc_(size, &gc, RHS, pitch, origin, nID);
       if ( !Comm_S(RHS, 1) ) return 0;
 
+      init_mask_(MSK, size, innerFidx, &gc);
+
       break;
   }
 
 
 
-  init_mask_(MSK, size, innerFidx, &gc);
+
 
 
   // タイミング測定の初期化

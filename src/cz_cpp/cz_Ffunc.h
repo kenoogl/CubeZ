@@ -297,6 +297,11 @@ void ljcb_g3_(REAL_TYPE* d,
               double* flop);
 
 // cz_blas.f90
+void imask_k_       (REAL_TYPE* x,
+                     int* sz,
+                     int* idx,
+                     int* g);
+
 void init_mask_     (REAL_TYPE* x,
                      int* sz,
                      int* idx,

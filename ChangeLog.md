@@ -8,6 +8,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-17 Version 0.7.1
+  - lsor_simd2() unroll(4)の実装
+
+---
 - 2018-12-16 Version 0.7.0
   - lsor_simd() peel/body/remainderのループ長調整
 

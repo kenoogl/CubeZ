@@ -466,23 +466,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[0]+2*gc, var_type);
-     b = czAllocR(size[0]+2*gc, var_type);
-     c = czAllocR(size[0]+2*gc, var_type);
+     a = czAllocR(size[0]+2*GUIDE, var_type);
+     b = czAllocR(size[0]+2*GUIDE, var_type);
+     c = czAllocR(size[0]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[0]+2*gc; i++) {
+     for (int i=0; i<size[0]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=1; i<size[0]; i++) {
-       a[i+gc] = -1.0/6.0;
+       a[i+GUIDE] = -1.0/6.0;
      }
      for (int i=0; i<size[0]; i++) {
-       b[i+gc] = 1.0;
+       b[i+GUIDE] = 1.0;
      }
      for (int i=0; i<size[0]-1; i++) {
-       c[i+gc] = -1.0/6.0;
+       c[i+GUIDE] = -1.0/6.0;
      }
 
 
@@ -610,23 +610,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[0]+2*gc, var_type);
-     b = czAllocR(size[0]+2*gc, var_type);
-     c = czAllocR(size[0]+2*gc, var_type);
+     a = czAllocR(size[0]+2*GUIDE, var_type);
+     b = czAllocR(size[0]+2*GUIDE, var_type);
+     c = czAllocR(size[0]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[0]+2*gc; i++) {
+     for (int i=0; i<size[0]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=2; i<size[0]; i++) {
-       a[i+gc] = -1.0/6.0;
+       a[i+GUIDE] = -1.0/6.0;
      }
      for (int i=0; i<size[0]; i++) {
-       b[i+gc] = 1.0;
+       b[i+GUIDE] = 1.0;
      }
      for (int i=0; i<size[0]-2; i++) {
-       c[i+gc] = -1.0/6.0;
+       c[i+GUIDE] = -1.0/6.0;
      }
 
 
@@ -692,23 +692,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -773,26 +773,26 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
+       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -857,16 +857,16 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
+       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
-     e = czAllocR(size[2]+2*gc, var_type);
-     w = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
+     e = czAllocR(size[2]+2*GUIDE, var_type);
+     w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
@@ -874,13 +874,13 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        w[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
      ljcb_g0_(e, size, innerFidx, &gc, w, a, b, c);
@@ -946,23 +946,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -1028,23 +1028,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -1110,23 +1110,23 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -1213,26 +1213,26 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      //blas_copy_(q, B, size, &gc);
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
+       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -1319,13 +1319,13 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      blas_copy_(q, B, size, &gc);
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
-     e = czAllocR(size[2]+2*gc, var_type);
-     w = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
+     e = czAllocR(size[2]+2*GUIDE, var_type);
+     w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
@@ -1333,13 +1333,13 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        w[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
      ljcb_g0_(e, size, innerFidx, &gc, w, a, b, c);
@@ -1427,26 +1427,26 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*gc)*(size[1]+2*gc)*(size[2]+2*gc)
+       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
-     a = czAllocR(size[2]+2*gc, var_type);
-     b = czAllocR(size[2]+2*gc, var_type);
-     c = czAllocR(size[2]+2*gc, var_type);
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     b = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*gc; i++) {
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
        b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
-       a[i+gc-1] = -1.0/6.0;
+       a[i+GUIDE-1] = -1.0/6.0;
      }
      for (int i=2; i<=size[2]-1; i++) {
-       b[i+gc-1] = 1.0;
+       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
-       c[i+gc-1] = -1.0/6.0;
+       c[i+GUIDE-1] = -1.0/6.0;
      }
 
 
@@ -1457,7 +1457,8 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_simd_kernel");
        flop_count = 0.0;
-       lsor_simd(q, X, w, a, b, c, B, res, flop_count);
+       //lsor_simd(q, X, w, a, b, c, B, res, flop_count);
+       lsor_simd2(q, X, w, a, c, B, MSK, res, flop_count);
        TIMING_stop("LSOR_simd_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
