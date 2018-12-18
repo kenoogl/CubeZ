@@ -149,18 +149,23 @@ public:
 
 public:
   int Evaluate(int argc, char **argv);
+
   void debug(int m_mode) {
       debug_mode = m_mode;
   }
 
-  void pcr(const int nx,
-           const int pn,
-           REAL_TYPE* d,
-           REAL_TYPE* a,
-           REAL_TYPE* c,
-           REAL_TYPE* d1,
-           REAL_TYPE* a1,
-           REAL_TYPE* c1);
+  void print_m256(__m256 x) {
+    printf("%f %f %f %f\n",x[3],x[2],x[1],x[0]);
+  }
+
+
+  // cz_tdma.cpp
+  void tdma_s(int nx,
+              REAL_TYPE* d,
+              const REAL_TYPE a,
+              const REAL_TYPE b,
+              const REAL_TYPE c,
+              REAL_TYPE* w);
 
   void tdma(int nx,
             REAL_TYPE* d,
@@ -183,8 +188,6 @@ public:
             REAL_TYPE* w);
 
   void tdma4(const int nx,
-             const int i,
-             const int j,
              REAL_TYPE* d0,
              REAL_TYPE* d1,
              REAL_TYPE* d2,
@@ -197,21 +200,80 @@ public:
              REAL_TYPE* w3,
              double& flop);
 
-  double relax(const int i,
+  void tdma5(const int nx,
+             REAL_TYPE* d0,
+             REAL_TYPE* d1,
+             REAL_TYPE* d2,
+             REAL_TYPE* d3,
+             REAL_TYPE* a,
+             REAL_TYPE* c,
+             REAL_TYPE* w0,
+             REAL_TYPE* w1,
+             REAL_TYPE* w2,
+             REAL_TYPE* w3,
+             double& flop);
+
+
+  // cz_lsor_relax.cpp
+  double relax4(const int i,
+                const int j,
+                const int kst,
+                const int ked,
+                REAL_TYPE* d,
+                REAL_TYPE* x,
+                REAL_TYPE* m,
+                double& flop);
+
+  double relax4s(const int i,
+                 const int j,
+                 const int kst,
+                 const int ked,
+                 REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* m,
+                 double& flop);
+
+  double relax_256(const int* ia,
+                   const int* ja,
+                   const int kst,
+                   const int ked,
+                   REAL_TYPE* d,
+                   REAL_TYPE* x,
+                   REAL_TYPE* msk,
+                   double& flop);
+
+  // cz_lsor_rhs.cpp
+  void ms_rhs4v(const int* ia,
+                const int* ja,
+                const int kst,
+                const int ked,
+                REAL_TYPE* d,
+                REAL_TYPE* x,
+                REAL_TYPE* rhs,
+                REAL_TYPE* m,
+                double& flop);
+
+  void ms_rhs4(const int i,
                const int j,
                const int kst,
                const int ked,
                REAL_TYPE* d,
                REAL_TYPE* x,
-               REAL_TYPE* m,
+               REAL_TYPE* rhs,
+               REAL_TYPE* msk,
                double& flop);
 
-  void tdma_s(int nx,
-              REAL_TYPE* d,
-              const REAL_TYPE a,
-              const REAL_TYPE b,
-              const REAL_TYPE c,
-              REAL_TYPE* w);
+  void ms_rhs_256(const int i,
+                  const int j,
+                  const int kst,
+                  const int ked,
+                  REAL_TYPE* d,
+                  REAL_TYPE* x,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* msk,
+                  double& flop);
+
+
 
   void lsor_ms(REAL_TYPE* d,
                REAL_TYPE* x,
@@ -265,6 +327,16 @@ public:
   void printA(int nx, int ss, REAL_TYPE* a, char* s);
   void printB(int nx, REAL_TYPE* a, char* s);
 
+
+  void pcr(const int nx,
+           const int pn,
+           REAL_TYPE* d,
+           REAL_TYPE* a,
+           REAL_TYPE* c,
+           REAL_TYPE* d1,
+           REAL_TYPE* a1,
+           REAL_TYPE* c1);
+
   void pcr2(const int nx,
            const int pn,
            REAL_TYPE* d,
@@ -272,6 +344,14 @@ public:
            REAL_TYPE* c);
 
 private:
+  inline static void sIndex(int& i, int& j,
+                const int l, const int ni, const int is, const int js) {
+    int jj = l / ni;
+    int ii = l - jj*ni;
+    j = jj + js - 1;
+    i = ii + is - 1;
+  };
+
   inline void matx2(REAL_TYPE* d, REAL_TYPE a, REAL_TYPE c)
   {
     /*   Ax = d    8+8 fp

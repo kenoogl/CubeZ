@@ -531,44 +531,6 @@ int CZ::Evaluate(int argc, char **argv)
     if (!fph) fclose(fph);
   }
 
-  char tmp_fname[30];
-  int loc[3];
-
-  if (debug_mode==1) {
-
-
-    double errmax = 0.0;
-    switch (ls_type)
-    {
-      case LS_LSOR_SIMD:
-      case LS_LJCB_D:
-      case LS_LSOR_E:
-      case LS_LSOR_F:
-        sprintf( tmp_fname, "p_%05d.sph", myRank );
-        fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
-        exact_t_(size, &gc, ERR, pitch, origin);
-        err_t_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-        Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
-        sprintf( tmp_fname, "e_%05d.sph", myRank );
-        fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
-        break;
-
-      default:
-        sprintf( tmp_fname, "p_%05d.sph", myRank );
-        fileout_(size, &gc, P, pitch, origin, tmp_fname);
-        exact_(size, &gc, ERR, pitch, origin);
-        err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-        Hostonly_ printf("Error max = %e at (%d %d %d)\n", errmax, loc[0],loc[1],loc[2]);
-        sprintf( tmp_fname, "e_%05d.sph", myRank );
-        fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
-        break;
-    }
-
-
-  }
-
 
   FILE *fp = NULL;
 
@@ -601,6 +563,44 @@ int CZ::Evaluate(int argc, char **argv)
   }
 
 	PM.printLegend(fp);
+
+
+
+  char tmp_fname[30];
+  int loc[3];
+
+  if (debug_mode==1) {
+
+    double errmax = 0.0;
+    switch (ls_type)
+    {
+      case LS_LSOR_SIMD:
+      case LS_LJCB_D:
+      case LS_LSOR_E:
+      case LS_LSOR_F:
+        sprintf( tmp_fname, "p_%05d.sph", myRank );
+        fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
+        exact_t_(size, &gc, ERR, pitch, origin);
+        err_t_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
+        sprintf( tmp_fname, "e_%05d.sph", myRank );
+        fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
+        break;
+
+      default:
+        sprintf( tmp_fname, "p_%05d.sph", myRank );
+        fileout_(size, &gc, P, pitch, origin, tmp_fname);
+        exact_(size, &gc, ERR, pitch, origin);
+        err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
+        sprintf( tmp_fname, "e_%05d.sph", myRank );
+        fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
+        break;
+    }
+  } // debug
+
 
   Hostonly_ {
     fflush(fp);

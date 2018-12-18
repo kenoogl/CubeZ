@@ -1458,7 +1458,8 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        TIMING_start("LSOR_simd_kernel");
        flop_count = 0.0;
        //lsor_simd(q, X, w, a, b, c, B, res, flop_count);
-       lsor_simd2(q, X, w, a, c, B, MSK, res, flop_count);
+       //lsor_simd2(q, X, w, a, c, B, MSK, res, flop_count);
+       lsor_simd3(q, X, w, a, c, B, MSK, res, flop_count);
        TIMING_stop("LSOR_simd_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;

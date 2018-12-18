@@ -44,8 +44,11 @@ set(cz_files
        cz_miscel.cpp
        cz_Poisson.cpp
        cz_comm.cpp
-       cz_dsolver.cpp
-       cz_simd.cpp
+       cz_pcr.cpp
+       cz_lsor_simd.cpp
+       cz_lsor_relax.cpp
+       cz_lsor_rhs.cpp
+       cz_tdma.cpp
 )
 
 add_library(CZ STATIC ${cz_files})
