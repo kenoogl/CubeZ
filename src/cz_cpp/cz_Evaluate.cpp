@@ -277,7 +277,7 @@ int CZ::Evaluate(int argc, char **argv)
 
     if ((tmp/SdW)*SdW != tmp || tmp<2) {
       printf("NK is not appropriate N=%d > NK=%d\n",
-      SdB, SdW*(SdB-2) + 2*(SdW-GUIDE));
+      SdB, SdW*SdB + 2*(SdW-GUIDE));
       exit(1);
     }
 

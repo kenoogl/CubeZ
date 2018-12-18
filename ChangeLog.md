@@ -8,6 +8,14 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-17 Version 0.7.3
+  - tdma4()
+
+---
+- 2018-12-17 Version 0.7.2
+  - lsor_simd3() remainder loop の削除
+
+---
 - 2018-12-17 Version 0.7.1
   - lsor_simd2() unroll(4)の実装
 

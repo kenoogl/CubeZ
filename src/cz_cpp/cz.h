@@ -182,6 +182,20 @@ public:
             REAL_TYPE* c,
             REAL_TYPE* w);
 
+  void tdma4(const int nx,
+             const int i,
+             const int j,
+             REAL_TYPE* d0,
+             REAL_TYPE* d1,
+             REAL_TYPE* d2,
+             REAL_TYPE* d3,
+             REAL_TYPE* a,
+             REAL_TYPE* c,
+             REAL_TYPE* w0,
+             REAL_TYPE* w1,
+             REAL_TYPE* w2,
+             REAL_TYPE* w3);
+
   void tdma_s(int nx,
               REAL_TYPE* d,
               const REAL_TYPE a,
@@ -208,6 +222,16 @@ public:
                  double &flop);
 
   void lsor_simd2(REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* w,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* rhs,
+                 REAL_TYPE* msk,
+                 double &res,
+                 double &flop);
+
+  void lsor_simd3(REAL_TYPE* d,
                  REAL_TYPE* x,
                  REAL_TYPE* w,
                  REAL_TYPE* a,
