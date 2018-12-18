@@ -8,6 +8,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-18 Version 0.7.4
+  - relax()
+
+---
 - 2018-12-17 Version 0.7.3
   - tdma4()
 

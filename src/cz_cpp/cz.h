@@ -194,7 +194,17 @@ public:
              REAL_TYPE* w0,
              REAL_TYPE* w1,
              REAL_TYPE* w2,
-             REAL_TYPE* w3);
+             REAL_TYPE* w3,
+             double& flop);
+
+  double relax(const int i,
+               const int j,
+               const int kst,
+               const int ked,
+               REAL_TYPE* d,
+               REAL_TYPE* x,
+               REAL_TYPE* m,
+               double& flop);
 
   void tdma_s(int nx,
               REAL_TYPE* d,
