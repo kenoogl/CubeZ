@@ -701,3 +701,137 @@ void CZ::tdma6(const int nx,
   TIMING_stop("TDMA_R_body", f4);
   flop += f4;
 }
+
+
+/*
+ * @brief Thomas Algorithm
+ * @param [in      nx   配列長
+ * @param [in,out] d    RHS/解ベクトル X[nx]
+ * @param [in]     a    L_1 vector
+ * @param [in]     c    U_1 vector
+ * @param [in]     w    work vector (U_1)
+ * @note simd intrinsic
+
+void CZ::tdma7(const int nx,
+               REAL_TYPE* a,
+               REAL_TYPE* e,
+               REAL_TYPE* w,
+               REAL_TYPE* d0,
+               REAL_TYPE* d1,
+               REAL_TYPE* d2,
+               REAL_TYPE* d3,
+               REAL_TYPE* d4,
+               REAL_TYPE* d5,
+               REAL_TYPE* d6,
+               REAL_TYPE* d7,
+               double& flop)
+{
+  __assume_aligned(a,  ALIGN);
+  __assume_aligned(e,  ALIGN);
+  __assume_aligned(w,  ALIGN);
+  __assume_aligned(d0, ALIGN);
+  __assume_aligned(d1, ALIGN);
+  __assume_aligned(d2, ALIGN);
+  __assume_aligned(d3, ALIGN);
+  __assume_aligned(d4, ALIGN);
+  __assume_aligned(d5, ALIGN);
+  __assume_aligned(d6, ALIGN);
+  __assume_aligned(d7, ALIGN);
+
+
+  int bst = SdW-GUIDE-1;
+  int bed = SdW*(SdB+1)-GUIDE-1;
+  const double f1 = 24.0*(double)bst;
+  const double f2 = 24.0*(double)(nx-bst+1);
+  const double f3 = 8.0*(double)(nx-1-bed);
+  const double f4 = 8.0*(double)bed;
+
+  REAL_TYPE ee, aa, ww;
+
+
+
+  // Forward:Peel
+  TIMING_start("TDMA_F_peel");
+  #pragma loop count (SdW-GUIDE-2)
+  for (int k=1; k<bst; k++)
+  {
+    aa = a[k];
+    ee = e[k];
+    d0[k] = (d0[k] - aa * d0[k-1]) * ee;
+    d1[k] = (d1[k] - aa * d1[k-1]) * ee;
+    d2[k] = (d2[k] - aa * d2[k-1]) * ee;
+    d3[k] = (d3[k] - aa * d3[k-1]) * ee;
+    d3[k] = (d4[k] - aa * d4[k-1]) * ee;
+    d3[k] = (d5[k] - aa * d5[k-1]) * ee;
+    d3[k] = (d6[k] - aa * d6[k-1]) * ee;
+    d3[k] = (d7[k] - aa * d7[k-1]) * ee;
+  }
+  TIMING_stop("TDMA_F_peel", f1);
+  flop += f1;
+
+
+  // Forward:SIMD body
+  TIMING_start("TDMA_F_body");
+  for (int k=bst; k<nx; k+=8)
+  {
+    // aa = a[k];
+    // ee = e[k];
+    __m256 aaa = _mm256_set1_ps(a[k]);
+    __m256 eee = _mm256_set1_ps(e[k]);
+
+    __m256 dd0 = _mm256_load_ps(&d0[k-1]);
+    __m256 dd1 = _mm256_load_ps(&d1[k-1]);
+    __m256 dd2 = _mm256_load_ps(&d2[k-1]);
+    __m256 dd3 = _mm256_load_ps(&d3[k-1]);
+    __m256 dd4 = _mm256_load_ps(&d4[k-1]);
+    __m256 dd5 = _mm256_load_ps(&d5[k-1]);
+    __m256 dd6 = _mm256_load_ps(&d6[k-1]);
+    __m256 dd7 = _mm256_load_ps(&d7[k-1]);
+
+    __m256 dn0 = _mm256_load_ps(&d0[k]);
+    __m256 dn1 = _mm256_load_ps(&d1[k]);
+    __m256 dn2 = _mm256_load_ps(&d2[k]);
+    __m256 dn3 = _mm256_load_ps(&d3[k]);
+    __m256 dn4 = _mm256_load_ps(&d4[k]);
+    __m256 dn5 = _mm256_load_ps(&d5[k]);
+    __m256 dn6 = _mm256_load_ps(&d6[k]);
+    __m256 dn7 = _mm256_load_ps(&d7[k]);
+
+    d0[k] = (d0[k] - aa * d0[k-1]) * ee;
+    d1[k] = (d1[k] - aa * d1[k-1]) * ee;
+    d2[k] = (d2[k] - aa * d2[k-1]) * ee;
+    d3[k] = (d3[k] - aa * d3[k-1]) * ee;
+  }
+  TIMING_stop("TDMA_F_body", f2);
+  flop += f2;
+
+
+  // Backward:Peel
+  TIMING_start("TDMA_R_peel");
+  #pragma loop count (SdW-GUIDE-3)
+  for (int k=nx-2; k>=bed; k--)
+  {
+    ww = w[k];
+    d0[k] -= ww * d0[k+1];
+    d1[k] -= ww * d1[k+1];
+    d2[k] -= ww * d2[k+1];
+    d3[k] -= ww * d3[k+1];
+  }
+  TIMING_stop("TDMA_R_peel", f3);
+  flop += f3;
+
+
+  // Backward:SIMD body
+  TIMING_start("TDMA_R_body");
+  for (int k=bed-1; k>=0; k--)
+  {
+    ww = w[k];
+    d0[k] -= ww * d0[k+1];
+    d1[k] -= ww * d1[k+1];
+    d2[k] -= ww * d2[k+1];
+    d3[k] -= ww * d3[k+1];
+  }
+  TIMING_stop("TDMA_R_body", f4);
+  flop += f4;
+}
+*/

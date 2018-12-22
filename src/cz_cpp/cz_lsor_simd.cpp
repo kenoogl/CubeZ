@@ -412,69 +412,74 @@ void CZ::lsor_simd4(REAL_TYPE* d,
 
   res = 0.0;
 
-  #pragma omp parallel for schedule(dynamic,1) reduction(+:res) private(flop_count)
-  for (int l=0; l<QI*QJ; l+=4)
+  for (int col=0; col<2; col++)
   {
-    int ia[4], ja[4];
-    sIndex(ia[0], ja[0], l  , QI, ist, jst);
-    sIndex(ia[1], ja[1], l+1, QI, ist, jst);
-    sIndex(ia[2], ja[2], l+2, QI, ist, jst);
-    sIndex(ia[3], ja[3], l+3, QI, ist, jst);
+    #pragma omp parallel for schedule(dynamic,1) reduction(+:res) private(flop_count)
+    for (int l=col; l<QI*QJ; l+=8)
+    {
+      int ia[4], ja[4];
+      sIndex(ia[0], ja[0], l  , QI, ist, jst);
+      sIndex(ia[1], ja[1], l+2, QI, ist, jst);
+      sIndex(ia[2], ja[2], l+4, QI, ist, jst);
+      sIndex(ia[3], ja[3], l+6, QI, ist, jst);
 
-    TIMING_start("LSOR_RHS");
-    flop_count = 0.0;
-    ms_rhs4v(ia, ja, kst, ked, d, x, rhs, msk, flop_count);
-    TIMING_stop("LSOR_RHS", flop_count);
-
-
-    TIMING_start("LSOR_TDMA_BC");
-    d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(kst-2,ia[0],ja[0],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)];
-    d[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(ked  ,ia[0],ja[0],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)];
-    d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(kst-2,ia[1],ja[1],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)];
-    d[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(ked  ,ia[1],ja[1],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)];
-
-    d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(kst-2,ia[2],ja[2],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)];
-    d[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(ked  ,ia[2],ja[2],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)];
-
-    d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(kst-2,ia[3],ja[3],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)];
-    d[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)]
-                                               + rhs[_IDX_S3D(ked  ,ia[3],ja[3],NK,NI,GUIDE)] * r )
-                                               * msk[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)];
-    TIMING_stop("LSOR_TDMA_BC", 24.0);
+      TIMING_start("LSOR_RHS");
+      flop_count = 0.0;
+      ms_rhs4v(ia, ja, kst, ked, d, x, rhs, msk, flop_count);
+      TIMING_stop("LSOR_RHS", flop_count);
 
 
-    TIMING_start("LSOR_TDMA");
-    flop_count = 0.0;
-    tdma6(QK,
-         &a[kst+GUIDE-1],
-         &e[kst+GUIDE-1],
-         &w[kst+GUIDE-1],
-         &d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)],
-         &d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)],
-         &d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)],
-         &d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)],
-         flop_count
-       );
-    TIMING_stop("LSOR_TDMA", flop_count);
+      TIMING_start("LSOR_TDMA_BC");
+      d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(kst-2,ia[0],ja[0],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)];
+      d[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(ked  ,ia[0],ja[0],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(ked-1,ia[0],ja[0],NK,NI,GUIDE)];
+      d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(kst-2,ia[1],ja[1],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)];
+      d[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(ked  ,ia[1],ja[1],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(ked-1,ia[1],ja[1],NK,NI,GUIDE)];
+
+      d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(kst-2,ia[2],ja[2],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)];
+      d[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(ked  ,ia[2],ja[2],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(ked-1,ia[2],ja[2],NK,NI,GUIDE)];
+
+      d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)] = ( d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(kst-2,ia[3],ja[3],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)];
+      d[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)] = ( d[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)]
+                                                 + rhs[_IDX_S3D(ked  ,ia[3],ja[3],NK,NI,GUIDE)] * r )
+                                                 * msk[_IDX_S3D(ked-1,ia[3],ja[3],NK,NI,GUIDE)];
+      TIMING_stop("LSOR_TDMA_BC", 24.0);
 
 
-    TIMING_start("LSOR_Relax");
-    flop_count = 0.0;
-    res += relax4c(ia, ja, kst, ked, d, x, msk, flop_count);
-    TIMING_stop("LSOR_Relax", flop_count);
+      TIMING_start("LSOR_TDMA");
+      flop_count = 0.0;
+      tdma6(QK,
+           &a[kst+GUIDE-1],
+           &e[kst+GUIDE-1],
+           &w[kst+GUIDE-1],
+           &d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)],
+           &d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)],
+           &d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)],
+           &d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)],
+           flop_count
+         );
+      TIMING_stop("LSOR_TDMA", flop_count);
+
+
+      TIMING_start("LSOR_Relax");
+      flop_count = 0.0;
+      res += relax4c(ia, ja, kst, ked, d, x, msk, flop_count);
+      TIMING_stop("LSOR_Relax", flop_count);
+    }
   }
+
+
 }

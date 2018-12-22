@@ -12,12 +12,14 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 
 - tdma5()のsimd化
 
-- LUの省演算版
-
 - 緩和スイープ制御を2colorにする
 
 
 ## REVISION HISTORY
+
+---
+- 2018-12-18 Version 0.7.7
+  - lsor_simd4() 2-color オーダリング
 
 ---
 - 2018-12-18 Version 0.7.6
