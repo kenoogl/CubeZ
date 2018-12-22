@@ -1503,6 +1503,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE var_type=0;
 
      REAL_TYPE* q;  // RHS
+     REAL_TYPE* q2;
      REAL_TYPE* w;  // work
      REAL_TYPE* a;
      REAL_TYPE* c;
@@ -1511,6 +1512,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      int kst = innerFidx[K_minus];
 
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+     if( (q2= czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      std::memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
@@ -1551,7 +1553,8 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_simd_kernel");
        flop_count = 0.0;
-       lsor_simd4(q, X, w, a, e, B, MSK, res, flop_count);
+       //lsor_simd4(q, X, w, a, e, B, MSK, res, flop_count);
+       lsor_simd5(q, X, w, a, e, B, MSK, q2, res, flop_count);
        TIMING_stop("LSOR_simd_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -1574,6 +1577,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(a);
      czDelete(c);
      czDelete(e);
+     czDelete(q2);
 
      return itr;
    }

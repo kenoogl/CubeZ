@@ -220,14 +220,12 @@ public:
              REAL_TYPE* w3,
              double& flop);
 
-  void tdma6(const int nx,
-             REAL_TYPE* a,
-             REAL_TYPE* e,
-             REAL_TYPE* w,
-             REAL_TYPE* d0,
-             REAL_TYPE* d1,
-             REAL_TYPE* d2,
-             REAL_TYPE* d3,
+  void tdma6(const int* ia,
+             const int* ja,
+             REAL_TYPE* ap,
+             REAL_TYPE* ep,
+             REAL_TYPE* wp,
+             REAL_TYPE* dp,
              double& flop);
 
   void tdma7(const int* ia,
@@ -236,6 +234,7 @@ public:
              REAL_TYPE* ep,
              REAL_TYPE* wp,
              REAL_TYPE* dp,
+             REAL_TYPE* dw,
              double& flop);
 
   void tdma8(const int nx,
@@ -422,14 +421,15 @@ public:
                  double &flop);
 
   void lsor_simd5(REAL_TYPE* d,
-                 REAL_TYPE* x,
-                 REAL_TYPE* w,
-                 REAL_TYPE* a,
-                 REAL_TYPE* c,
-                 REAL_TYPE* rhs,
-                 REAL_TYPE* msk,
-                 double &res,
-                 double &flop);
+                  REAL_TYPE* x,
+                  REAL_TYPE* w,
+                  REAL_TYPE* a,
+                  REAL_TYPE* c,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* msk,
+                  REAL_TYPE* d2,
+                  double &res,
+                  double &flop);
 
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数

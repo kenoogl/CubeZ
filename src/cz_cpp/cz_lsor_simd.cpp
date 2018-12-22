@@ -444,19 +444,7 @@ void CZ::lsor_simd4(REAL_TYPE* d,
 
       TIMING_start("LSOR_TDMA");
       flop_count = 0.0;
-      /*
-      tdma6(QK,
-           &a[kst+GUIDE-1],
-           &e[kst+GUIDE-1],
-           &w[kst+GUIDE-1],
-           &d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)],
-           flop_count
-         );
-      */
-      tdma7(ia, ja, a, e, w, d, flop_count);
+      tdma6(ia, ja, a, e, w, d, flop_count);
       TIMING_stop("LSOR_TDMA", flop_count);
 
 
@@ -484,6 +472,7 @@ void CZ::lsor_simd5(REAL_TYPE* d,
                     REAL_TYPE* e,
                     REAL_TYPE* rhs,
                     REAL_TYPE* msk,
+                    REAL_TYPE* d2,
                     double &res,
                     double &flop)
 {
@@ -494,6 +483,7 @@ void CZ::lsor_simd5(REAL_TYPE* d,
   __assume_aligned(e, ALIGN);
   __assume_aligned(msk, ALIGN);
   __assume_aligned(rhs, ALIGN);
+  __assume_aligned(d2, ALIGN);
 
   int NI = size[0];
   int NJ = size[1];
@@ -512,7 +502,7 @@ void CZ::lsor_simd5(REAL_TYPE* d,
   // (i,j)点をサンプルするためのインデクス計算
   int QI = ied - ist + 1;
   int QJ = jed - jst + 1;
-  int QK = ked - kst + 1;
+
 
   res = 0.0;
 
@@ -553,6 +543,8 @@ void CZ::lsor_simd5(REAL_TYPE* d,
 
       TIMING_start("LSOR_TDMA");
       flop_count = 0.0;
+      tdma7(ia, ja, a, e, w, d, d2, flop_count);
+/*
       tdma8(QK,
            &a[kst+GUIDE-1],
            &e[kst+GUIDE-1],
@@ -567,8 +559,13 @@ void CZ::lsor_simd5(REAL_TYPE* d,
            &d[_IDX_S3D(kst-1,ia[7],ja[7],NK,NI,GUIDE)],
            flop_count
          );
+         */
       TIMING_stop("LSOR_TDMA", flop_count);
 
+      REAL_TYPE* swp = NULL;
+      swp = d;
+      d = d2;
+      d2 = swp;
 
       TIMING_start("LSOR_Relax");
       flop_count = 0.0;
