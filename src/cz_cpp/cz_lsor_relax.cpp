@@ -235,6 +235,103 @@ double CZ::relax4c(const int* ia,
   return (double)res;
 }
 
+double CZ::relax8c(const int* ia,
+                   const int* ja,
+                   const int kst,
+                   const int ked,
+                   REAL_TYPE* d,
+                   REAL_TYPE* x,
+                   REAL_TYPE* m,
+                   double& flop)
+{
+  __assume_aligned(d, ALIGN);
+  __assume_aligned(x, ALIGN);
+  __assume_aligned(m, ALIGN);
+
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+
+  REAL_TYPE res=0.0;
+  REAL_TYPE omg = ac1;
+  REAL_TYPE pp0, dp0, pn0;
+  REAL_TYPE pp1, dp1, pn1;
+  REAL_TYPE pp2, dp2, pn2;
+  REAL_TYPE pp3, dp3, pn3;
+  REAL_TYPE pp4, dp4, pn4;
+  REAL_TYPE pp5, dp5, pn5;
+  REAL_TYPE pp6, dp6, pn6;
+  REAL_TYPE pp7, dp7, pn7;
+  size_t    m0, m1, m2, m3, m4, m5, m6, m7;
+
+  flop += 48.0*(double)(ked-kst+2);
+
+  TIMING_start("LSOR_Relax_Body");
+  #pragma vector always
+  #pragma ivdep
+  for (int k=kst-1; k<ked; k++) {
+    m0 = _IDX_S3D(k,ia[0],ja[0],NK,NI,GUIDE);
+    pp0 = x[m0];
+    dp0 = ( d[m0] - pp0 ) * omg * m[m0];
+    pn0 = pp0 + dp0;
+    x[m0] = pn0;
+
+    m1 = _IDX_S3D(k,ia[1],ja[1],NK,NI,GUIDE);
+    pp1 = x[m1];
+    dp1 = ( d[m1] - pp1 ) * omg * m[m1];
+    pn1 = pp1 + dp1;
+    x[m1] = pn1;
+
+    m2 = _IDX_S3D(k,ia[2],ja[2],NK,NI,GUIDE);
+    pp2 = x[m2];
+    dp2 = ( d[m2] - pp2 ) * omg * m[m2];
+    pn2 = pp2 + dp2;
+    x[m2] = pn2;
+
+    m3 = _IDX_S3D(k,ia[3],ja[3],NK,NI,GUIDE);
+    pp3 = x[m3];
+    dp3 = ( d[m3] - pp3 ) * omg * m[m3];
+    pn3 = pp3 + dp3;
+    x[m3] = pn3;
+
+    m4 = _IDX_S3D(k,ia[4],ja[4],NK,NI,GUIDE);
+    pp4 = x[m4];
+    dp4 = ( d[m4] - pp4 ) * omg * m[m4];
+    pn4 = pp4 + dp4;
+    x[m4] = pn4;
+
+    m5 = _IDX_S3D(k,ia[5],ja[5],NK,NI,GUIDE);
+    pp5 = x[m5];
+    dp5 = ( d[m5] - pp5 ) * omg * m[m5];
+    pn5 = pp5 + dp5;
+    x[m5] = pn5;
+
+    m6 = _IDX_S3D(k,ia[6],ja[6],NK,NI,GUIDE);
+    pp6 = x[m6];
+    dp6 = ( d[m6] - pp6 ) * omg * m[m6];
+    pn6 = pp6 + dp6;
+    x[m6] = pn6;
+
+    m7 = _IDX_S3D(k,ia[7],ja[7],NK,NI,GUIDE);
+    pp7 = x[m7];
+    dp7 = ( d[m7] - pp7 ) * omg * m[m7];
+    pn7 = pp7 + dp7;
+    x[m7] = pn7;
+
+    res += dp0 * dp0
+         + dp1 * dp1
+         + dp2 * dp2
+         + dp3 * dp3
+         + dp4 * dp4
+         + dp5 * dp5
+         + dp6 * dp6 
+         + dp7 * dp7;
+  }
+  TIMING_stop("LSOR_Relax_Body", 24.0*(double)(ked-kst+2));
+
+  return (double)res;
+}
+
 
 // @note relax4()をSIMD化
 double CZ::relax_256(const int* ia,

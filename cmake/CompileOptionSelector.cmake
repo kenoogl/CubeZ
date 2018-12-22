@@ -36,9 +36,9 @@ macro (AddOptimizeOption)
     set(CMAKE_Fortran_FLAGS "-O3 -Wall")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=3 -std=c++11")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHOST -O3 -qopt-report=3")
-    set(CMAKE_Fortran_FLAGS "-xHOST -O3 -qopt-report=3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=5 -std=c++11 -restrict")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHOST -O3 -qopt-report=5")
+    set(CMAKE_Fortran_FLAGS "-xHOST -O3 -qopt-report=5")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -O4 -Minfo=intensity,vect -cpp=mm")

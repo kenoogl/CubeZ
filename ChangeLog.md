@@ -18,6 +18,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-18 Version 0.7.8
+  - tdma7()で受け渡し方法の別実装
+
+---
 - 2018-12-18 Version 0.7.7
   - lsor_simd4() 2-color オーダリング
 

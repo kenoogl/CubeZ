@@ -702,7 +702,6 @@ void CZ::tdma6(const int nx,
   flop += f4;
 }
 
-
 /*
  * @brief Thomas Algorithm
  * @param [in      nx   配列長
@@ -710,45 +709,49 @@ void CZ::tdma6(const int nx,
  * @param [in]     a    L_1 vector
  * @param [in]     c    U_1 vector
  * @param [in]     w    work vector (U_1)
- * @note simd intrinsic
-
-void CZ::tdma7(const int nx,
-               REAL_TYPE* a,
-               REAL_TYPE* e,
-               REAL_TYPE* w,
-               REAL_TYPE* d0,
-               REAL_TYPE* d1,
-               REAL_TYPE* d2,
-               REAL_TYPE* d3,
-               REAL_TYPE* d4,
-               REAL_TYPE* d5,
-               REAL_TYPE* d6,
-               REAL_TYPE* d7,
+ * @note tdma6()と値の受け渡しが異なるもの
+ */
+void CZ::tdma7(const int* ia,
+               const int* ja,
+               REAL_TYPE* ap,
+               REAL_TYPE* ep,
+               REAL_TYPE* wp,
+               REAL_TYPE* dp,
                double& flop)
 {
-  __assume_aligned(a,  ALIGN);
-  __assume_aligned(e,  ALIGN);
-  __assume_aligned(w,  ALIGN);
-  __assume_aligned(d0, ALIGN);
-  __assume_aligned(d1, ALIGN);
-  __assume_aligned(d2, ALIGN);
-  __assume_aligned(d3, ALIGN);
-  __assume_aligned(d4, ALIGN);
-  __assume_aligned(d5, ALIGN);
-  __assume_aligned(d6, ALIGN);
-  __assume_aligned(d7, ALIGN);
+  __assume_aligned(ap, ALIGN);
+  __assume_aligned(ep, ALIGN);
+  __assume_aligned(wp, ALIGN);
+  __assume_aligned(dp, ALIGN);
 
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int nx = ked - kst + 1;
 
   int bst = SdW-GUIDE-1;
   int bed = SdW*(SdB+1)-GUIDE-1;
-  const double f1 = 24.0*(double)bst;
-  const double f2 = 24.0*(double)(nx-bst+1);
+  const double f1 = 12.0*(double)bst;
+  const double f2 = 12.0*(double)(nx-bst+1);
   const double f3 = 8.0*(double)(nx-1-bed);
   const double f4 = 8.0*(double)bed;
 
   REAL_TYPE ee, aa, ww;
 
+  float *a, *e, *w;
+  float *d0, *d1, *d2, *d3;
 
+  a = &ap[kst+GUIDE-1];
+  e = &ep[kst+GUIDE-1];
+  w = &wp[kst+GUIDE-1];
+
+  d0 = &dp[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)];
+  d1 = &dp[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)],
+  d2 = &dp[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)],
+  d3 = &dp[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)],
 
   // Forward:Peel
   TIMING_start("TDMA_F_peel");
@@ -761,10 +764,6 @@ void CZ::tdma7(const int nx,
     d1[k] = (d1[k] - aa * d1[k-1]) * ee;
     d2[k] = (d2[k] - aa * d2[k-1]) * ee;
     d3[k] = (d3[k] - aa * d3[k-1]) * ee;
-    d3[k] = (d4[k] - aa * d4[k-1]) * ee;
-    d3[k] = (d5[k] - aa * d5[k-1]) * ee;
-    d3[k] = (d6[k] - aa * d6[k-1]) * ee;
-    d3[k] = (d7[k] - aa * d7[k-1]) * ee;
   }
   TIMING_stop("TDMA_F_peel", f1);
   flop += f1;
@@ -772,31 +771,10 @@ void CZ::tdma7(const int nx,
 
   // Forward:SIMD body
   TIMING_start("TDMA_F_body");
-  for (int k=bst; k<nx; k+=8)
+  for (int k=bst; k<nx; k++)
   {
-    // aa = a[k];
-    // ee = e[k];
-    __m256 aaa = _mm256_set1_ps(a[k]);
-    __m256 eee = _mm256_set1_ps(e[k]);
-
-    __m256 dd0 = _mm256_load_ps(&d0[k-1]);
-    __m256 dd1 = _mm256_load_ps(&d1[k-1]);
-    __m256 dd2 = _mm256_load_ps(&d2[k-1]);
-    __m256 dd3 = _mm256_load_ps(&d3[k-1]);
-    __m256 dd4 = _mm256_load_ps(&d4[k-1]);
-    __m256 dd5 = _mm256_load_ps(&d5[k-1]);
-    __m256 dd6 = _mm256_load_ps(&d6[k-1]);
-    __m256 dd7 = _mm256_load_ps(&d7[k-1]);
-
-    __m256 dn0 = _mm256_load_ps(&d0[k]);
-    __m256 dn1 = _mm256_load_ps(&d1[k]);
-    __m256 dn2 = _mm256_load_ps(&d2[k]);
-    __m256 dn3 = _mm256_load_ps(&d3[k]);
-    __m256 dn4 = _mm256_load_ps(&d4[k]);
-    __m256 dn5 = _mm256_load_ps(&d5[k]);
-    __m256 dn6 = _mm256_load_ps(&d6[k]);
-    __m256 dn7 = _mm256_load_ps(&d7[k]);
-
+    aa = a[k];
+    ee = e[k];
     d0[k] = (d0[k] - aa * d0[k-1]) * ee;
     d1[k] = (d1[k] - aa * d1[k-1]) * ee;
     d2[k] = (d2[k] - aa * d2[k-1]) * ee;
@@ -834,4 +812,221 @@ void CZ::tdma7(const int nx,
   TIMING_stop("TDMA_R_body", f4);
   flop += f4;
 }
+
+/*
+ * @brief Thomas Algorithm
+ * @param [in      nx   配列長
+ * @param [in,out] d    RHS/解ベクトル X[nx]
+ * @param [in]     a    L_1 vector
+ * @param [in]     c    U_1 vector
+ * @param [in]     w    work vector (U_1)
+ * @note simd intrinsic
 */
+void CZ::tdma8(const int nx,
+               REAL_TYPE* a,
+               REAL_TYPE* e,
+               REAL_TYPE* w,
+               REAL_TYPE* d0,
+               REAL_TYPE* d1,
+               REAL_TYPE* d2,
+               REAL_TYPE* d3,
+               REAL_TYPE* d4,
+               REAL_TYPE* d5,
+               REAL_TYPE* d6,
+               REAL_TYPE* d7,
+               double& flop)
+{
+  __assume_aligned(a,  ALIGN);
+  __assume_aligned(e,  ALIGN);
+  __assume_aligned(w,  ALIGN);
+  __assume_aligned(d0, ALIGN);
+  __assume_aligned(d1, ALIGN);
+  __assume_aligned(d2, ALIGN);
+  __assume_aligned(d3, ALIGN);
+  __assume_aligned(d4, ALIGN);
+  __assume_aligned(d5, ALIGN);
+  __assume_aligned(d6, ALIGN);
+  __assume_aligned(d7, ALIGN);
+
+  int bst = SdW-GUIDE-1;
+  int bed = SdW*(SdB+1)-GUIDE-1;
+
+  const double f1 = 24.0*(double)bst;
+  const double f2 = 24.0*(double)(nx-bst+1)/8;
+  const double f3 = 16.0*(double)(nx-1-bed);
+  const double f4 = 16.0*(double)bed/8;
+
+  float aa, ee, ww;
+
+  // Forward:Peel
+  TIMING_start("TDMA_F_peel");
+  #pragma loop count (SdW-GUIDE-2)
+  for (int k=1; k<bst; k++)
+  {
+    aa = a[k];
+    ee = e[k];
+    d0[k] = (d0[k] - aa * d0[k-1]) * ee;
+    d1[k] = (d1[k] - aa * d1[k-1]) * ee;
+    d2[k] = (d2[k] - aa * d2[k-1]) * ee;
+    d3[k] = (d3[k] - aa * d3[k-1]) * ee;
+    d4[k] = (d4[k] - aa * d4[k-1]) * ee;
+    d5[k] = (d5[k] - aa * d4[k-1]) * ee;
+    d6[k] = (d6[k] - aa * d6[k-1]) * ee;
+    d7[k] = (d7[k] - aa * d7[k-1]) * ee;
+  }
+  TIMING_stop("TDMA_F_peel", f1);
+  flop += f1;
+
+
+  // 最初のd[k-1]を作っておく(transposed) unalign
+  // d0[], d1[], d2[], d3[], d4[], d5[], d6[], d7[]
+  // gather命令可能
+  __m256 t0 = _mm256_set_ps(
+            d7[bst-1], d6[bst-1], d5[bst-1], d4[bst-1],
+            d3[bst-1], d2[bst-1], d1[bst-1], d0[bst-1]
+         );
+
+  // Forward:SIMD body
+  TIMING_start("TDMA_F_body");
+  #pragma ivdep
+  for (int k=bst; k<nx; k+=8)
+  {
+    // aa = a[k];
+    // ee = e[k];
+    __m256 aaa = _mm256_set1_ps(a[k]);
+    __m256 eee = _mm256_set1_ps(e[k]);
+
+    __m256 t1[8], dd[8];
+
+    t1[0] = _mm256_load_ps(&d0[k]);
+    t1[1] = _mm256_load_ps(&d1[k]);
+    t1[2] = _mm256_load_ps(&d2[k]);
+    t1[3] = _mm256_load_ps(&d3[k]);
+    t1[4] = _mm256_load_ps(&d4[k]);
+    t1[5] = _mm256_load_ps(&d5[k]);
+    t1[6] = _mm256_load_ps(&d6[k]);
+    t1[7] = _mm256_load_ps(&d7[k]);
+
+    _mm256_transpose_8x8_ps(dd, t1);
+
+
+    // d0[k] = (d0[k] - aa * d0[k-1]) * ee;
+    // fnmadd_ps(a,b,c) => -a*b+c
+    t1[0] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, t0,    dd[0]), eee
+            );
+    t1[1] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[0], dd[1]), eee
+            );
+    t1[2] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[1], dd[2]), eee
+            );
+    t1[3] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[2], dd[3]), eee
+            );
+    t1[4] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[3], dd[4]), eee
+            );
+    t1[5] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[4], dd[5]), eee
+            );
+    t1[6] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[5], dd[6]), eee
+            );
+    t1[7] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(aaa, dd[6], dd[7]), eee
+            );
+
+    // copy dd[7] > t0, 以降の処理の前に
+    t0 = dd[7];
+
+    // 出力のため転置
+    _mm256_transpose_8x8_ps(dd, t1);
+
+    _mm256_store_ps( d0+k , dd[0] );
+    _mm256_store_ps( d1+k , dd[1] );
+    _mm256_store_ps( d2+k , dd[2] );
+    _mm256_store_ps( d3+k , dd[3] );
+    _mm256_store_ps( d4+k , dd[4] );
+    _mm256_store_ps( d5+k , dd[5] );
+    _mm256_store_ps( d6+k , dd[6] );
+    _mm256_store_ps( d7+k , dd[7] );
+
+  }
+  TIMING_stop("TDMA_F_body", f1);
+  flop += f1;
+
+
+  // Backward:Peel
+  TIMING_start("TDMA_R_peel");
+  #pragma loop count (SdW-GUIDE-3)
+  for (int k=nx-2; k>=bed; k--)
+  {
+    ww = w[k];
+    d0[k] -= ww * d0[k+1];
+    d1[k] -= ww * d1[k+1];
+    d2[k] -= ww * d2[k+1];
+    d3[k] -= ww * d3[k+1];
+    d4[k] -= ww * d4[k+1];
+    d5[k] -= ww * d5[k+1];
+    d6[k] -= ww * d6[k+1];
+    d7[k] -= ww * d7[k+1];
+  }
+  TIMING_stop("TDMA_R_peel", f3);
+  flop += f3;
+
+
+  // d[k+1]の内容を作っておく
+  t0 = _mm256_set_ps(
+            d7[bed], d6[bed], d5[bed], d4[bed],
+            d3[bed], d2[bed], d1[bed], d0[bed]
+      );
+
+  // Backward:SIMD body
+  // 降順にアクセス 開始はbed-1ではなく、64バイト境界のbed-8から-GUIDE-1(先頭)まで
+  // 計算順序はt1[7]から
+  TIMING_start("TDMA_R_body");
+  for (int k=bed-8; k>=-GUIDE-1; k-=8)
+  {
+    // ww = w[k];
+    __m256 www = _mm256_set1_ps(w[k]);
+
+    __m256 t1[8], dd[8];
+
+    t1[0] = _mm256_load_ps(&d0[k]);
+    t1[1] = _mm256_load_ps(&d1[k]);
+    t1[2] = _mm256_load_ps(&d2[k]);
+    t1[3] = _mm256_load_ps(&d3[k]);
+    t1[4] = _mm256_load_ps(&d4[k]);
+    t1[5] = _mm256_load_ps(&d5[k]);
+    t1[6] = _mm256_load_ps(&d6[k]);
+    t1[7] = _mm256_load_ps(&d7[k]);
+
+    _mm256_transpose_8x8_ps(dd, t1);
+
+    // d0[k] -= ww * d0[k+1];
+    t1[7] = _mm256_fnmadd_ps(www, t0   , dd[7]);
+    t1[6] = _mm256_fnmadd_ps(www, dd[7], dd[6]);
+    t1[5] = _mm256_fnmadd_ps(www, dd[6], dd[5]);
+    t1[4] = _mm256_fnmadd_ps(www, dd[5], dd[4]);
+    t1[3] = _mm256_fnmadd_ps(www, dd[4], dd[3]);
+    t1[2] = _mm256_fnmadd_ps(www, dd[3], dd[2]);
+    t1[1] = _mm256_fnmadd_ps(www, dd[2], dd[1]);
+    t1[0] = _mm256_fnmadd_ps(www, dd[1], dd[0]);
+
+    t0 = dd[0];
+
+    _mm256_transpose_8x8_ps(dd, t1);
+
+    _mm256_store_ps( d0+k , dd[0] );
+    _mm256_store_ps( d1+k , dd[1] );
+    _mm256_store_ps( d2+k , dd[2] );
+    _mm256_store_ps( d3+k , dd[3] );
+    _mm256_store_ps( d4+k , dd[4] );
+    _mm256_store_ps( d5+k , dd[5] );
+    _mm256_store_ps( d6+k , dd[6] );
+    _mm256_store_ps( d7+k , dd[7] );
+  }
+  TIMING_stop("TDMA_R_body", f4);
+  flop += f4;
+}

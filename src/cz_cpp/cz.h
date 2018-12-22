@@ -155,7 +155,9 @@ public:
   }
 
   void print_m256(__m256 x) {
-    printf("%f %f %f %f\n",x[3],x[2],x[1],x[0]);
+    printf("%f %f %f %f %f %f ^%f %f\n",
+    x[7], x[6], x[5], x[4],
+    x[3], x[2], x[1], x[0]);
   }
 
 
@@ -227,7 +229,55 @@ public:
              REAL_TYPE* d2,
              REAL_TYPE* d3,
              double& flop);
-  
+
+  void tdma7(const int* ia,
+             const int* ja,
+             REAL_TYPE* ap,
+             REAL_TYPE* ep,
+             REAL_TYPE* wp,
+             REAL_TYPE* dp,
+             double& flop);
+
+  void tdma8(const int nx,
+             REAL_TYPE* a,
+             REAL_TYPE* e,
+             REAL_TYPE* w,
+             REAL_TYPE* d0,
+             REAL_TYPE* d1,
+             REAL_TYPE* d2,
+             REAL_TYPE* d3,
+             REAL_TYPE* d4,
+             REAL_TYPE* d5,
+             REAL_TYPE* d6,
+             REAL_TYPE* d7,
+             double& flop);
+
+  inline void _mm256_transpose_8x8_ps(__m256* dst, const __m256* src)
+  {
+  	__m256  tmp[8], tmpp[8];
+
+  	for(int i=0;i<8;i+=2)
+  	{
+  		tmp[i+0] = _mm256_unpacklo_ps(src[i], src[i+1]);
+  		tmp[i+1] = _mm256_unpackhi_ps(src[i], src[i+1]);
+  	}
+  	for(int i=0;i<8;i+=4)
+  	{
+  		tmpp[i+0] = _mm256_shuffle_ps(tmp[i+0],tmp[i+2],_MM_SHUFFLE(1,0,1,0));
+  		tmpp[i+1] = _mm256_shuffle_ps(tmp[i+0],tmp[i+2],_MM_SHUFFLE(3,2,3,2));
+  	}
+  	for(int i=0;i<8;i+=4)
+  	{
+  		tmpp[i+2] = _mm256_shuffle_ps(tmp[i+1],tmp[i+3],_MM_SHUFFLE(1,0,1,0));
+  		tmpp[i+3] = _mm256_shuffle_ps(tmp[i+1],tmp[i+3],_MM_SHUFFLE(3,2,3,2));
+  	}
+  	for(int i=0;i<4;i++)
+  	{
+  		dst[i+0] = _mm256_permute2f128_ps(tmpp[i], tmpp[i+4], 0x20);
+  		dst[i+4] = _mm256_permute2f128_ps(tmpp[i], tmpp[i+4], 0x31);
+  	}
+  }
+
   void tdma_pre(REAL_TYPE* a,
                 REAL_TYPE* c,
                 REAL_TYPE* e,
@@ -262,6 +312,15 @@ public:
                  REAL_TYPE* m,
                  double& flop);
 
+  double relax8c(const int* ia,
+                 const int* ja,
+                 const int kst,
+                 const int ked,
+                 REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* m,
+                 double& flop);
+
   double relax_256(const int* ia,
                    const int* ja,
                    const int kst,
@@ -282,6 +341,16 @@ public:
 
 
   // cz_lsor_rhs.cpp
+  void ms_rhs8v(const int* ia,
+                const int* ja,
+                const int kst,
+                const int ked,
+                REAL_TYPE* d,
+                REAL_TYPE* x,
+                REAL_TYPE* rhs,
+                REAL_TYPE* m,
+                double& flop);
+
   void ms_rhs4v(const int* ia,
                 const int* ja,
                 const int kst,
@@ -343,6 +412,16 @@ public:
                  double &flop);
 
   void lsor_simd4(REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* w,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* rhs,
+                 REAL_TYPE* msk,
+                 double &res,
+                 double &flop);
+
+  void lsor_simd5(REAL_TYPE* d,
                  REAL_TYPE* x,
                  REAL_TYPE* w,
                  REAL_TYPE* a,
