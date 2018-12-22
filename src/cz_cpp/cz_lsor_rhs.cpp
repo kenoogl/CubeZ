@@ -37,6 +37,7 @@ void CZ::ms_rhs8v(const int* ia,
   TIMING_start("LSOR_RHS_Body");
   #pragma vector always
   #pragma ivdep
+  #pragma unroll(2)
   for (int k=kst-1; k<ked; k++) {
     size_t m0 = _IDX_S3D(k,ia[0],  ja[0]  ,NK, NI, GUIDE);
     d[m0] =(( x[_IDX_S3D(k,ia[0]-1,ja[0]  ,NK, NI, GUIDE)]
@@ -93,7 +94,7 @@ void CZ::ms_rhs8v(const int* ia,
             + x[_IDX_S3D(k,ia[6]  ,ja[6]+1,NK, NI, GUIDE)]
           ) * r + rhs[m6]
           ) *     msk[m6];
-    
+
     size_t m7 = _IDX_S3D(k,ia[7]  ,ja[7]  ,NK, NI, GUIDE);
     d[m7] =(( x[_IDX_S3D(k,ia[7]-1,ja[7]  ,NK, NI, GUIDE)]
             + x[_IDX_S3D(k,ia[7]+1,ja[7]  ,NK, NI, GUIDE)]

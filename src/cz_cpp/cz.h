@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "cz_Define.h"
 #include "cz_Ffunc.h"
@@ -228,27 +229,38 @@ public:
              REAL_TYPE* dp,
              double& flop);
 
-  void tdma7(const int* ia,
-             const int* ja,
-             REAL_TYPE* ap,
-             REAL_TYPE* ep,
-             REAL_TYPE* wp,
-             REAL_TYPE* dp,
-             REAL_TYPE* dw,
+  void tdma6_8(const int* ia,
+               const int* ja,
+               REAL_TYPE* restrict ap,
+               REAL_TYPE* restrict ep,
+               REAL_TYPE* restrict wp,
+               REAL_TYPE* restrict dp,
+               double& flop);
+
+  void tdma6_8_4(const int* ia,
+                 const int* ja,
+                 REAL_TYPE* restrict ap,
+                 REAL_TYPE* restrict ep,
+                 REAL_TYPE* restrict wp,
+                 REAL_TYPE* restrict dp,
+                 double& flop);
+
+  void tdma7(const int* restrict ia,
+             const int* restrict ja,
+             REAL_TYPE* restrict ap,
+             REAL_TYPE* restrict ep,
+             REAL_TYPE* restrict wp,
+             REAL_TYPE* restrict dp,
+             REAL_TYPE* restrict dw,
              double& flop);
 
-  void tdma8(const int nx,
-             REAL_TYPE* a,
-             REAL_TYPE* e,
-             REAL_TYPE* w,
-             REAL_TYPE* d0,
-             REAL_TYPE* d1,
-             REAL_TYPE* d2,
-             REAL_TYPE* d3,
-             REAL_TYPE* d4,
-             REAL_TYPE* d5,
-             REAL_TYPE* d6,
-             REAL_TYPE* d7,
+  void tdma8(const int* restrict ia,
+             const int* restrict ja,
+             REAL_TYPE* restrict ap,
+             REAL_TYPE* restrict ep,
+             REAL_TYPE* restrict wp,
+             REAL_TYPE* restrict dp,
+             REAL_TYPE* restrict dw,
              double& flop);
 
   inline void _mm256_transpose_8x8_ps(__m256* dst, const __m256* src)
@@ -306,9 +318,9 @@ public:
                  const int* ja,
                  const int kst,
                  const int ked,
-                 REAL_TYPE* d,
-                 REAL_TYPE* x,
-                 REAL_TYPE* m,
+                 REAL_TYPE* restrict d,
+                 REAL_TYPE* restrict x,
+                 REAL_TYPE* restrict m,
                  double& flop);
 
   double relax8c(const int* ia,

@@ -177,9 +177,9 @@ double CZ::relax4c(const int* ia,
                    const int* ja,
                    const int kst,
                    const int ked,
-                   REAL_TYPE* d,
-                   REAL_TYPE* x,
-                   REAL_TYPE* m,
+                   REAL_TYPE* restrict d,
+                   REAL_TYPE* restrict x,
+                   REAL_TYPE* restrict m,
                    double& flop)
 {
   __assume_aligned(d, ALIGN);
@@ -269,6 +269,7 @@ double CZ::relax8c(const int* ia,
   TIMING_start("LSOR_Relax_Body");
   #pragma vector always
   #pragma ivdep
+  #pragma unroll(2)
   for (int k=kst-1; k<ked; k++) {
     m0 = _IDX_S3D(k,ia[0],ja[0],NK,NI,GUIDE);
     pp0 = x[m0];
@@ -324,16 +325,16 @@ double CZ::relax8c(const int* ia,
          + dp3 * dp3
          + dp4 * dp4
          + dp5 * dp5
-         + dp6 * dp6 
+         + dp6 * dp6
          + dp7 * dp7;
   }
-  TIMING_stop("LSOR_Relax_Body", 24.0*(double)(ked-kst+2));
+  TIMING_stop("LSOR_Relax_Body", 48.0*(double)(ked-kst+2));
 
   return (double)res;
 }
 
 
-// @note relax4()をSIMD化
+// @note relax4c()をSIMD化
 double CZ::relax_256(const int* ia,
                      const int* ja,
                      const int kst,
@@ -353,16 +354,14 @@ double CZ::relax_256(const int* ia,
 
   float coef = ac1;
   float tmp0 = 0.0;
-  float tmp1 = 0.0;
-  float tmp2 = 0.0;
-  float tmp3 = 0.0;
+  //float tmp1 = 0.0;
+  //float tmp2 = 0.0;
+  //float tmp3 = 0.0;
 
   double f2 = (20.0+64.0)*(double)(ked-kst+2)/8.0;
 
   flop += f2;
 
-
-  __m256 omg = _mm256_set1_ps(coef);
 
   __attribute__((aligned(32))) float t0[8] = {0};
   __attribute__((aligned(32))) float t1[8] = {0};
@@ -400,27 +399,29 @@ double CZ::relax_256(const int* ia,
     __m256 y3 = _mm256_loadu_ps(&msk[m3]);
 
     // dp0 = ( d[m0] - pp0 ) * omg * m[m0];
-    __m256 dp0 = _mm256_mul_ps(
-                    _mm256_fmsub_ps( d0, omg, _mm256_mul_ps( pp0, omg ) ), y0
-                  );
+    __m256 omg = _mm256_set1_ps(coef);
 
-    __m256 dp1 = _mm256_mul_ps(
-                    _mm256_fmsub_ps( d1, omg, _mm256_mul_ps( pp1, omg ) ), y1
-                  );
+    d0 = _mm256_mul_ps(
+         _mm256_fmsub_ps( d0, omg, _mm256_mul_ps( pp0, omg ) ), y0
+        );
 
-    __m256 dp2 = _mm256_mul_ps(
-                    _mm256_fmsub_ps( d2, omg, _mm256_mul_ps( pp2, omg ) ), y2
-                  );
+    d1 = _mm256_mul_ps(
+         _mm256_fmsub_ps( d1, omg, _mm256_mul_ps( pp1, omg ) ), y1
+        );
 
-    __m256 dp3 = _mm256_mul_ps(
-                    _mm256_fmsub_ps( d3, omg, _mm256_mul_ps( pp3, omg ) ), y3
-                  );
+    d2 = _mm256_mul_ps(
+         _mm256_fmsub_ps( d2, omg, _mm256_mul_ps( pp2, omg ) ), y2
+        );
+
+    d3 = _mm256_mul_ps(
+         _mm256_fmsub_ps( d3, omg, _mm256_mul_ps( pp3, omg ) ), y3
+        );
 
     // pn0 = pp0 + dp0;
-    y0 = _mm256_add_ps( pp0, dp0 );
-    y1 = _mm256_add_ps( pp1, dp1 );
-    y2 = _mm256_add_ps( pp2, dp2 );
-    y3 = _mm256_add_ps( pp3, dp3 );
+    y0 = _mm256_add_ps( pp0, d0 );
+    y1 = _mm256_add_ps( pp1, d1 );
+    y2 = _mm256_add_ps( pp2, d2 );
+    y3 = _mm256_add_ps( pp3, d3 );
 
     // x[m0] = pn0;
     _mm256_storeu_ps( x+m0 , y0 );
@@ -429,7 +430,17 @@ double CZ::relax_256(const int* ia,
     _mm256_storeu_ps( x+m3 , y3 );
 
     // res += dp0 * dp0 + dp1 * dp1 + dp2 * dp2 + dp3 * dp3;
-    _mm256_store_ps(t0, dp0);
+    _mm256_store_ps(t0, _mm256_dp_ps(d0, d0, 0xFF));
+    _mm256_store_ps(t1, _mm256_dp_ps(d1, d1, 0xFF));
+    _mm256_store_ps(t2, _mm256_dp_ps(d2, d2, 0xFF));
+    _mm256_store_ps(t3, _mm256_dp_ps(d3, d3, 0xFF));
+    tmp0 += t0[0] + t0[4]
+          + t1[0] + t1[4]
+          + t2[0] + t2[4]
+          + t3[0] + t3[4];
+
+    /*
+    _mm256_store_ps(t0, d0);
     tmp0 += t0[0] * t0[0]
           + t0[1] * t0[1]
           + t0[2] * t0[2]
@@ -439,7 +450,7 @@ double CZ::relax_256(const int* ia,
           + t0[6] * t0[6]
           + t0[7] * t0[7];
 
-    _mm256_store_ps(t1, dp1);
+    _mm256_store_ps(t1, d1);
     tmp1 += t1[0] * t1[0]
           + t1[1] * t1[1]
           + t1[2] * t1[2]
@@ -449,7 +460,7 @@ double CZ::relax_256(const int* ia,
           + t1[6] * t1[6]
           + t1[7] * t1[7];
 
-    _mm256_store_ps(t2, dp2);
+    _mm256_store_ps(t2, d2);
     tmp2 += t2[0] * t2[0]
           + t2[1] * t2[1]
           + t2[2] * t2[2]
@@ -459,7 +470,7 @@ double CZ::relax_256(const int* ia,
           + t2[6] * t2[6]
           + t2[7] * t2[7];
 
-    _mm256_store_ps(t3, dp3);
+    _mm256_store_ps(t3, d3);
     tmp3 += t3[0] * t3[0]
           + t3[1] * t3[1]
           + t3[2] * t3[2]
@@ -468,10 +479,12 @@ double CZ::relax_256(const int* ia,
           + t3[5] * t3[5]
           + t3[6] * t3[6]
           + t3[7] * t3[7];
-        }
+    */
+  }
   TIMING_stop("LSOR_Relax_Body", f2);
 
-  return (double)( tmp0 + tmp1 + tmp2 + tmp3 );
+  //return (double)( tmp0 + tmp1 + tmp2 + tmp3 );
+  return (double)( tmp0 );
 }
 
 

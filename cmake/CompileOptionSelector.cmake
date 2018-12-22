@@ -26,7 +26,7 @@ macro (AddOptimizeOption)
     # -fPIC : PIC flag
 
   elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -std=c++11 -restrict")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5")
     set(CMAKE_Fortran_FLAGS "-O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5")
 

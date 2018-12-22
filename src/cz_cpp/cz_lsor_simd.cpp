@@ -543,29 +543,16 @@ void CZ::lsor_simd5(REAL_TYPE* d,
 
       TIMING_start("LSOR_TDMA");
       flop_count = 0.0;
-      tdma7(ia, ja, a, e, w, d, d2, flop_count);
-/*
-      tdma8(QK,
-           &a[kst+GUIDE-1],
-           &e[kst+GUIDE-1],
-           &w[kst+GUIDE-1],
-           &d[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[4],ja[4],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[5],ja[5],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[6],ja[6],NK,NI,GUIDE)],
-           &d[_IDX_S3D(kst-1,ia[7],ja[7],NK,NI,GUIDE)],
-           flop_count
-         );
-         */
+      //tdma6_8_4(ia, ja, a, e, w, d, flop_count);
+      tdma6_8(ia, ja, a, e, w, d, flop_count);
+      //tdma7(ia, ja, a, e, w, d, d2, flop_count);
+      //tdma8(ia, ja, a, e, w, d, d2, flop_count);
       TIMING_stop("LSOR_TDMA", flop_count);
 
-      REAL_TYPE* swp = NULL;
-      swp = d;
-      d = d2;
-      d2 = swp;
+      //REAL_TYPE* swp = NULL;
+      //swp = d;
+      //d = d2;
+      //d2 = swp;
 
       TIMING_start("LSOR_Relax");
       flop_count = 0.0;

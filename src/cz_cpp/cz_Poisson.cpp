@@ -772,7 +772,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
-     std::memcpy(q, B, sizeof(REAL_TYPE)*(
+     memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
@@ -856,7 +856,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
-     std::memcpy(q, B, sizeof(REAL_TYPE)*(
+     memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
@@ -1212,7 +1212,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
      //blas_copy_(q, B, size, &gc);
-     std::memcpy(q, B, sizeof(REAL_TYPE)*(
+     memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
@@ -1426,7 +1426,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
-     std::memcpy(q, B, sizeof(REAL_TYPE)*(
+     memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
@@ -1514,7 +1514,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
      if( (q2= czAllocR_S3D(size,var_type)) == NULL ) return 0;
 
-     std::memcpy(q, B, sizeof(REAL_TYPE)*(
+     memcpy(q, B, sizeof(REAL_TYPE)*(
        (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
      ));
 
