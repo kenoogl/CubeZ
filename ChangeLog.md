@@ -4,8 +4,24 @@
 BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入できない
 現状はディリクレ条件でのテストのみ
 
+- relax_256() 残差の積和をSIMD化
+- relax_256() peelループ分割、bodyをload_ps(), store_ps()
+- relax512版
+
+- ms_rhs4v() >> ms_rhs_256()
+
+- tdma5()のsimd化
+
+- LUの省演算版
+
+- 緩和スイープ制御を2colorにする
+
 
 ## REVISION HISTORY
+
+---
+- 2018-12-18 Version 0.7.6
+  - tdma6()
 
 ---
 - 2018-12-18 Version 0.7.5
@@ -87,7 +103,7 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 
 ---
 - 2018-11-13 Version 0.5.1
-  - examp[le/scripts
+  - example/scripts
 
 
 ---

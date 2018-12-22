@@ -509,7 +509,7 @@ int CZ::Evaluate(int argc, char **argv)
 
     case LS_LSOR_SIMD:
       TIMING_start("LSOR_SIMD");
-      if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=LSOR_SIMD2(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_SIMD", flop);
       break;
 

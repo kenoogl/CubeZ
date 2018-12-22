@@ -174,10 +174,15 @@ public:
             REAL_TYPE* c,
             REAL_TYPE* w);
 
+  void tdma1(int nx,
+            REAL_TYPE* d,
+            REAL_TYPE* a,
+            REAL_TYPE* c,
+            REAL_TYPE* w);
+
   void tdma2(int nx,
             REAL_TYPE* d,
             REAL_TYPE* a,
-            REAL_TYPE* b,
             REAL_TYPE* c,
             REAL_TYPE* w);
 
@@ -213,6 +218,21 @@ public:
              REAL_TYPE* w3,
              double& flop);
 
+  void tdma6(const int nx,
+             REAL_TYPE* a,
+             REAL_TYPE* e,
+             REAL_TYPE* w,
+             REAL_TYPE* d0,
+             REAL_TYPE* d1,
+             REAL_TYPE* d2,
+             REAL_TYPE* d3,
+             double& flop);
+  
+  void tdma_pre(REAL_TYPE* a,
+                REAL_TYPE* c,
+                REAL_TYPE* e,
+                REAL_TYPE* w,
+                double& flop);
 
   // cz_lsor_relax.cpp
   double relax4(const int i,
@@ -233,6 +253,15 @@ public:
                  REAL_TYPE* m,
                  double& flop);
 
+  double relax4c(const int* ia,
+                 const int* ja,
+                 const int kst,
+                 const int ked,
+                 REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* m,
+                 double& flop);
+
   double relax_256(const int* ia,
                    const int* ja,
                    const int kst,
@@ -241,6 +270,16 @@ public:
                    REAL_TYPE* x,
                    REAL_TYPE* msk,
                    double& flop);
+
+  double relax_256s(const int* ia,
+                    const int* ja,
+                    const int kst,
+                    const int ked,
+                    REAL_TYPE* d,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    double& flop);
+
 
   // cz_lsor_rhs.cpp
   void ms_rhs4v(const int* ia,
@@ -263,18 +302,8 @@ public:
                REAL_TYPE* msk,
                double& flop);
 
-  void ms_rhs_256(const int i,
-                  const int j,
-                  const int kst,
-                  const int ked,
-                  REAL_TYPE* d,
-                  REAL_TYPE* x,
-                  REAL_TYPE* rhs,
-                  REAL_TYPE* msk,
-                  double& flop);
 
-
-
+  // lsor_simd.cpp
   void lsor_ms(REAL_TYPE* d,
                REAL_TYPE* x,
                REAL_TYPE* w,
@@ -304,6 +333,16 @@ public:
                  double &flop);
 
   void lsor_simd3(REAL_TYPE* d,
+                 REAL_TYPE* x,
+                 REAL_TYPE* w,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* rhs,
+                 REAL_TYPE* msk,
+                 double &res,
+                 double &flop);
+
+  void lsor_simd4(REAL_TYPE* d,
                  REAL_TYPE* x,
                  REAL_TYPE* w,
                  REAL_TYPE* a,
@@ -551,6 +590,13 @@ private:
                 const int itr_max,
                 double& flop,
                 bool converge_check=true);
+
+  int LSOR_SIMD2(double& res,
+                 REAL_TYPE* X,
+                 REAL_TYPE* B,
+                 const int itr_max,
+                 double& flop,
+                 bool converge_check=true);
 
   double Fdot1(REAL_TYPE* x, double& flop);
 

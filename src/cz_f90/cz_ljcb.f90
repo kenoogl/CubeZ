@@ -665,7 +665,7 @@ end subroutine tdma_ljcb_a
 !! @param [in]     b    coef
 !! @param [in]     c    coef
 !<
-subroutine ljcb_g0 (e, sz, idx, g, w, a, b, c)
+subroutine ljcb_g0 (e, sz, idx, g, w, a, b, c, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -674,7 +674,7 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop
 real, dimension(1-g:sz(3)+g)                           ::  a, b, c, w, e
-real                                                   :: f
+real                                                   ::  f
 
 
 ist = idx(0)

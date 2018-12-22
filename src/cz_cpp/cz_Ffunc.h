@@ -271,7 +271,8 @@ void ljcb_g0_(REAL_TYPE* e,
               REAL_TYPE* w,
               REAL_TYPE* a,
               REAL_TYPE* b,
-              REAL_TYPE* c);
+              REAL_TYPE* c,
+              double* flop);
 
 void ljcb_g1_(REAL_TYPE* d,
               int* sz,

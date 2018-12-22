@@ -223,6 +223,9 @@ using namespace pm_lib;
   set_label("LSOR_Relax_Peel",      PerfMonitor::CALC, true);
   set_label("LSOR_Relax_Body",      PerfMonitor::CALC, true);
 
+  set_label("LSOR_LU_decomp",       PerfMonitor::CALC, true);
+  set_label("TDMA_PRE",             PerfMonitor::CALC, true);
+
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
 
