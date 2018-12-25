@@ -81,7 +81,7 @@ int CZ::Evaluate(int argc, char **argv)
   }
 
   // 等方
-  pitch[0] = pitch[1] = pitch[2] = 1.0/(REAL_TYPE)(G_size[0]-1);
+  pitch[0] = pitch[1] = pitch[2] = 1.0/(REAL_TYPE)(G_size[2]-1);
 
 
   // 分割数のチェック
@@ -263,6 +263,27 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "ljcb_e.txt");
   }
 
+  else if ( !strcasecmp(q, "lsor_j") ) {
+    ls_type = LS_LSOR_J;
+    strcpy(fname, "lsor_j.txt");
+
+    int tmp = (size[0] - 2*(SdW-GUIDE));
+    SdB = tmp/SdW;
+
+    printf("\nALIGN          = %d\n", ALIGN);
+    printf("SIMD width     = %d\n", SdW);
+    printf("SIMD body loop = %d\n", SdB);
+
+
+    if ((tmp/SdW)*SdW != tmp || tmp<2) {
+      printf("NI is not appropriate N=%d > NI=%d\n",
+      SdB, SdW*SdB + 2*(SdW-GUIDE));
+      exit(1);
+    }
+
+
+  }
+
   // 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
 
@@ -377,6 +398,17 @@ int CZ::Evaluate(int argc, char **argv)
 
       imask_k_(MSK, size, innerFidx, &gc);
 
+      break;
+
+    case LS_LSOR_J:
+      bc_ikj_(size, &gc, P, pitch, origin, nID);
+      if ( !Comm_S(P, 1) ) return 0;
+
+      // source term >> ソース項ゼロ
+      bc_ikj_(size, &gc, RHS, pitch, origin, nID);
+      if ( !Comm_S(RHS, 1) ) return 0;
+
+      imask_ikj_(MSK, size, innerFidx, &gc);
       break;
 
     default:
@@ -513,6 +545,12 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("LSOR_SIMD", flop);
       break;
 
+    case LS_LSOR_J:
+      TIMING_start("LSOR_J");
+      if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_J", flop);
+      break;
+
     default:
       break;
   }
@@ -586,6 +624,18 @@ int CZ::Evaluate(int argc, char **argv)
         Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
         sprintf( tmp_fname, "e_%05d.sph", myRank );
         fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
+        break;
+
+      case LS_LSOR_J:
+        sprintf( tmp_fname, "p_%05d.sph", myRank );
+        fileout_ikj_(size, &gc, P, pitch, origin, tmp_fname);
+        exact_ikj_(size, &gc, ERR, pitch, origin);
+        err_ikj_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
+        sprintf( tmp_fname, "e_%05d.sph", myRank );
+        fileout_ikj_(size, &gc, ERR, pitch, origin, tmp_fname);
+
         break;
 
       default:

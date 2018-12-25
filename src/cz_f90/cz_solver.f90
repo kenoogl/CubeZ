@@ -218,6 +218,110 @@ endif
 return
 end subroutine bc_k
 
+!> ********************************************************************
+!! @brief Boundary condition
+!! @param [in]     sz    配列長
+!! @param [in]     g     ガイドセル長
+!! @param [in]     p     soution vector
+!! @param [out]    dh    grid width
+!! @param [in]     org   起点
+!! @param [in]     nID   隣接ランクテーブル
+!! @note resは積算
+!!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
+!<
+subroutine bc_ikj (sz, g, p, dh, org, nID)
+implicit none
+include 'cz_fparam.fi'
+integer                                                :: i, j, k, ix, jx, kx, g
+integer, dimension(3)                                  :: sz
+integer, dimension(0:5)                                :: nID
+real, dimension(3)                                     :: org
+real, dimension(1-g:sz(1)+g, 1-g:sz(3)+g, 1-g:sz(2)+g) :: p
+real                                                   :: pi, x, y, dh
+
+ix = sz(1)
+jx = sz(2)
+kx = sz(3)
+
+pi = 2.0*asin(1.0)
+
+! ZMINUS Dirichlet
+if( nID(K_MINUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+do j=1,jx
+do i=1,ix
+  x = org(1) + dh*real(i-1)
+  y = org(2) + dh*real(j-1)
+  p(i,1,j) = sin(pi*x)*sin(pi*y)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+
+! ZPLUS Dirichlet
+if( nID(K_PLUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+do j=1,jx
+do i=1,ix
+  x = org(1) + dh*real(i-1)
+  y = org(2) + dh*real(j-1)
+  p(i,kx,j) = sin(pi*x)*sin(pi*y)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+
+! XMINUS
+if( nID(I_MINUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do j=1,jx
+do k=1,kx
+  p(1,k,j) = 0.0 !p(2, j,k)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+
+! XPLUS
+if( nID(I_PLUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do j=1,jx
+do k=1,kx
+  p(ix,k,j) = 0.0 !p(ix-1,j,k)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+
+! YMINUS
+if( nID(J_MINUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do k=1,kx
+do i=1,ix
+  p(i,k,1) = 0.0 !p(i,2, k)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+
+! YPLUS
+if( nID(J_PLUS) < 0 ) then
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do k=1,kx
+do i=1,ix
+  p(i,k,jx) = 0.0 !p(i,jx-1,k)
+end do
+end do
+!$OMP END PARALLEL DO
+endif
+
+return
+end subroutine bc_ikj
 
 
 !> ********************************************************************

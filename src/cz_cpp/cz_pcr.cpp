@@ -114,7 +114,8 @@ void CZ::lsor_ms(REAL_TYPE* d, REAL_TYPE* x, REAL_TYPE* w, REAL_TYPE* rhs, doubl
 
  */
 void CZ::pcr(const int nx, const int pn, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c,
-                                         REAL_TYPE* d1, REAL_TYPE* a1, REAL_TYPE* c1)
+                                         REAL_TYPE* d1, REAL_TYPE* a1, REAL_TYPE* c1,
+                                          double& flop)
 {
   REAL_TYPE r, ap, cp;
 
@@ -148,7 +149,7 @@ void CZ::pcr(const int nx, const int pn, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* 
 
 }
 
-void CZ::pcr2(const int nx, const int pn, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c)
+void CZ::pcr2(const int nx, const int pn, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c, double& flop)
 {
 
   const int ss = 0x1 << (pn-1);
@@ -174,7 +175,7 @@ void CZ::pcr2(const int nx, const int pn, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE*
       pcr_kernel_1(nx, s, ss, d, a, c);
     }
 */
-    pcr_kernel_3(nx, s, ss, d, a, c);
+    pcr_kernel_3(nx, s, ss, d, a, c, flop);
   }
 
 }
@@ -254,10 +255,12 @@ void CZ::pcr_kernel_2(const int nx, const int s, const int ss, const int ip,
 
 
 void CZ::pcr_kernel_3(const int nx, const int s, const int ss,
-                    REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c)
+                    REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c, double& flop)
 {
   REAL_TYPE r, ap, cp;
   int iL, iR;
+
+  flop += (double)(nx)*21.0;
 
   for (int i=1; i<=nx; i++)
   {
@@ -273,7 +276,7 @@ void CZ::pcr_kernel_3(const int nx, const int s, const int ss,
     c[i] = - r * cp * c[iR];
     d[i] =   r * ( d[i] - ap * d[iL] - cp * d[iR] );
   }
-  printB(nx, a, "A");
-  printB(nx, c, "C");
-  printf("\n");
+  //printB(nx, a, "A");
+  //printB(nx, c, "C");
+  //printf("\n");
 }

@@ -31,6 +31,13 @@ void bc_k_    (int* sz,
                REAL_TYPE* org,
                int* nID);
 
+void bc_ikj_  (int* sz,
+               int* g,
+               REAL_TYPE* e,
+               REAL_TYPE* dh,
+               REAL_TYPE* org,
+               int* nID);
+
 void jacobi_        (REAL_TYPE* p,
                      int* sz,
                      int* idx,
@@ -76,6 +83,75 @@ void tdma_1_ (int* nx,
               REAL_TYPE* cf,
               REAL_TYPE* w,
               double* flop);
+
+
+// cz_losr.f90
+void lsor_lu_rhs_j_(REAL_TYPE* d,
+                   int* sz,
+                   int* idx,
+                   int* g,
+                   int* j,
+                   REAL_TYPE* x,
+                   REAL_TYPE* rhs,
+                   double* flop);
+
+void lsor_lu_rhs_k_(REAL_TYPE* d,
+                   int* sz,
+                   int* idx,
+                   int* g,
+                   int* j,
+                   int* k,
+                   REAL_TYPE* x,
+                   REAL_TYPE* msk,
+                   double* flop);
+
+void lsor_lu_bc_kst_(REAL_TYPE* d,
+                     int* sz,
+                     int* idx,
+                     int* g,
+                     int* j,
+                     REAL_TYPE* rhs,
+                     REAL_TYPE* msk,
+                     double* flop);
+
+void lsor_lu_bc_ked_(REAL_TYPE* d,
+                     int* sz,
+                     int* idx,
+                     int* g,
+                     int* j,
+                     REAL_TYPE* rhs,
+                     REAL_TYPE* msk,
+                     double* flop);
+
+void lsor_tdma_f_(REAL_TYPE* d,
+                  int* sz,
+                  int* idx,
+                  int*g,
+                  int* j,
+                  int* k,
+                  REAL_TYPE* a,
+                  REAL_TYPE* e,
+                  double* flop);
+
+void lsor_tdma_b_(REAL_TYPE* d,
+                  int* sz,
+                  int* idx,
+                  int*g,
+                  int* j,
+                  REAL_TYPE* w,
+                  double* flop);
+
+void lsor_relax_(REAL_TYPE* d,
+                 int* sz,
+                 int* idx,
+                 int* g,
+                 int* j,
+                 REAL_TYPE* x,
+                 REAL_TYPE* msk,
+                 REAL_TYPE* omg,
+                 double* res,
+                 double* flop);
+
 
 void tdma_lsor_a_(REAL_TYPE* d,
                 int* sz,
@@ -147,6 +223,51 @@ void tdma_lsor_f_(REAL_TYPE* d,
                 double* flop);
 
 // cz_ljcb.f90
+
+void ms_rhs8_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int* g,
+              int* ia,
+              int* ja,
+              REAL_TYPE* x,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              double* flop);
+
+void ms_relax8_(REAL_TYPE* d,
+                int* sz,
+                int* idx,
+                int* g,
+                int* ia,
+                int* ja,
+                REAL_TYPE* x,
+                REAL_TYPE* msk,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+
+void ms_bc_(REAL_TYPE* d,
+            int* sz,
+            int* idx,
+            int* g,
+            int* ia,
+            int* ja,
+            REAL_TYPE* rhs,
+            REAL_TYPE* msk,
+            double* flop);
+
+void ms_tdma_(REAL_TYPE* d,
+              int* sz,
+              int* idx,
+              int*g,
+              int* ia,
+              int* ja,
+              REAL_TYPE* a,
+              REAL_TYPE* e,
+              REAL_TYPE* w,
+              double* flop);
+
 void tdma_ljcb_a_(REAL_TYPE* d,
                 int* sz,
                 int* idx,
@@ -298,6 +419,11 @@ void ljcb_g3_(REAL_TYPE* d,
               double* flop);
 
 // cz_blas.f90
+void imask_ikj_     (REAL_TYPE* x,
+                     int* sz,
+                     int* idx,
+                     int* g);
+
 void imask_k_       (REAL_TYPE* x,
                      int* sz,
                      int* idx,
@@ -416,13 +542,34 @@ void fileout_t_ (int* sz,
                REAL_TYPE* org,
                char* fname);
 
+void fileout_ikj_ (int* sz,
+               int* g,
+               REAL_TYPE* s,
+               REAL_TYPE* dh,
+               REAL_TYPE* org,
+               char* fname);
+
 void exact_t_ (int* sz,
                int* g,
                REAL_TYPE* e,
                REAL_TYPE* dh,
                REAL_TYPE* org);
 
+void exact_ikj_ (int* sz,
+               int* g,
+               REAL_TYPE* e,
+               REAL_TYPE* dh,
+               REAL_TYPE* org);
+
 void err_t_   (int* sz,
+               int* idx,
+               int* g,
+               double* d,
+               REAL_TYPE* p,
+               REAL_TYPE* e,
+               int* loc);
+
+void err_ikj_   (int* sz,
                int* idx,
                int* g,
                double* d,

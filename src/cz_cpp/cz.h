@@ -260,7 +260,6 @@ public:
              REAL_TYPE* restrict ep,
              REAL_TYPE* restrict wp,
              REAL_TYPE* restrict dp,
-             REAL_TYPE* restrict dw,
              double& flop);
 
   inline void _mm256_transpose_8x8_ps(__m256* dst, const __m256* src)
@@ -443,6 +442,28 @@ public:
                   double &res,
                   double &flop);
 
+  void lsor_simd6(REAL_TYPE* d,
+                  REAL_TYPE* x,
+                  REAL_TYPE* w,
+                  REAL_TYPE* a,
+                  REAL_TYPE* c,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* msk,
+                  REAL_TYPE* d2,
+                  double &res,
+                  double &flop);
+
+  void lsor_j(REAL_TYPE* d,
+              REAL_TYPE* x,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* c,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              double &res,
+              double &flop);
+
+
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
   int getNumStage(int n) {
@@ -465,22 +486,33 @@ public:
            REAL_TYPE* c,
            REAL_TYPE* d1,
            REAL_TYPE* a1,
-           REAL_TYPE* c1);
+           REAL_TYPE* c1,
+           double& flop);
 
   void pcr2(const int nx,
            const int pn,
            REAL_TYPE* d,
            REAL_TYPE* a,
-           REAL_TYPE* c);
+           REAL_TYPE* c,
+           double& flop);
 
 private:
-  inline static void sIndex(int& i, int& j,
+  inline static void cIndex(int& i, int& j,
                 const int l, const int ni, const int is, const int js) {
     int jj = l / ni;
     int ii = l - jj*ni;
     j = jj + js - 1;
     i = ii + is - 1;
   };
+
+  inline static void fIndex(int& i, int& j,
+                const int l, const int ni, const int is, const int js) {
+    int jj = l / ni;
+    int ii = l - jj*ni;
+    j = jj + js;
+    i = ii + is;
+  };
+
 
   inline void matx2(REAL_TYPE* d, REAL_TYPE a, REAL_TYPE c)
   {
@@ -553,7 +585,8 @@ private:
                     const int ss,
                     REAL_TYPE* d,
                     REAL_TYPE* a,
-                    REAL_TYPE* c);
+                    REAL_TYPE* c,
+                    double& flop);
 
 
   void pcr_merge(const int nx,
@@ -688,6 +721,13 @@ private:
                  const int itr_max,
                  double& flop,
                  bool converge_check=true);
+
+  int LSOR_J(double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itr_max,
+             double& flop,
+             bool converge_check=true);
 
   double Fdot1(REAL_TYPE* x, double& flop);
 

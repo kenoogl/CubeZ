@@ -207,6 +207,7 @@ using namespace pm_lib;
 
   set_label("LSOR_TDMA_BC",     PerfMonitor::CALC, true);
   set_label("LSOR_TDMA",        PerfMonitor::CALC, false);
+  set_label("LSOR_TDMA_Ex",     PerfMonitor::CALC, true);
 
   set_label("TDMA_F_peel",      PerfMonitor::CALC, true);
   set_label("TDMA_F_body",      PerfMonitor::CALC, true);
@@ -215,16 +216,22 @@ using namespace pm_lib;
   set_label("TDMA_R_body",      PerfMonitor::CALC, true);
   set_label("TDMA_R_remainder", PerfMonitor::CALC, true);
 
-  set_label("LSOR_RHS",             PerfMonitor::CALC, false);
-  set_label("LSOR_RHS_Peel",        PerfMonitor::CALC, true);
-  set_label("LSOR_RHS_Body",        PerfMonitor::CALC, true);
+  set_label("LSOR_RHS",         PerfMonitor::CALC, false);
+  set_label("LSOR_RHS_Peel",    PerfMonitor::CALC, true);
+  set_label("LSOR_RHS_Body",    PerfMonitor::CALC, true);
+  set_label("LSOR_RHS_Ex",      PerfMonitor::CALC, true);
+  set_label("LSOR_RHS_J",       PerfMonitor::CALC, true);
+  set_label("LSOR_RHS_K",       PerfMonitor::CALC, true);
+  set_label("LSOR_TDMA_F",      PerfMonitor::CALC, true);
+  set_label("LSOR_TDMA_R",      PerfMonitor::CALC, true);
 
-  set_label("LSOR_Relax",           PerfMonitor::CALC, false);
-  set_label("LSOR_Relax_Peel",      PerfMonitor::CALC, true);
-  set_label("LSOR_Relax_Body",      PerfMonitor::CALC, true);
+  set_label("LSOR_Relax",       PerfMonitor::CALC, false);
+  set_label("LSOR_Relax_Peel",  PerfMonitor::CALC, true);
+  set_label("LSOR_Relax_Body",  PerfMonitor::CALC, true);
+  set_label("LSOR_Relax_Ex",    PerfMonitor::CALC, true);
 
-  set_label("LSOR_LU_decomp",       PerfMonitor::CALC, true);
-  set_label("TDMA_PRE",             PerfMonitor::CALC, true);
+  set_label("LSOR_LU_decomp",   PerfMonitor::CALC, true);
+  set_label("TDMA_PRE",         PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
@@ -251,4 +258,5 @@ using namespace pm_lib;
   set_label("LSOR_SIMD",        PerfMonitor::CALC, false);
   set_label("LSOR_simd_Itr",    PerfMonitor::CALC, false);
   set_label("LSOR_simd_kernel", PerfMonitor::CALC, false);
+  set_label("LSOR_J",           PerfMonitor::CALC, false);
 }

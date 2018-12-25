@@ -14,6 +14,10 @@
 
 #include "cz.h"
 
+int order_of_PM_key=0;
+
+pm_lib::PerfMonitor PM;
+
 /*
 
 
@@ -61,6 +65,38 @@
    return var;
  }
 
+ void set_label(const std::string label, pm_lib::PerfMonitor::Type type)
+ {
+   bool exclusive=true;
+
+   // 登録個数のチェック
+   order_of_PM_key++;
+
+   if ( order_of_PM_key > PM_NUM_MAX )
+   {
+     printf("\tThe number of labels for Performance monitor goes over limit.\n");
+     exit(0);
+   }
+
+   // 文字数がTM_LABEL_MAX-1を超えるものはカット
+   if ( strlen(label.c_str()) > TM_LABEL_MAX-1 )
+   {
+     printf("\tWarning: Length of timing label must be less than %d\n", TM_LABEL_MAX-1);
+   }
+
+   // Performance Monitorへの登録
+   PM.setProperties(label, type, exclusive);
+ }
+
+ inline void TIMING_start(const std::string key) {
+   PM.start(key);
+ }
+
+ inline void TIMING_stop(const std::string key, double flopPerTask=0.0, int iterationCount=1) {
+   PM.stop(key, flopPerTask, (unsigned)iterationCount);
+ }
+
+
 int main(int argc, char *argv[])
 {
   //                     0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
@@ -74,8 +110,11 @@ int main(int argc, char *argv[])
   REAL_TYPE *a=NULL, *b=NULL, *c=NULL, *d=NULL, *p=NULL, *q=NULL, *r=NULL;
   int n = N;
   int pn;
+  int numThreads=0;
 
   CZ z;
+
+  double flop = 0.0;
 
   // Nを超える最小の2べき数の乗数 pn
   if ( -1 == (pn=z.getNumStage(n))) {
@@ -85,6 +124,25 @@ int main(int argc, char *argv[])
   const int ss = 0x1 << (pn-1);
 
   //printf("n=%d : pn=%d , ss=%d \n", n, pn, ss);
+
+
+  PM.initialize( PM_NUM_MAX );
+  PM.setRankInfo( 1 );
+  std::string Parallel_str;
+  if ( numThreads > 1 ) {
+    Parallel_str = "OpenMP";
+  }
+  else {
+    Parallel_str = "Serial";
+  }
+  PM.setParallelMode(Parallel_str, numThreads, 1);
+
+  {
+    using namespace pm_lib;
+
+    set_label("PCR",  PerfMonitor::CALC);
+  }
+
 
 
 
@@ -126,10 +184,17 @@ int main(int argc, char *argv[])
   printf("\n");
 
   // 内点の個数と、その先頭アドレス、外点の両端は境界値
-  z.pcr(n, pn, d, a, c, p, q, r);
+  TIMING_start("PCR");
+  z.pcr(n, pn, d, a, c, p, q, r, flop);
+  TIMING_stop("PCR", flop);
 
   // ok
   //z.tdma(n, &d[_IDX_(1,ss)], &a[_IDX_(1,ss)], &b[_IDX_(1,ss)], &c[_IDX_(1,ss)], &p[_IDX_(1,ss)]);
+
+  char str[100];
+  sprintf(str, "PCR test");
+  PM.print(stdout, "hoge", str);
+  //PM.printThreads(fp, 1, 0); // time cost order
 
   FILE* fp;
   fp=fopen("result.txt", "w");

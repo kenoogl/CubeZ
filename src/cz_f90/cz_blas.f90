@@ -13,6 +13,56 @@
 !! @note based on Onishi version ffv_blas
 !<
 
+!> ********************************************************************
+!! @brief 要素のマスク
+!! @param [in,out] x  スカラー
+!! @param [in]     sz 配列長
+!! @param [in]     idx         インデクス範囲
+!! @param [in]     g  ガイドセル
+!<
+subroutine imask_ikj(x, sz, idx, g)
+implicit none
+integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  ist, jst, kst
+integer                                                ::  ied, jed, ked
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+real, dimension(1-g:sz(1)+g, 1-g:sz(3)+g, 1-g:sz(2)+g) ::  x
+
+ix = sz(1)
+jx = sz(2)
+kx = sz(3)
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do j=1-g,jx+g
+do k=1-g,kx+g
+do i=1-g,ix+g
+  x(i, k, j) = 0.0
+end do
+end do
+end do
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do j = jst, jed
+do k = kst, ked
+do i = ist, ied
+  x(i, k, j) = 1.0
+end do
+end do
+end do
+!$OMP END PARALLEL DO
+
+return
+end subroutine imask_ikj
+
 
 !> ********************************************************************
 !! @brief 要素のマスク

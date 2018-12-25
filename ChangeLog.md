@@ -18,6 +18,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-25 Version 0.8.1
+  - LSOR_J
+
+---
 - 2018-12-18 Version 0.8.0
   - tdma6_8() unroll(8)
 

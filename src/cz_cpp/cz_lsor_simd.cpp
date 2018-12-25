@@ -296,10 +296,10 @@ void CZ::lsor_simd3(REAL_TYPE* d,
   for (int l=0; l<QI*QJ; l+=4)
   {
     int ia[4], ja[4];
-    sIndex(ia[0], ja[0], l  , QI, ist, jst);
-    sIndex(ia[1], ja[1], l+1, QI, ist, jst);
-    sIndex(ia[2], ja[2], l+2, QI, ist, jst);
-    sIndex(ia[3], ja[3], l+3, QI, ist, jst);
+    cIndex(ia[0], ja[0], l  , QI, ist, jst);
+    cIndex(ia[1], ja[1], l+1, QI, ist, jst);
+    cIndex(ia[2], ja[2], l+2, QI, ist, jst);
+    cIndex(ia[3], ja[3], l+3, QI, ist, jst);
 
     TIMING_start("LSOR_RHS");
     flop_count = 0.0;
@@ -417,10 +417,10 @@ void CZ::lsor_simd4(REAL_TYPE* d,
     for (int l=col; l<QI*QJ; l+=8)
     {
       int ia[4], ja[4];
-      sIndex(ia[0], ja[0], l  ,  QI, ist, jst);
-      sIndex(ia[1], ja[1], l+2,  QI, ist, jst);
-      sIndex(ia[2], ja[2], l+4,  QI, ist, jst);
-      sIndex(ia[3], ja[3], l+6,  QI, ist, jst);
+      cIndex(ia[0], ja[0], l  ,  QI, ist, jst);
+      cIndex(ia[1], ja[1], l+2,  QI, ist, jst);
+      cIndex(ia[2], ja[2], l+4,  QI, ist, jst);
+      cIndex(ia[3], ja[3], l+6,  QI, ist, jst);
 
 
       TIMING_start("LSOR_RHS");
@@ -488,6 +488,7 @@ void CZ::lsor_simd5(REAL_TYPE* d,
   int NI = size[0];
   int NJ = size[1];
   int NK = size[2];
+  int gc = GUIDE;
 
   int ist = innerFidx[I_minus];
   int ied = innerFidx[I_plus];
@@ -512,14 +513,15 @@ void CZ::lsor_simd5(REAL_TYPE* d,
     for (int l=col; l<QI*QJ; l+=16)
     {
       int ia[8], ja[8];
-      sIndex(ia[0], ja[0], l  ,  QI, ist, jst);
-      sIndex(ia[1], ja[1], l+2,  QI, ist, jst);
-      sIndex(ia[2], ja[2], l+4,  QI, ist, jst);
-      sIndex(ia[3], ja[3], l+6,  QI, ist, jst);
-      sIndex(ia[4], ja[4], l+8,  QI, ist, jst);
-      sIndex(ia[5], ja[5], l+10, QI, ist, jst);
-      sIndex(ia[6], ja[6], l+12, QI, ist, jst);
-      sIndex(ia[7], ja[7], l+14, QI, ist, jst);
+
+      cIndex(ia[0], ja[0], l  ,  QI, ist, jst);
+      cIndex(ia[1], ja[1], l+2,  QI, ist, jst);
+      cIndex(ia[2], ja[2], l+4,  QI, ist, jst);
+      cIndex(ia[3], ja[3], l+6,  QI, ist, jst);
+      cIndex(ia[4], ja[4], l+8,  QI, ist, jst);
+      cIndex(ia[5], ja[5], l+10, QI, ist, jst);
+      cIndex(ia[6], ja[6], l+12, QI, ist, jst);
+      cIndex(ia[7], ja[7], l+14, QI, ist, jst);
 
 
       TIMING_start("LSOR_RHS");
@@ -544,9 +546,9 @@ void CZ::lsor_simd5(REAL_TYPE* d,
       TIMING_start("LSOR_TDMA");
       flop_count = 0.0;
       //tdma6_8_4(ia, ja, a, e, w, d, flop_count);
-      tdma6_8(ia, ja, a, e, w, d, flop_count);
+      //tdma6_8(ia, ja, a, e, w, d, flop_count);
       //tdma7(ia, ja, a, e, w, d, d2, flop_count);
-      //tdma8(ia, ja, a, e, w, d, d2, flop_count);
+      tdma8(ia, ja, a, e, w, d, flop_count);
       TIMING_stop("LSOR_TDMA", flop_count);
 
       //REAL_TYPE* swp = NULL;
@@ -554,10 +556,159 @@ void CZ::lsor_simd5(REAL_TYPE* d,
       //d = d2;
       //d2 = swp;
 
+
       TIMING_start("LSOR_Relax");
       flop_count = 0.0;
       res += relax8c(ia, ja, kst, ked, d, x, msk, flop_count);
       TIMING_stop("LSOR_Relax", flop_count);
     }
+  }
+}
+
+/*
+ * @brief LSOR Multi-System
+ * @param [in]     d    RHS vector
+ * @param [in,out] x    solution vector
+ * @param [in]     w    work vector (U_1)
+ * @param [in]     rhs
+ * @param [out]    res  residual
+ */
+void CZ::lsor_simd6(REAL_TYPE* d,
+                    REAL_TYPE* x,
+                    REAL_TYPE* w,
+                    REAL_TYPE* a,
+                    REAL_TYPE* e,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* d2,
+                    double &res,
+                    double &flop)
+{
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+
+  int ist = innerFidx[I_minus];
+  int ied = innerFidx[I_plus];
+  int jst = innerFidx[J_minus];
+  int jed = innerFidx[J_plus];
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+
+  double flop_count = 0.0;
+
+  // (i,j)点をサンプルするためのインデクス計算
+  int QI = ied - ist + 1;
+  int QJ = jed - jst + 1;
+
+  res = 0.0;
+
+  for (int col=0; col<2; col++)
+  {
+    #pragma omp parallel for schedule(dynamic,1) reduction(+:res) private(flop_count)
+    for (int l=col; l<QI*QJ; l+=16)
+    {
+      int ia[8], ja[8];
+
+      fIndex(ia[0], ja[0], l  ,  QI, ist, jst);
+      fIndex(ia[1], ja[1], l+2,  QI, ist, jst);
+      fIndex(ia[2], ja[2], l+4,  QI, ist, jst);
+      fIndex(ia[3], ja[3], l+6,  QI, ist, jst);
+      fIndex(ia[4], ja[4], l+8,  QI, ist, jst);
+      fIndex(ia[5], ja[5], l+10, QI, ist, jst);
+      fIndex(ia[6], ja[6], l+12, QI, ist, jst);
+      fIndex(ia[7], ja[7], l+14, QI, ist, jst);
+
+      TIMING_start("LSOR_RHS_Ex");
+      flop_count = 0.0;
+      ms_rhs8_(d, size, innerFidx, &gc, ia, ja, x, rhs, msk, &flop_count);
+      TIMING_stop("LSOR_RHS_Ex", flop_count);
+
+      TIMING_start("LSOR_TDMA_BC");
+      flop_count = 0.0;
+      ms_bc_(d, size, innerFidx, &gc, ia, ja, rhs, msk, &flop_count);
+      TIMING_stop("LSOR_TDMA_BC", flop_count);
+
+      TIMING_start("LSOR_TDMA_Ex");
+      flop_count = 0.0;
+      ms_tdma_(d, size, innerFidx, &gc, ia, ja, a, e, w, &flop_count);
+      TIMING_stop("LSOR_TDMA_Ex", flop_count);
+
+      TIMING_start("LSOR_Relax_Ex");
+      flop_count = 0.0;
+      ms_relax8_(d, size, innerFidx, &gc, ia, ja, x, msk, &ac1, &res, &flop_count);
+      TIMING_stop("LSOR_Relax_Ex", flop_count);
+    }
+  }
+}
+
+
+/*
+ * @brief LSOR Multi-System
+ * @param [in]     d    RHS vector
+ * @param [in,out] x    solution vector
+ * @param [in]     w    work vector (U_1)
+ * @param [in]     rhs
+ * @param [out]    res  residual
+ */
+void CZ::lsor_j(REAL_TYPE* d,
+                REAL_TYPE* x,
+                REAL_TYPE* w,
+                REAL_TYPE* a,
+                REAL_TYPE* e,
+                REAL_TYPE* rhs,
+                REAL_TYPE* msk,
+                double &res,
+                double &flop)
+{
+  int gc = GUIDE;
+  int jst = innerFidx[J_minus];
+  int jed = innerFidx[J_plus];
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+
+  double flop_count = 0.0;
+  res = 0.0;
+
+  #pragma omp parallel for reduction(+:res) schedule(dynamic,1) private(flop_count)
+  for (int j=jst; j<=jed; j++) {
+
+    TIMING_start("LSOR_RHS_J");
+    flop_count = 0.0;
+    lsor_lu_rhs_j_(d, size, innerFidx, &gc, &j, x, rhs, &flop_count);
+    TIMING_stop("LSOR_RHS_J", flop_count);
+
+    for (int k=kst; k<=ked; k++) {
+
+      TIMING_start("LSOR_RHS_K");
+      flop_count = 0.0;
+      lsor_lu_rhs_k_(d, size, innerFidx, &gc, &j, &k, x, msk, &flop_count);
+      TIMING_stop("LSOR_RHS_K", flop_count);
+
+      TIMING_start("LSOR_TDMA_BC");
+      flop_count = 0.0;
+      if (k == kst)
+        lsor_lu_bc_kst_(d, size, innerFidx, &gc, &j, rhs, msk, &flop_count);
+      if (k == ked)
+        lsor_lu_bc_ked_(d, size, innerFidx, &gc, &j, rhs, msk, &flop_count);
+      TIMING_stop("LSOR_TDMA_BC", flop_count);
+
+      TIMING_start("LSOR_TDMA_F");
+      flop_count = 0.0;
+      if (k>2)
+        lsor_tdma_f_(d, size, innerFidx, &gc, &j, &k, a, e, &flop_count);
+      TIMING_stop("LSOR_TDMA_F", flop_count);
+    }
+
+    TIMING_start("LSOR_TDMA_R");
+    flop_count = 0.0;
+    lsor_tdma_b_(d, size, innerFidx, &gc, &j, w, &flop_count);
+    TIMING_stop("LSOR_TDMA_R", flop_count);
+
+    TIMING_start("LSOR_Relax_Ex");
+    flop_count = 0.0;
+    lsor_relax_(d, size, innerFidx, &gc, &j, x, msk, &ac1, &res, &flop_count);
+    TIMING_stop("LSOR_Relax_Ex", flop_count);
   }
 }

@@ -1555,6 +1555,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        flop_count = 0.0;
        //lsor_simd4(q, X, w, a, e, B, MSK, res, flop_count);
        lsor_simd5(q, X, w, a, e, B, MSK, q2, res, flop_count);
+       //lsor_simd6(q, X, w, a, e, B, MSK, q2, res, flop_count);
        TIMING_stop("LSOR_simd_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -1578,6 +1579,96 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(c);
      czDelete(e);
      czDelete(q2);
+
+     return itr;
+   }
+
+   /* #################################################################
+   * @brief Line SOR Multi System
+   * @param [in,out] res    残差
+   * @param [in,out] X      解ベクトル
+   * @param [in]     B      RHSベクトル
+   * @param [in]     itr_max 最大反復数
+   * @param [in]     flop   浮動小数点演算数
+   */
+   int CZ::LSOR_J(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+   {
+     int itr;
+     double flop_count = 0.0;
+     int gc = GUIDE;
+     REAL_TYPE var_type=0;
+
+     REAL_TYPE* q;  // RHS
+     REAL_TYPE* w;  // work
+     REAL_TYPE* a;
+     REAL_TYPE* c;
+     REAL_TYPE* e;
+
+     int kst = innerFidx[K_minus];
+
+     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+
+     memcpy(q, B, sizeof(REAL_TYPE)*(
+       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
+     ));
+
+     a = czAllocR(size[2]+2*GUIDE, var_type);
+     c = czAllocR(size[2]+2*GUIDE, var_type);
+     e = czAllocR(size[2]+2*GUIDE, var_type);
+     w = czAllocR(size[2]+2*GUIDE, var_type);
+
+     for (int i=0; i<size[2]+2*GUIDE; i++) {
+       a[i] = 0.0;
+       c[i] = 0.0;
+       e[i] = 0.0;
+       w[i] = 0.0;
+     }
+     for (int i=3; i<=size[2]-1; i++) {
+       a[i+GUIDE-1] = -1.0/6.0;
+     }
+     for (int i=2; i<=size[2]-2; i++) {
+       c[i+GUIDE-1] = -1.0/6.0;
+     }
+
+     TIMING_start("LSOR_LU_decomp");
+     flop_count = 0.0;
+     tdma_pre(&a[kst+GUIDE-1],
+              &c[kst+GUIDE-1],
+              &e[kst+GUIDE-1],
+              &w[kst+GUIDE-1],
+              flop_count);
+     TIMING_stop("LSOR_LU_decomp", flop_count);
+
+
+     for (itr=1; itr<=itr_max; itr++)
+     {
+       res = 0.0;
+
+       TIMING_start("LSOR_simd_kernel");
+       flop_count = 0.0;
+       lsor_j(q, X, w, a, e, B, MSK, res, flop_count);
+       TIMING_stop("LSOR_simd_kernel", flop_count);
+
+       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+
+       if ( converge_check ) {
+         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+
+         res *= res_normal;
+         res = sqrt(res);
+         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+
+         if ( res < eps ) break;
+       }
+
+     } // Iteration
+
+     czDelete(q);
+     czDelete(w);
+     czDelete(a);
+     czDelete(c);
+     czDelete(e);
 
      return itr;
    }

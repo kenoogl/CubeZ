@@ -772,6 +772,8 @@ void CZ::tdma6_8(const int* ia,
 
   // Forward:Peel
   TIMING_start("TDMA_F_peel");
+  #pragma vector always
+  #pragma ivdep
   #pragma loop count (SdW-GUIDE-2)
   for (int k=1; k<bst; k++)
   {
@@ -792,7 +794,9 @@ void CZ::tdma6_8(const int* ia,
 
   // Forward:SIMD body
   TIMING_start("TDMA_F_body");
-  #pragma unroll(2)
+  #pragma vector always
+  #pragma ivdep
+  #pragma unroll(4)
   for (int k=bst; k<nx; k++)
   {
     aa = a[k];
@@ -813,6 +817,8 @@ void CZ::tdma6_8(const int* ia,
   // Backward:Peel
   TIMING_start("TDMA_R_peel");
   #pragma loop count (SdW-GUIDE-3)
+  #pragma vector always
+  #pragma ivdep
   for (int k=nx-2; k>=bed; k--)
   {
     ww = w[k];
@@ -831,7 +837,9 @@ void CZ::tdma6_8(const int* ia,
 
   // Backward:SIMD body
   TIMING_start("TDMA_R_body");
-  #pragma unroll(2)
+  #pragma vector always
+  #pragma ivdep
+  #pragma unroll(4)
   for (int k=bed-1; k>=0; k--)
   {
     ww = w[k];
@@ -1214,14 +1222,12 @@ void CZ::tdma8(const int* restrict ia,
                REAL_TYPE* restrict ep,
                REAL_TYPE* restrict wp,
                REAL_TYPE* restrict dp,
-               REAL_TYPE* restrict dw,
                double& flop)
 {
   __assume_aligned(ap, ALIGN);
   __assume_aligned(ep, ALIGN);
   __assume_aligned(wp, ALIGN);
   __assume_aligned(dp, ALIGN);
-  __assume_aligned(dw, ALIGN);
 
   int NI = size[0];
   int NJ = size[1];
@@ -1253,15 +1259,6 @@ void CZ::tdma8(const int* restrict ia,
   float* restrict d6;
   float* restrict d7;
 
-  float* restrict x0;
-  float* restrict x1;
-  float* restrict x2;
-  float* restrict x3;
-  float* restrict x4;
-  float* restrict x5;
-  float* restrict x6;
-  float* restrict x7;
-
   a = &ap[kst+GUIDE-1];
   e = &ep[kst+GUIDE-1];
   w = &wp[kst+GUIDE-1];
@@ -1275,15 +1272,8 @@ void CZ::tdma8(const int* restrict ia,
   d6 = &dp[_IDX_S3D(kst-1,ia[6],ja[6],NK,NI,GUIDE)];
   d7 = &dp[_IDX_S3D(kst-1,ia[7],ja[7],NK,NI,GUIDE)];
 
-  x0 = &dw[_IDX_S3D(kst-1,ia[0],ja[0],NK,NI,GUIDE)];
-  x1 = &dw[_IDX_S3D(kst-1,ia[1],ja[1],NK,NI,GUIDE)];
-  x2 = &dw[_IDX_S3D(kst-1,ia[2],ja[2],NK,NI,GUIDE)];
-  x3 = &dw[_IDX_S3D(kst-1,ia[3],ja[3],NK,NI,GUIDE)];
-  x4 = &dw[_IDX_S3D(kst-1,ia[4],ja[4],NK,NI,GUIDE)];
-  x5 = &dw[_IDX_S3D(kst-1,ia[5],ja[5],NK,NI,GUIDE)];
-  x6 = &dw[_IDX_S3D(kst-1,ia[6],ja[6],NK,NI,GUIDE)];
-  x7 = &dw[_IDX_S3D(kst-1,ia[7],ja[7],NK,NI,GUIDE)];
-
+  //check_align(&d0[bst], "d0");
+  //check_align(&d1[bst], "d1");
 
 
   // Forward:Peel
@@ -1319,10 +1309,8 @@ void CZ::tdma8(const int* restrict ia,
   #pragma ivdep
   for (int k=bst; k<nx; k+=8)
   {
-    // aa = a[k];
-    // ee = e[k];
-    __m256 aaa = _mm256_set1_ps(a[k]);
-    __m256 eee = _mm256_set1_ps(e[k]);
+    __m256 aaa = _mm256_load_ps(&a[k]);
+    __m256 eee = _mm256_load_ps(&e[k]);
 
     __m256 t1[8], dd[8];
 
@@ -1335,64 +1323,117 @@ void CZ::tdma8(const int* restrict ia,
     t1[6] = _mm256_load_ps(&d6[k]);
     t1[7] = _mm256_load_ps(&d7[k]);
 
+
     _mm256_transpose_8x8_ps(dd, t1);
 
-
+    // aa = a[k];
+    // ee = e[k];
     // d0[k] = (d0[k] - aa * d0[k-1]) * ee;
     // fnmadd_ps(a,b,c) => -a*b+c
-    t1[0] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t0,    dd[0]), eee
+
+    __m256 ac = _mm256_broadcastss_ps( _mm256_extractf128_ps(aaa, 0) );
+    dd[0] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, t0,    dd[0]),
+            _mm256_broadcastss_ps( _mm256_extractf128_ps(eee, 0) )
             );
-    t1[1] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[0], dd[1]), eee
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(aaa, _MM_SHUFFLE(3,2,1,1)), 0) );
+    dd[1] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[0], dd[1]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permute_ps(eee, _MM_SHUFFLE(3,2,1,1)), 0) )
             );
-    t1[2] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[1], dd[2]), eee
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(aaa, _MM_SHUFFLE(3,2,1,2)), 0) );
+    dd[2] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[1], dd[2]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permute_ps(eee, _MM_SHUFFLE(3,2,1,2)), 0) )
             );
-    t1[3] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[2], dd[3]), eee
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(aaa, _MM_SHUFFLE(3,2,1,3)), 0) );
+    dd[3] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[2], dd[3]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permute_ps(eee, _MM_SHUFFLE(3,2,1,3)), 0) )
             );
-    t1[4] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[3], dd[4]), eee
+
+    eee = _mm256_set1_ps(e[k+4]);
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(aaa, _mm256_set_epi32(7,6,5,4,3,2,1,4)),
+           0) );
+    dd[4] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[3], dd[4]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permutevar8x32_ps(eee, _mm256_set_epi32(7,6,5,4,3,2,1,4)),
+                   0) )
+          );
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(aaa, _mm256_set_epi32(7,6,5,4,3,2,1,5)),
+           0) );
+    dd[5] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[4], dd[5]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permutevar8x32_ps(eee, _mm256_set_epi32(7,6,5,4,3,2,1,5)),
+                   0) )
             );
-    t1[5] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[4], dd[5]), eee
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(aaa, _mm256_set_epi32(7,6,5,4,3,2,1,6)),
+           0) );
+    dd[6] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[5], dd[6]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permutevar8x32_ps(eee, _mm256_set_epi32(7,6,5,4,3,2,1,6)),
+                   0) )
             );
-    t1[6] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[5], dd[6]), eee
-            );
-    t1[7] = _mm256_mul_ps(
-            _mm256_fnmadd_ps(aaa, t1[6], dd[7]), eee
+
+    ac = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(aaa, _mm256_set_epi32(7,6,5,4,3,2,1,7)),
+           0) );
+    dd[7] = _mm256_mul_ps(
+            _mm256_fnmadd_ps(ac, dd[6], dd[7]),
+            _mm256_broadcastss_ps(
+                   _mm256_extractf128_ps(
+                     _mm256_permutevar8x32_ps(eee, _mm256_set_epi32(7,6,5,4,3,2,1,7)),
+                   0) )
             );
 
     // copy dd[7] > t0, 以降の処理の前に
-    t0 = t1[7];
+    t0 = dd[7];
 
     // 出力のため転置
-    _mm256_transpose_8x8_ps(dd, t1);
+    _mm256_transpose_8x8_ps(t1, dd);
 
-    _mm256_store_ps( d0+k , dd[0] );
-    _mm256_store_ps( d1+k , dd[1] );
-    _mm256_store_ps( d2+k , dd[2] );
-    _mm256_store_ps( d3+k , dd[3] );
-    _mm256_store_ps( d4+k , dd[4] );
-    _mm256_store_ps( d5+k , dd[5] );
-    _mm256_store_ps( d6+k , dd[6] );
-    _mm256_store_ps( d7+k , dd[7] );
+    _mm256_store_ps( d0+k , t1[0] );
+    _mm256_store_ps( d1+k , t1[1] );
+    _mm256_store_ps( d2+k , t1[2] );
+    _mm256_store_ps( d3+k , t1[3] );
+    _mm256_store_ps( d4+k , t1[4] );
+    _mm256_store_ps( d5+k , t1[5] );
+    _mm256_store_ps( d6+k , t1[6] );
+    _mm256_store_ps( d7+k , t1[7] );
 
   }
   TIMING_stop("TDMA_F_body", f2);
   flop += f2;
-
-
-  x0[nx-1] = d0[nx-1];
-  x1[nx-1] = d1[nx-1];
-  x2[nx-1] = d2[nx-1];
-  x3[nx-1] = d3[nx-1];
-  x4[nx-1] = d4[nx-1];
-  x5[nx-1] = d5[nx-1];
-  x6[nx-1] = d6[nx-1];
-  x7[nx-1] = d7[nx-1];
 
 
   // Backward:Peel
@@ -1401,14 +1442,14 @@ void CZ::tdma8(const int* restrict ia,
   for (int k=nx-2; k>=bed; k--)
   {
     ww = w[k];
-    x0[k] = d0[k] - ww * x0[k+1];
-    x1[k] = d1[k] - ww * x1[k+1];
-    x2[k] = d2[k] - ww * x2[k+1];
-    x3[k] = d3[k] - ww * x3[k+1];
-    x4[k] = d4[k] - ww * x4[k+1];
-    x5[k] = d5[k] - ww * x5[k+1];
-    x6[k] = d6[k] - ww * x6[k+1];
-    x7[k] = d7[k] - ww * x7[k+1];
+    d0[k] = d0[k] - ww * d0[k+1];
+    d1[k] = d1[k] - ww * d1[k+1];
+    d2[k] = d2[k] - ww * d2[k+1];
+    d3[k] = d3[k] - ww * d3[k+1];
+    d4[k] = d4[k] - ww * d4[k+1];
+    d5[k] = d5[k] - ww * d5[k+1];
+    d6[k] = d6[k] - ww * d6[k+1];
+    d7[k] = d7[k] - ww * d7[k+1];
   }
   TIMING_stop("TDMA_R_peel", f3);
   flop += f3;
@@ -1416,8 +1457,8 @@ void CZ::tdma8(const int* restrict ia,
 
   // x[k+1]の内容を作っておく
   t0 = _mm256_set_ps(
-            x7[bed], x6[bed], x5[bed], x4[bed],
-            x3[bed], x2[bed], x1[bed], x0[bed]
+            d7[bed], d6[bed], d5[bed], d4[bed],
+            d3[bed], d2[bed], d1[bed], d0[bed]
       );
 
   // Backward:SIMD body
@@ -1427,9 +1468,8 @@ void CZ::tdma8(const int* restrict ia,
   for (int k=bed-8; k>=-GUIDE-1; k-=8)
   {
     // ww = w[k];
-    __m256 www = _mm256_set1_ps(w[k]);
-
-    __m256 t1[8], dd[8], xx[8];
+    __m256 www = _mm256_load_ps(&w[k]);
+    __m256 t1[8], dd[8], wc;
 
     t1[0] = _mm256_load_ps(&d0[k]);
     t1[1] = _mm256_load_ps(&d1[k]);
@@ -1443,29 +1483,64 @@ void CZ::tdma8(const int* restrict ia,
     _mm256_transpose_8x8_ps(dd, t1);
 
 
-    // x0[k] = d0[k] - ww * x0[k+1];
+    // d0[k] = d0[k] - ww * d0[k+1];
     // fnmadd_ps(a,b,c) => -a*b+c
-    t1[7] = _mm256_fnmadd_ps(www, t0   , dd[7]);
-    t1[6] = _mm256_fnmadd_ps(www, t1[7], dd[6]);
-    t1[5] = _mm256_fnmadd_ps(www, t1[6], dd[5]);
-    t1[4] = _mm256_fnmadd_ps(www, t1[5], dd[4]);
-    t1[3] = _mm256_fnmadd_ps(www, t1[4], dd[3]);
-    t1[2] = _mm256_fnmadd_ps(www, t1[3], dd[2]);
-    t1[1] = _mm256_fnmadd_ps(www, t1[2], dd[1]);
-    t1[0] = _mm256_fnmadd_ps(www, t1[1], dd[0]);
 
-    t0 = t1[0];
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(www, _mm256_set_epi32(7,6,5,4,3,2,1,7)),
+           0) );
+    dd[7] = _mm256_fnmadd_ps(wc, t0   , dd[7]);
 
-    _mm256_transpose_8x8_ps(dd, t1);
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(www, _mm256_set_epi32(7,6,5,4,3,2,1,6)),
+           0) );
+    dd[6] = _mm256_fnmadd_ps(wc, dd[7], dd[6]);
 
-    _mm256_store_ps( x0+k , dd[0] );
-    _mm256_store_ps( x1+k , dd[1] );
-    _mm256_store_ps( x2+k , dd[2] );
-    _mm256_store_ps( x3+k , dd[3] );
-    _mm256_store_ps( x4+k , dd[4] );
-    _mm256_store_ps( x5+k , dd[5] );
-    _mm256_store_ps( x6+k , dd[6] );
-    _mm256_store_ps( x7+k , dd[7] );
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(www, _mm256_set_epi32(7,6,5,4,3,2,1,5)),
+           0) );
+    dd[5] = _mm256_fnmadd_ps(wc, dd[6], dd[5]);
+
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permutevar8x32_ps(www, _mm256_set_epi32(7,6,5,4,3,2,1,4)),
+           0) );
+    dd[4] = _mm256_fnmadd_ps(wc, dd[5], dd[4]);
+
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(www, _MM_SHUFFLE(3,2,1,3)), 0) );
+    dd[3] = _mm256_fnmadd_ps(wc, dd[4], dd[3]);
+
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(www, _MM_SHUFFLE(3,2,1,2)), 0) );
+    dd[2] = _mm256_fnmadd_ps(wc, dd[3], dd[2]);
+
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(
+             _mm256_permute_ps(www, _MM_SHUFFLE(3,2,1,1)), 0) );
+    dd[1] = _mm256_fnmadd_ps(wc, dd[2], dd[1]);
+
+    wc = _mm256_broadcastss_ps(
+           _mm256_extractf128_ps(www, 0) );
+    dd[0] = _mm256_fnmadd_ps(wc, dd[1], dd[0]);
+
+    t0 = dd[0];
+
+    _mm256_transpose_8x8_ps(t1, dd);
+
+    _mm256_store_ps( d0+k , t1[0] );
+    _mm256_store_ps( d1+k , t1[1] );
+    _mm256_store_ps( d2+k , t1[2] );
+    _mm256_store_ps( d3+k , t1[3] );
+    _mm256_store_ps( d4+k , t1[4] );
+    _mm256_store_ps( d5+k , t1[5] );
+    _mm256_store_ps( d6+k , t1[6] );
+    _mm256_store_ps( d7+k , t1[7] );
   }
   TIMING_stop("TDMA_R_body", f4);
   flop += f4;
