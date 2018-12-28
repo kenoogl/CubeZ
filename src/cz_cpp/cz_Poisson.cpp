@@ -239,18 +239,22 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    else if ( !strcasecmp(precon.c_str(), "sor2sma") ){
      RBSOR(res, xx, bb, lc_max, flop, false);
    }
+   /*
    else if ( !strcasecmp(precon.c_str(), "lsor_a") ){
      LSOR_A(res, xx, bb, lc_max, flop, false);
    }
+   */
    else if ( !strcasecmp(precon.c_str(), "lsor_b") ){
      LSOR_B(res, xx, bb, lc_max, flop, false);
    }
+   /*
    else if ( !strcasecmp(precon.c_str(), "lsor_c") ){
      LSOR_C(res, xx, bb, lc_max, flop, false);
    }
    else if ( !strcasecmp(precon.c_str(), "lsor_d") ){
      LSOR_D(res, xx, bb, lc_max, flop, false);
    }
+   */
    else if ( !strcasecmp(precon.c_str(), "lsor_e") ){
      LSOR_E(res, xx, bb, lc_max, flop, false);
    }
@@ -263,6 +267,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    else if ( !strcasecmp(precon.c_str(), "lsor_k") ){
      LSOR_K(res, xx, bb, lc_max, flop, false);
    }
+   /*
    else if ( !strcasecmp(precon.c_str(), "ljcb_a") ){
      LJCB_A(res, xx, bb, lc_max, flop, false);
    }
@@ -275,12 +280,15 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    else if ( !strcasecmp(precon.c_str(), "ljcb_d") ){
      LJCB_D(res, xx, bb, lc_max, flop, false);
    }
+   */
    else if ( !strcasecmp(precon.c_str(), "ljcb_e") ){
      LJCB_E(res, xx, bb, lc_max, flop, false);
    }
+   /*
    else if ( !strcasecmp(precon.c_str(), "lsor_simd") ){
       LSOR_SIMD(res, xx, bb, lc_max, flop, false);
    }
+   */
    else {
      printf("preconditiner error  %d\n", precon.c_str());
      exit(1);
@@ -442,19 +450,18 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  }
 
 
-  /* #################################################################
-  * @brief Line SOR反復
-  * @param [in,out] res    残差
-  * @param [in,out] X      解ベクトル
-  * @param [in]     B      RHSベクトル
-  * @param [in]     itr_max 最大反復数
-  * @param [in]     flop   浮動小数点演算数
-  * @note LSORのリファレンス実装
-          カーネルは全てFortran
-          内側ループはi
-  */
-  int CZ::LSOR_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
-               const int itr_max, double& flop, bool converge_check)
+
+ /* #################################################################
+ * @brief Line SOR Multi System
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ * @note LSOR_Aのtdma_lsor_a_のtdma_0を展開実装
+ */
+ int CZ::LSOR_B(double& res, REAL_TYPE* X, REAL_TYPE* B,
+              const int itr_max, double& flop, bool converge_check)
    {
      int itr;
      double flop_count = 0.0;
@@ -464,7 +471,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
      REAL_TYPE* a;
-     REAL_TYPE* b;
      REAL_TYPE* c;
 
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
@@ -473,177 +479,27 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      blas_copy_(q, B, size, &gc);
 
      a = czAllocR(size[0]+2*GUIDE, var_type);
-     b = czAllocR(size[0]+2*GUIDE, var_type);
      c = czAllocR(size[0]+2*GUIDE, var_type);
 
      for (int i=0; i<size[0]+2*GUIDE; i++) {
        a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=1; i<size[0]; i++) {
-       a[i+GUIDE] = -1.0/6.0;
-     }
-     for (int i=0; i<size[0]; i++) {
-       b[i+GUIDE] = 1.0;
-     }
-     for (int i=0; i<size[0]-1; i++) {
-       c[i+GUIDE] = -1.0/6.0;
-     }
-
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LSOR_kernel");
-       flop_count = 0.0;
-       tdma_lsor_a_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
-       TIMING_stop("LSOR_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-
-   /* #################################################################
-   * @brief Line SOR Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note カーネルをCで実装
-           TDMAの係数がスカラー固定なのでB/F異なる
-           内側ループはi
-   */
-   int CZ::LSOR_C(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
-     REAL_TYPE var_type=0;
-
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LSOR_MS_kernel");
-       flop_count = 0.0;
-       lsor_ms(q, X, w, B, res, flop_count);
-       TIMING_stop("LSOR_MS_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-
-     return itr;
-   }
-
-   /* #################################################################
-   * @brief Line SOR Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note LSOR_Aのtdma_lsor_a_のtdma_0を展開実装
-   */
-   int CZ::LSOR_B(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-     a = czAllocR(size[0]+2*GUIDE, var_type);
-     b = czAllocR(size[0]+2*GUIDE, var_type);
-     c = czAllocR(size[0]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[0]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=2; i<size[0]; i++) {
        a[i+GUIDE] = -1.0/6.0;
-     }
-     for (int i=0; i<size[0]; i++) {
-       b[i+GUIDE] = 1.0;
      }
      for (int i=0; i<size[0]-2; i++) {
        c[i+GUIDE] = -1.0/6.0;
      }
 
 
-
      for (itr=1; itr<=itr_max; itr++)
      {
        res = 0.0;
 
        TIMING_start("LSOR_MS_kernel");
        flop_count = 0.0;
-       tdma_lsor_b_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
+       tdma_lsor_b_(q, size, innerFidx, &gc, X, w, a, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LSOR_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -664,89 +520,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(q);
      czDelete(w);
      czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-   /* #################################################################
-   * @brief Line SOR Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note tdma_sor_bから、TDMAをkループに変更、kは最外側のまま
-   */
-   int CZ::LSOR_D(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LSOR_MS_kernel");
-       flop_count = 0.0;
-       tdma_lsor_d_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
-       TIMING_stop("LSOR_MS_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
      czDelete(c);
 
      return itr;
@@ -772,7 +545,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
      REAL_TYPE* a;
-     REAL_TYPE* b;
      REAL_TYPE* c;
 
      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
@@ -783,19 +555,14 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      ));
 
      a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
      c = czAllocR(size[2]+2*GUIDE, var_type);
 
      for (int i=0; i<size[2]+2*GUIDE; i++) {
        a[i] = 0.0;
-       b[i] = 0.0;
        c[i] = 0.0;
      }
      for (int i=3; i<=size[2]-1; i++) {
        a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
        c[i+GUIDE-1] = -1.0/6.0;
@@ -809,7 +576,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LSOR_MS_kernel");
        flop_count = 0.0;
-       tdma_lsor_e_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
+       tdma_lsor_e_(q, size, innerFidx, &gc, X, w, a, c, B, &ac1, &res, &flop_count);
        TIMING_stop("LSOR_MS_kernel", flop_count);
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -830,7 +597,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(q);
      czDelete(w);
      czDelete(a);
-     czDelete(b);
      czDelete(c);
 
      return itr;
@@ -852,11 +618,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      double flop_count = 0.0;
      int gc = GUIDE;
      REAL_TYPE var_type=0;
+     int kst = innerFidx[K_minus];
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
      REAL_TYPE* a;
-     REAL_TYPE* b;
      REAL_TYPE* c;
      REAL_TYPE* e;
 
@@ -867,29 +633,26 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      ));
 
      a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
      c = czAllocR(size[2]+2*GUIDE, var_type);
      e = czAllocR(size[2]+2*GUIDE, var_type);
      w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-       e[i] = 0.0;
-       w[i] = 0.0;
-     }
      for (int i=3; i<=size[2]-1; i++) {
        a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
        c[i+GUIDE-1] = -1.0/6.0;
      }
 
-     ljcb_g0_(e, size, innerFidx, &gc, w, a, b, c, &flop_count);
+     TIMING_start("LSOR_LU_decomp");
+     flop_count = 0.0;
+     tdma_pre(&a[kst+GUIDE-1],
+              &c[kst+GUIDE-1],
+              &e[kst+GUIDE-1],
+              &w[kst+GUIDE-1],
+              flop_count);
+     TIMING_stop("LSOR_LU_decomp", flop_count);
+
 
      for (itr=1; itr<=itr_max; itr++)
      {
@@ -918,384 +681,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(q);
      czDelete(w);
      czDelete(a);
-     czDelete(b);
      czDelete(c);
 
      return itr;
    }
 
-   /* #################################################################
-   * @brief Line JACOBI Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note TDMAはk-loop(外側)で、内側のiループでベクトル化
-   */
-   int CZ::LJCB_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LJCB_MS_kernel");
-       flop_count = 0.0;
-       tdma_ljcb_a_(q, size, innerFidx, &gc, X, w, a, b, c, B, &ac1, &res, &flop_count);
-       TIMING_stop("LJCB_MS_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-   /* #################################################################
-   * @brief Line JACOBI Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note tdma_ljcb_a_のijループを一重化
-   */
-   int CZ::LJCB_B(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LJCB_MS_kernel");
-       flop_count = 0.0;
-       tdma_ljcb_b_(q, size, innerFidx, &gc, X, w, a, b, c, B, MSK, &ac1, &res, &flop_count);
-       TIMING_stop("LJCB_MS_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-
-   /* #################################################################
-   * @brief Line JACOBI Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note tdma_ljcb_a_の各カーネルを独立サブルーチンにして計時
-   */
-   int CZ::LJCB_C(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     blas_copy_(q, B, size, &gc);
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LJCB_f0_kernel");
-       flop_count = 0.0;
-       ljcb_f0_(q, size, innerFidx, &gc, X, B, &flop_count);
-       TIMING_stop("LJCB_f0_kernel", flop_count);
-
-       TIMING_start("LJCB_f1_kernel");
-       flop_count = 0.0;
-       ljcb_f1_(q, size, innerFidx, &gc, w, b, c, B, &flop_count);
-       TIMING_stop("LJCB_f1_kernel", flop_count);
-
-       TIMING_start("LJCB_f2_kernel");
-       flop_count = 0.0;
-       ljcb_f2_(q, size, innerFidx, &gc, w, a, b, c, &flop_count);
-       TIMING_stop("LJCB_f2_kernel", flop_count);
-
-       TIMING_start("LJCB_f3_kernel");
-       flop_count = 0.0;
-       ljcb_f3_(q, size, innerFidx, &gc, w, &flop_count);
-       TIMING_stop("LJCB_f3_kernel", flop_count);
-
-       TIMING_start("LJCB_f4_kernel");
-       flop_count = 0.0;
-       ljcb_f4_(q, size, innerFidx, &gc, X, &ac1, &res, &flop_count);
-       TIMING_stop("LJCB_f4_kernel", flop_count);
-
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-   /* #################################################################
-   * @brief Line JACOBI Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   * @note tdma_ljcb_a_の各k-loopを最内側に
-   */
-   int CZ::LJCB_D(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     //blas_copy_(q, B, size, &gc);
-     memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
-     ));
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LJCB_f0_kernel");
-       flop_count = 0.0;
-       ljcb_f0t_(q, size, innerFidx, &gc, X, B, &flop_count);
-       TIMING_stop("LJCB_f0_kernel", flop_count);
-
-       TIMING_start("LJCB_f1_kernel");
-       flop_count = 0.0;
-       ljcb_f1t_(q, size, innerFidx, &gc, w, b, c, B, &flop_count);
-       TIMING_stop("LJCB_f1_kernel", flop_count);
-
-       TIMING_start("LJCB_f2_kernel");
-       flop_count = 0.0;
-       ljcb_f2t_(q, size, innerFidx, &gc, w, a, b, c, &flop_count);
-       TIMING_stop("LJCB_f2_kernel", flop_count);
-
-       TIMING_start("LJCB_f3_kernel");
-       flop_count = 0.0;
-       ljcb_f3t_(q, size, innerFidx, &gc, w, &flop_count);
-       TIMING_stop("LJCB_f3_kernel", flop_count);
-
-       TIMING_start("LJCB_f4_kernel");
-       flop_count = 0.0;
-       ljcb_f4t_(q, size, innerFidx, &gc, X, &ac1, &res, &flop_count);
-       TIMING_stop("LJCB_f4_kernel", flop_count);
-
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         // BCはq[]に与えられているので、不要
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
 
    /* #################################################################
    * @brief Line JACOBI Multi System
@@ -1313,11 +703,11 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      double flop_count = 0.0;
      int gc = GUIDE;
      REAL_TYPE var_type=0;
+     int kst = innerFidx[K_minus];
 
      REAL_TYPE* q;  // RHS
      REAL_TYPE* w;  // work
      REAL_TYPE* a;
-     REAL_TYPE* b;
      REAL_TYPE* c;
      REAL_TYPE* e;
 
@@ -1326,32 +716,26 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      blas_copy_(q, B, size, &gc);
 
      a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
      c = czAllocR(size[2]+2*GUIDE, var_type);
      e = czAllocR(size[2]+2*GUIDE, var_type);
      w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     /*
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-       e[i] = 0.0;
-       w[i] = 0.0;
-     }
-     */
 
      for (int i=3; i<=size[2]-1; i++) {
        a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
      }
      for (int i=2; i<=size[2]-2; i++) {
        c[i+GUIDE-1] = -1.0/6.0;
      }
 
-     ljcb_g0_(e, size, innerFidx, &gc, w, a, b, c, &flop_count);
+     TIMING_start("LSOR_LU_decomp");
+     flop_count = 0.0;
+     tdma_pre(&a[kst+GUIDE-1],
+              &c[kst+GUIDE-1],
+              &e[kst+GUIDE-1],
+              &w[kst+GUIDE-1],
+              flop_count);
+     TIMING_stop("LSOR_LU_decomp", flop_count);
 
 
 
@@ -1366,7 +750,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
        TIMING_start("LJCB_f1_kernel");
        flop_count = 0.0;
-       ljcb_g1_(q, size, innerFidx, &gc, b, B, &flop_count);
+       ljcb_g1_(q, size, innerFidx, &gc, B, &flop_count);
        TIMING_stop("LJCB_f1_kernel", flop_count);
 
        TIMING_start("LJCB_f2_kernel");
@@ -1403,194 +787,13 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      czDelete(q);
      czDelete(w);
      czDelete(a);
-     czDelete(b);
      czDelete(c);
      czDelete(e);
 
      return itr;
    }
 
-   /* #################################################################
-   * @brief Line SOR Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   */
-   int CZ::LSOR_SIMD(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
 
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* b;
-     REAL_TYPE* c;
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
-     ));
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     b = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       b[i] = 0.0;
-       c[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-1; i++) {
-       b[i+GUIDE-1] = 1.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-
-     TIMING_start("LSOR_simd_Itr");
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LSOR_simd_kernel");
-       flop_count = 0.0;
-       lsor_simd(q, X, w, a, b, c, B, res, flop_count);
-       //lsor_simd2(q, X, w, a, c, B, MSK, res, flop_count);
-       //lsor_simd3(q, X, w, a, c, B, MSK, res, flop_count);
-       TIMING_stop("LSOR_simd_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-     TIMING_stop("LSOR_simd_Itr");
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(b);
-     czDelete(c);
-
-     return itr;
-   }
-
-   /* #################################################################
-   * @brief Line SOR Multi System
-   * @param [in,out] res    残差
-   * @param [in,out] X      解ベクトル
-   * @param [in]     B      RHSベクトル
-   * @param [in]     itr_max 最大反復数
-   * @param [in]     flop   浮動小数点演算数
-   */
-   int CZ::LSOR_SIMD2(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
-   {
-     int itr;
-     double flop_count = 0.0;
-     int gc = GUIDE;
-     REAL_TYPE var_type=0;
-
-     REAL_TYPE* q;  // RHS
-     REAL_TYPE* q2;
-     REAL_TYPE* w;  // work
-     REAL_TYPE* a;
-     REAL_TYPE* c;
-     REAL_TYPE* e;
-
-     int kst = innerFidx[K_minus];
-
-     if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
-     if( (q2= czAllocR_S3D(size,var_type)) == NULL ) return 0;
-
-     memcpy(q, B, sizeof(REAL_TYPE)*(
-       (size[0]+2*GUIDE)*(size[1]+2*GUIDE)*(size[2]+2*GUIDE)
-     ));
-
-     a = czAllocR(size[2]+2*GUIDE, var_type);
-     c = czAllocR(size[2]+2*GUIDE, var_type);
-     e = czAllocR(size[2]+2*GUIDE, var_type);
-     w = czAllocR(size[2]+2*GUIDE, var_type);
-
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       c[i] = 0.0;
-       e[i] = 0.0;
-       w[i] = 0.0;
-     }
-     for (int i=3; i<=size[2]-1; i++) {
-       a[i+GUIDE-1] = -1.0/6.0;
-     }
-     for (int i=2; i<=size[2]-2; i++) {
-       c[i+GUIDE-1] = -1.0/6.0;
-     }
-
-     TIMING_start("LSOR_LU_decomp");
-     flop_count = 0.0;
-     tdma_pre(&a[kst+GUIDE-1],
-              &c[kst+GUIDE-1],
-              &e[kst+GUIDE-1],
-              &w[kst+GUIDE-1],
-              flop_count);
-     TIMING_stop("LSOR_LU_decomp", flop_count);
-
-
-     TIMING_start("LSOR_simd_Itr");
-     for (itr=1; itr<=itr_max; itr++)
-     {
-       res = 0.0;
-
-       TIMING_start("LSOR_simd_kernel");
-       flop_count = 0.0;
-       lsor_simd4(q, X, w, a, e, B, MSK, res, flop_count);
-       //lsor_simd5(q, X, w, a, e, B, MSK, q2, res, flop_count);
-       //lsor_simd6(q, X, w, a, e, B, MSK, q2, res, flop_count);
-       TIMING_stop("LSOR_simd_kernel", flop_count);
-
-       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
-
-       if ( converge_check ) {
-         if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
-
-         res *= res_normal;
-         res = sqrt(res);
-         Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
-         if ( res < eps ) break;
-       }
-
-     } // Iteration
-     TIMING_stop("LSOR_simd_Itr");
-
-     czDelete(q);
-     czDelete(w);
-     czDelete(a);
-     czDelete(c);
-     czDelete(e);
-     czDelete(q2);
-
-     return itr;
-   }
 
    /* #################################################################
    * @brief Line SOR Multi System
@@ -1629,12 +832,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      e = czAllocR(size[2]+2*GUIDE, var_type);
      w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       c[i] = 0.0;
-       e[i] = 0.0;
-       w[i] = 0.0;
-     }
      for (int i=3; i<=size[2]-1; i++) {
        a[i+GUIDE-1] = -1.0/6.0;
      }
@@ -1723,12 +920,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      e = czAllocR(size[2]+2*GUIDE, var_type);
      w = czAllocR(size[2]+2*GUIDE, var_type);
 
-     for (int i=0; i<size[2]+2*GUIDE; i++) {
-       a[i] = 0.0;
-       c[i] = 0.0;
-       e[i] = 0.0;
-       w[i] = 0.0;
-     }
      for (int i=3; i<=size[2]-1; i++) {
        a[i+GUIDE-1] = -1.0/6.0;
      }

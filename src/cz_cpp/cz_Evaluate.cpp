@@ -192,12 +192,12 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_PSOR;
     strcpy(fname, "psor.txt");
   }
-
+  /*
   else if ( !strcasecmp(q, "lsor") ) {
     ls_type = LS_LSOR;
     strcpy(fname, "lsor.txt");
   }
-
+  */
   else if ( !strcasecmp(q, "sor2sma") ) {
     ls_type = LS_SOR2SMA;
     strcpy(fname, "sor2sma.txt");
@@ -207,17 +207,17 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_BICGSTAB;
     strcpy(fname, "pbicgstab.txt");
   }
-
+  /*
   else if ( !strcasecmp(q, "lsor_a") ) {
     ls_type = LS_LSOR_A;
     strcpy(fname, "lsor_a.txt");
   }
-
+  */
   else if ( !strcasecmp(q, "lsor_b") ) {
     ls_type = LS_LSOR_B;
     strcpy(fname, "lsor_b.txt");
   }
-
+  /*
   else if ( !strcasecmp(q, "lsor_c") ) {
     ls_type = LS_LSOR_C;
     strcpy(fname, "lsor_c.txt");
@@ -227,7 +227,7 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_D;
     strcpy(fname, "lsor_d.txt");
   }
-
+  */
   else if ( !strcasecmp(q, "lsor_e") ) {
     ls_type = LS_LSOR_E;
     strcpy(fname, "lsor_e.txt");
@@ -237,7 +237,7 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_F;
     strcpy(fname, "lsor_f.txt");
   }
-
+  /*
   else if ( !strcasecmp(q, "ljcb_a") ) {
     ls_type = LS_LJCB_A;
     strcpy(fname, "ljcb_a.txt");
@@ -257,7 +257,7 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LJCB_D;
     strcpy(fname, "ljcb_d.txt");
   }
-
+  */
   else if ( !strcasecmp(q, "ljcb_e") ) {
     ls_type = LS_LJCB_E;
     strcpy(fname, "ljcb_e.txt");
@@ -301,7 +301,7 @@ int CZ::Evaluate(int argc, char **argv)
     }
   }
 
-  // 逐次のみ、k方向を内側にしているので通信面を変更
+  /* 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
 
     //SdW = ALIGN / sizeof(REAL_TYPE);
@@ -322,7 +322,7 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_SIMD;
     strcpy(fname, "lsor_simd.txt");
   }
-
+  */
   else{
     printf("Invalid solver\n");
     exit(0);
@@ -490,19 +490,19 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop)) ) return 0;
       TIMING_stop("PBiCGSTAB", flop);
       break;
-
+    /*
     case LS_LSOR_A:
       TIMING_start("LSOR_A");
       if ( 0 == (itr=LSOR_A(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_A", flop);
       break;
-
+    */
     case LS_LSOR_B:
       TIMING_start("LSOR_B");
       if ( 0 == (itr=LSOR_B(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_B", flop);
       break;
-
+    /*
     case LS_LSOR_C:
       TIMING_start("LSOR_C");
       if ( 0 == (itr=LSOR_C(res, P, RHS, ItrMax, flop)) ) return 0;
@@ -514,7 +514,7 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_D(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_D", flop);
       break;
-
+    */
     case LS_LSOR_E:
       TIMING_start("LSOR_E");
       if ( 0 == (itr=LSOR_E(res, P, RHS, ItrMax, flop)) ) return 0;
@@ -526,7 +526,7 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_F(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_F", flop);
       break;
-
+    /*
     case LS_LJCB_A:
       TIMING_start("LJCB_A");
       if ( 0 == (itr=LJCB_A(res, P, RHS, ItrMax, flop)) ) return 0;
@@ -550,19 +550,19 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LJCB_D(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LJCB_D", flop);
       break;
-
+    */
     case LS_LJCB_E:
       TIMING_start("LJCB_E");
       if ( 0 == (itr=LJCB_E(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LJCB_E", flop);
       break;
-
+    /*
     case LS_LSOR_SIMD:
       TIMING_start("LSOR_SIMD");
       if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_SIMD", flop);
       break;
-
+    */
     case LS_LSOR_J:
       TIMING_start("LSOR_J");
       if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;

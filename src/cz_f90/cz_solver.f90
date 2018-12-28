@@ -425,6 +425,7 @@ real                                                   ::  omg, dd, ss, dp, pp, 
 real                                                   ::  c1, c2, c3, c4, c5, c6
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b, wk2
 real, dimension(7)                                     ::  cf
+!dir$ assume_aligned p:64, b:64, wk2:64
 
 ix = sz(1)
 jx = sz(2)
@@ -454,6 +455,9 @@ flop = flop + dble((kx*jx*ix)*25.0)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+
+!dir$ vector aligned
+!dir$ simd
 do i = ist, ied
   pp = p(i,j,k)
   bb = b(i,j,k)
@@ -475,6 +479,8 @@ end do
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+!dir$ vector aligned
+!dir$ simd
 do i = ist, ied
   p(i,j,k)=wk2(i,j,k)
 end do
@@ -516,6 +522,7 @@ real                                                   ::  c1, c2, c3, c4, c5, c
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b
 integer                                                ::  ip, color, ofst
 real, dimension(7)                                     ::  cf
+!dir$ assume_aligned p:64, b:64
 
 ix = sz(1)
 jx = sz(2)
@@ -544,6 +551,8 @@ flop = flop + dble(ix*jx*kx)*25.0*0.5d0
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
 do k=kst,ked
 do j=jst,jed
+!dir$ vector aligned
+!dir$ simd
 do i=ist+mod(k+j+ip,2), ied, 2
   pp = p(i,j,k)
   bb = b(i,j,k)
@@ -564,104 +573,3 @@ end do
 
 return
 end subroutine psor2sma_core
-
-
-!> ********************************************************************
-!! @brief TDMA
-!! @param [in]     nx   配列長
-!! @param [in,out] d    RHS vector -> 解ベクトル (in-place)
-!! @param [in]     a    L_1 vector
-!! @param [in]     b    D vector
-!! @param [in]     c    U_1 vector
-!! @param [in]     w    work vector (U_1)
-!! @param [in,out] flop flop count
-!!
-!! Algorithm
-!!
-!! w_1 = c_1 / b_1
-!! g_1 = d_1 / b_1
-!!
-!! ==> Forward elimination
-!! for i=2, N do
-!!  e = 1 / (b_i - a_i * w_{i-1})
-!!  w_i = c_i * e                    // N-1までが意味がある
-!!  g_i = (d_i - a_i * g_{i-1}) * e
-!!
-!!  x_n = g_n
-!!
-!! ==> Backward substitution
-!! for i=N-1, 1 do
-!!  x_i = g_i - w_i * x_{i+1}
-!!
-!! 上記のアルゴリズムで In-place にすると、
-!! g と x を d で置き換えることができる
-!!
-!!  A = (a, b, c) の三重対角
-!!  Ax = d を解く
-!!  L = (a, e^{-1}) aが下副要素(L_1)、e^{-1}が対角要素
-!!  U = (1, w) 対角要素1、wが上副要素(U_1)
-!!
-!!  LU分解: Lg=d, Ux=g
-!<
-subroutine tdma_0 (nx, d, a, b, c, w)
-implicit none
-integer                          ::  i, nx
-real                             ::  e
-real, dimension(nx)              ::  d, w, a, b, c
-
-
-d(1) = d(1)/b(1);
-w(1) = c(1)/b(1);
-
-do i=2, nx
-  e = 1.0 / (b(i) - a(i) * w(i-1))
-  w(i) = e * c(i)
-  d(i) = (d(i) - a(i) * d(i-1)) * e
-end do
-
-do i=nx-1, 1, -1
-  d(i) = d(i) - w(i) * d(i+1)
-end do
-
-return
-end subroutine tdma_0
-
-
-!> ********************************************************************
-!! @brief TDMA
-!! @param [in]     nx   配列長
-!! @param [in]     g    ガイドセル長
-!! @param [in,out] d    RHS vector -> 解ベクトル (in-place)
-!! @param [in]     cf   係数
-!! @param [in]     w    U_1 vector
-!! @param [in,out] flop flop count
-!<
-subroutine tdma_1 (nx, d, cf, w, flop)
-implicit none
-integer                   ::  i, nx
-double precision          ::  flop
-real                      ::  a, b, c, e
-real, dimension(nx)       ::  d, w
-real, dimension(3)        ::  cf
-
-a = cf(1)
-b = cf(2)
-c = cf(3)
-
-flop = flop + dble(nx-1)*(14.0 + 2.0) + 8.0*2.0
-
-d(1) = d(1)/b;
-w(1) = c/b;
-
-do i=2, nx
-  e = 1.0 / (b - a * w(i-1))
-  w(i) = e * c
-  d(i) = (d(i) - a * d(i-1)) * e
-end do
-
-do i=nx-1, 1, -1
-  d(i) = d(i) - w(i) * d(i+1)
-end do
-
-return
-end subroutine tdma_1

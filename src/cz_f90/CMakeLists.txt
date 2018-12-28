@@ -17,6 +17,7 @@ set(cz_files
        cz_utility.f90
        cz_ljcb.f90
        cz_lsor.f90
+       obsolete.f90
 )
 
 add_library(FCORE STATIC ${cz_files})

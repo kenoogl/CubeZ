@@ -28,6 +28,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(3)+g, 1-g:sz(2)+g) ::  x
+!dir$ assume_aligned x:64
 
 ix = sz(1)
 jx = sz(2)
@@ -43,6 +44,8 @@ ked = idx(5)
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do j=1-g,jx+g
 do k=1-g,kx+g
+!dir$ vector aligned
+!dir$ simd
 do i=1-g,ix+g
   x(i, k, j) = 0.0
 end do
@@ -53,6 +56,8 @@ end do
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do j = jst, jed
 do k = kst, ked
+!dir$ vector aligned
+!dir$ simd
 do i = ist, ied
   x(i, k, j) = 1.0
 end do
@@ -79,6 +84,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x
+!dir$ assume_aligned x:64
 
 ix = sz(1)
 jx = sz(2)
@@ -94,6 +100,8 @@ ked = idx(5)
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1-g,kx+g
 do j=1-g,jx+g
+  !dir$ vector aligned
+  !dir$ simd
 do i=1-g,ix+g
   x(k, i, j) = 0.0
 end do
@@ -104,6 +112,8 @@ end do
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   x(k, i, j) = 1.0
 end do
@@ -129,6 +139,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  x
+!dir$ assume_aligned x:64
 
 ix = sz(1)
 jx = sz(2)
@@ -144,6 +155,8 @@ ked = idx(5)
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1-g,kx+g
 do j=1-g,jx+g
+  !dir$ vector aligned
+  !dir$ simd
 do i=1-g,ix+g
   x(i, j, k) = 0.0
 end do
@@ -154,6 +167,8 @@ end do
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   x(i, j, k) = 1.0
 end do
@@ -176,6 +191,7 @@ implicit none
 integer                                                ::  i, j, k, ix, jx, kx, g
 integer, dimension(3)                                  ::  sz
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  x
+!dir$ assume_aligned x:64
 
 ix = sz(1)
 jx = sz(2)
@@ -184,6 +200,8 @@ kx = sz(3)
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1-g,kx+g
 do j=1-g,jx+g
+  !dir$ vector aligned
+  !dir$ simd
 do i=1-g,ix+g
   x(i, j, k) = 0.0
 end do
@@ -207,7 +225,7 @@ implicit none
 integer                                                ::  i, j, k, ix, jx, kx, g
 integer, dimension(3)                                  ::  sz
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  y, x
-
+!dir$ assume_aligned x:64, y:64
 ix = sz(1)
 jx = sz(2)
 kx = sz(3)
@@ -215,6 +233,8 @@ kx = sz(3)
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k=1-g,kx+g
 do j=1-g,jx+g
+  !dir$ vector aligned
+  !dir$ simd
 do i=1-g,ix+g
   y(i, j, k) = x(i, j, k)
 end do
@@ -246,6 +266,7 @@ integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  x, y, z
 double precision                                       ::  flop, a
+!dir$ assume_aligned x:64, y:64, z:64
 
 ix = sz(1)
 jx = sz(2)
@@ -263,6 +284,8 @@ flop = flop + dble(ix) * dble(jx) * dble(kx) * 2.0d0
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   z(i, j, k) = a * x(i, j, k) + y(i, j, k)
 end do
@@ -292,6 +315,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p
 double precision                                       ::  flop, q, r
+!dir$ assume_aligned p:64
 
 ix = sz(1)
 jx = sz(2)
@@ -313,6 +337,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*2.0d0
 !$OMP PRIVATE(q)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   q = dble(p(i, j, k))
   r = r + q*q
@@ -344,6 +370,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, q
 double precision                                       ::  flop, r
+!dir$ assume_aligned p:64, q:64
 
 ix = sz(1)
 jx = sz(2)
@@ -364,6 +391,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*2.0d0
 !$OMP REDUCTION(+:r)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   r = r + dble(p(i, j, k)) * dble(q(i, j, k))
 end do
@@ -396,6 +425,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, r, q
 double precision                                       ::  flop, beta, omg
+!dir$ assume_aligned p:64, q:64, r:64
 
 ix = sz(1)
 jx = sz(2)
@@ -413,6 +443,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*4.0d0
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   p(i,j,k) = r(i,j,k) + beta * ( p(i,j,k) - omg * q(i,j,k) )
 end do
@@ -445,6 +477,7 @@ integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  x, y, z
 double precision                                       ::  flop, a, b
+!dir$ assume_aligned x:64, y:64, z:64
 
 ix = sz(1)
 jx = sz(2)
@@ -462,6 +495,8 @@ flop = flop + dble(ix) * dble(jx) * dble(kx) * 6.0d0
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   z(i, j, k) = a * x(i, j, k) + b * y(i, j, k) + z(i, j, k)
 end do
@@ -494,6 +529,7 @@ real                                                   ::  dd, ss, c1, c2, c3, c
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  ap, p
 double precision                                       ::  flop
 real, dimension(7)                                     ::  cf
+!dir$ assume_aligned ap:64, p:64
 
 ix = sz(1)
 jx = sz(2)
@@ -519,6 +555,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*13.0d0
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   ss = c1 * p(i+1,j  ,k  ) &
      + c2 * p(i-1,j  ,k  ) &
@@ -558,6 +596,7 @@ real                                                   ::  dd, ss, c1, c2, c3, c
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  r, p, b
 double precision                                       ::  flop
 real, dimension(7)                                     ::  cf
+!dir$ assume_aligned r:64, p:64, b:64
 
 ix = sz(1)
 jx = sz(2)
@@ -583,6 +622,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*14.0d0
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   ss = c1 * p(i+1,j  ,k  ) &
      + c2 * p(i-1,j  ,k  ) &
@@ -621,6 +662,7 @@ double precision                                       ::  flop, res
 real                                                   ::  dd, ss, dp, c1, c2, c3, c4, c5, c6
 real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b
 real, dimension(7)                                     ::  cf
+!dir$ assume_aligned p:64, b:64
 
 ix = sz(1)
 jx = sz(2)
@@ -650,6 +692,8 @@ flop = flop + dble(ix)*dble(jx)*dble(kx)*16.0d0
 !$OMP PRIVATE(ss, dp)
 do k = kst, ked
 do j = jst, jed
+  !dir$ vector aligned
+  !dir$ simd
 do i = ist, ied
   ss = c1 * p(i+1,j  ,k  ) &
      + c2 * p(i-1,j  ,k  ) &
