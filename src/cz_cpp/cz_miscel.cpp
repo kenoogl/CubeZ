@@ -222,8 +222,8 @@ using namespace pm_lib;
   set_label("LSOR_RHS_Ex",      PerfMonitor::CALC, true);
   set_label("LSOR_RHS_J",       PerfMonitor::CALC, true);
   set_label("LSOR_RHS_K",       PerfMonitor::CALC, true);
-  set_label("LSOR_TDMA_F",      PerfMonitor::CALC, true);
-  set_label("LSOR_TDMA_R",      PerfMonitor::CALC, true);
+  set_label("LSOR_TDMA_FWD",    PerfMonitor::CALC, true);
+  set_label("LSOR_TDMA_BWD",    PerfMonitor::CALC, true);
 
   set_label("LSOR_Relax",       PerfMonitor::CALC, false);
   set_label("LSOR_Relax_Peel",  PerfMonitor::CALC, true);
@@ -259,4 +259,5 @@ using namespace pm_lib;
   set_label("LSOR_simd_Itr",    PerfMonitor::CALC, false);
   set_label("LSOR_simd_kernel", PerfMonitor::CALC, false);
   set_label("LSOR_J",           PerfMonitor::CALC, false);
+  set_label("LSOR_K",           PerfMonitor::CALC, false);
 }

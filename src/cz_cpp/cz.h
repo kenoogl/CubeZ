@@ -457,12 +457,34 @@ public:
               REAL_TYPE* x,
               REAL_TYPE* w,
               REAL_TYPE* a,
-              REAL_TYPE* c,
+              REAL_TYPE* e,
               REAL_TYPE* rhs,
               REAL_TYPE* msk,
+              REAL_TYPE* d2,
               double &res,
               double &flop);
 
+  void lsor_j4(REAL_TYPE* d,
+              REAL_TYPE* x,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* e,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              REAL_TYPE* d2,
+              double &res,
+              double &flop);
+
+  void lsor_k(REAL_TYPE* d,
+              REAL_TYPE* x,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* e,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              REAL_TYPE* d2,
+              double &res,
+              double &flop);
 
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
@@ -723,6 +745,13 @@ private:
                  bool converge_check=true);
 
   int LSOR_J(double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itr_max,
+             double& flop,
+             bool converge_check=true);
+
+  int LSOR_K(double& res,
              REAL_TYPE* X,
              REAL_TYPE* B,
              const int itr_max,

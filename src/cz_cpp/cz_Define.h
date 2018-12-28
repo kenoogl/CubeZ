@@ -63,7 +63,7 @@
 
 
 // PMlibの登録ラベル個数
-#define PM_NUM_MAX 100
+#define PM_NUM_MAX 200
 
 // ラベルの最大文字数
 #define TM_LABEL_MAX 24
@@ -88,7 +88,8 @@ enum LinearSolver
   LS_LJCB_D,
   LS_LJCB_E,
   LS_LSOR_SIMD,
-  LS_LSOR_J
+  LS_LSOR_J,
+  LS_LSOR_K
 };
 
 

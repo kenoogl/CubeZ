@@ -280,8 +280,25 @@ int CZ::Evaluate(int argc, char **argv)
       SdB, SdW*SdB + 2*(SdW-GUIDE));
       exit(1);
     }
+  }
+
+  else if ( !strcasecmp(q, "lsor_k") ) {
+    ls_type = LS_LSOR_K;
+    strcpy(fname, "lsor_k.txt");
+
+    int tmp = (size[0] - 2*(SdW-GUIDE));
+    SdB = tmp/SdW;
+
+    printf("\nALIGN          = %d\n", ALIGN);
+    printf("SIMD width     = %d\n", SdW);
+    printf("SIMD body loop = %d\n", SdB);
 
 
+    if ((tmp/SdW)*SdW != tmp || tmp<2) {
+      printf("NI is not appropriate N=%d > NI=%d\n",
+      SdB, SdW*SdB + 2*(SdW-GUIDE));
+      exit(1);
+    }
   }
 
   // 逐次のみ、k方向を内側にしているので通信面を変更
@@ -401,6 +418,7 @@ int CZ::Evaluate(int argc, char **argv)
       break;
 
     case LS_LSOR_J:
+    case LS_LSOR_K:
       bc_ikj_(size, &gc, P, pitch, origin, nID);
       if ( !Comm_S(P, 1) ) return 0;
 
@@ -541,7 +559,7 @@ int CZ::Evaluate(int argc, char **argv)
 
     case LS_LSOR_SIMD:
       TIMING_start("LSOR_SIMD");
-      if ( 0 == (itr=LSOR_SIMD2(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_SIMD", flop);
       break;
 
@@ -549,6 +567,12 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_start("LSOR_J");
       if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_J", flop);
+      break;
+
+    case LS_LSOR_K:
+      TIMING_start("LSOR_K");
+      if ( 0 == (itr=LSOR_K(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR_K", flop);
       break;
 
     default:
@@ -627,6 +651,7 @@ int CZ::Evaluate(int argc, char **argv)
         break;
 
       case LS_LSOR_J:
+      case LS_LSOR_K:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_ikj_(size, &gc, P, pitch, origin, tmp_fname);
         exact_ikj_(size, &gc, ERR, pitch, origin);
