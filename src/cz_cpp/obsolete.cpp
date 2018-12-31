@@ -95,6 +95,83 @@ int CZ::LSOR_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
  }
 
 
+
+  /* #################################################################
+  * @brief Line SOR Multi System
+  * @param [in,out] res    残差
+  * @param [in,out] X      解ベクトル
+  * @param [in]     B      RHSベクトル
+  * @param [in]     itr_max 最大反復数
+  * @param [in]     flop   浮動小数点演算数
+  * @note LSOR_Aのtdma_lsor_a_のtdma_0を展開実装
+  */
+  int CZ::LSOR_B(double& res, REAL_TYPE* X, REAL_TYPE* B,
+               const int itr_max, double& flop, bool converge_check)
+    {
+      int itr;
+      double flop_count = 0.0;
+      int gc = GUIDE;
+      REAL_TYPE var_type=0;
+
+      REAL_TYPE* q;  // RHS
+      REAL_TYPE* w;  // work
+      REAL_TYPE* a;
+      REAL_TYPE* c;
+
+      if( (q = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+      if( (w = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+
+      blas_copy_(q, B, size, &gc);
+
+      a = czAllocR(size[0]+2*GUIDE, var_type);
+      c = czAllocR(size[0]+2*GUIDE, var_type);
+
+      for (int i=0; i<size[0]+2*GUIDE; i++) {
+        a[i] = 0.0;
+        c[i] = 0.0;
+      }
+      for (int i=2; i<size[0]; i++) {
+        a[i+GUIDE] = -1.0/6.0;
+      }
+      for (int i=0; i<size[0]-2; i++) {
+        c[i+GUIDE] = -1.0/6.0;
+      }
+
+
+      for (itr=1; itr<=itr_max; itr++)
+      {
+        res = 0.0;
+
+        TIMING_start("LSOR_MS_kernel");
+        flop_count = 0.0;
+        tdma_lsor_b_(q, size, innerFidx, &gc, X, w, a, c, B, &ac1, &res, &flop_count);
+        TIMING_stop("LSOR_MS_kernel", flop_count);
+
+        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+
+        if ( converge_check ) {
+          if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+
+          res *= res_normal;
+          res = sqrt(res);
+          Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+
+          // BCはq[]に与えられているので、不要
+          if ( res < eps ) break;
+        }
+
+      } // Iteration
+
+      czDelete(q);
+      czDelete(w);
+      czDelete(a);
+      czDelete(c);
+
+      return itr;
+    }
+
+
+
     /* #################################################################
     * @brief Line SOR Multi System
     * @param [in,out] res    残差
@@ -807,10 +884,10 @@ void CZ::ms_rhs8v(const int* ia,
                   REAL_TYPE* msk,
                   double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(rhs, ALIGN);
-  __assume_aligned(msk, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
 
   flop += 48.0*(double)(ked-kst+2);
 
@@ -903,10 +980,10 @@ void CZ::ms_rhs4v(const int* ia,
                   REAL_TYPE* msk,
                   double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(rhs, ALIGN);
-  __assume_aligned(msk, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
 
   flop += 24.0*(double)(ked-kst+2);
 
@@ -966,10 +1043,10 @@ void CZ::ms_rhs4(const int i,
                  REAL_TYPE* msk,
                  double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(rhs, ALIGN);
-  __assume_aligned(msk, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
 
   flop += 24.0*(double)(ked-kst+2);
 

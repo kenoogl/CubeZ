@@ -9,6 +9,16 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2018-12-31 Version 0.8.5
+   - ベストケースはlsor_k2()
+   - スレッドスケジュールはstatic
+
+---
+- 2018-12-31 Version 0.8.4
+  - 最適化のオプション変更
+  - Alignment, SIMD_width
+
+---
 - 2018-12-28 Version 0.8.3
   - テストしない関数をobsoleteへ移動
 

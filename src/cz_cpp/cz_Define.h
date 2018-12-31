@@ -89,7 +89,10 @@ enum LinearSolver
   LS_LJCB_E,
   LS_LSOR_SIMD,
   LS_LSOR_J,
-  LS_LSOR_K
+  LS_LSOR_J4,
+  LS_LSOR_K,
+  LS_LSOR_K2,
+  LS_LSOR_K3
 };
 
 

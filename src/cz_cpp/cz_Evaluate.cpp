@@ -192,12 +192,7 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_PSOR;
     strcpy(fname, "psor.txt");
   }
-  /*
-  else if ( !strcasecmp(q, "lsor") ) {
-    ls_type = LS_LSOR;
-    strcpy(fname, "lsor.txt");
-  }
-  */
+
   else if ( !strcasecmp(q, "sor2sma") ) {
     ls_type = LS_SOR2SMA;
     strcpy(fname, "sor2sma.txt");
@@ -206,18 +201,55 @@ int CZ::Evaluate(int argc, char **argv)
   else if ( !strcasecmp(q, "pbicgstab") ) {
     ls_type = LS_BICGSTAB;
     strcpy(fname, "pbicgstab.txt");
+
+    if ( !strcasecmp(precon.c_str(), "jacobi") ) {
+      pc_type = LS_JACOBI;
+    }
+    else if ( !strcasecmp(precon.c_str(), "psor") ) {
+      pc_type = LS_PSOR;
+    }
+    else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
+      pc_type = LS_SOR2SMA;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_a") ) {
+      pc_type = LS_LSOR_A;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_e") ) {
+      pc_type = LS_LSOR_E;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_f") ) {
+      pc_type = LS_LSOR_F;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_j") ) {
+      pc_type = LS_LSOR_J;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_j4") ) {
+      pc_type = LS_LSOR_J4;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_k") ) {
+      pc_type = LS_LSOR_K;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_k2") ) {
+      pc_type = LS_LSOR_K2;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_k3") ) {
+      pc_type = LS_LSOR_K3;
+    }
+    else if ( !strcasecmp(precon.c_str(), "ljcb_e") ) {
+      pc_type = LS_LJCB_E;
+    }
   }
   /*
   else if ( !strcasecmp(q, "lsor_a") ) {
     ls_type = LS_LSOR_A;
     strcpy(fname, "lsor_a.txt");
   }
-  */
+
   else if ( !strcasecmp(q, "lsor_b") ) {
     ls_type = LS_LSOR_B;
     strcpy(fname, "lsor_b.txt");
   }
-  /*
+
   else if ( !strcasecmp(q, "lsor_c") ) {
     ls_type = LS_LSOR_C;
     strcpy(fname, "lsor_c.txt");
@@ -266,40 +298,50 @@ int CZ::Evaluate(int argc, char **argv)
   else if ( !strcasecmp(q, "lsor_j") ) {
     ls_type = LS_LSOR_J;
     strcpy(fname, "lsor_j.txt");
+  }
 
-    int tmp = (size[0] - 2*(SdW-GUIDE));
-    SdB = tmp/SdW;
-
-    printf("\nALIGN          = %d\n", ALIGN);
-    printf("SIMD width     = %d\n", SdW);
-    printf("SIMD body loop = %d\n", SdB);
-
-
-    if ((tmp/SdW)*SdW != tmp || tmp<2) {
-      printf("NI is not appropriate N=%d > NI=%d\n",
-      SdB, SdW*SdB + 2*(SdW-GUIDE));
-      exit(1);
-    }
+  else if ( !strcasecmp(q, "lsor_j4") ) {
+    ls_type = LS_LSOR_J4;
+    strcpy(fname, "lsor_j4.txt");
   }
 
   else if ( !strcasecmp(q, "lsor_k") ) {
     ls_type = LS_LSOR_K;
     strcpy(fname, "lsor_k.txt");
-
-    int tmp = (size[0] - 2*(SdW-GUIDE));
-    SdB = tmp/SdW;
-
-    printf("\nALIGN          = %d\n", ALIGN);
-    printf("SIMD width     = %d\n", SdW);
-    printf("SIMD body loop = %d\n", SdB);
-
-
-    if ((tmp/SdW)*SdW != tmp || tmp<2) {
-      printf("NI is not appropriate N=%d > NI=%d\n",
-      SdB, SdW*SdB + 2*(SdW-GUIDE));
-      exit(1);
-    }
   }
+
+  else if ( !strcasecmp(q, "lsor_k2") ) {
+    ls_type = LS_LSOR_K2;
+    strcpy(fname, "lsor_k2.txt");
+  }
+  else if ( !strcasecmp(q, "lsor_k3") ) {
+    ls_type = LS_LSOR_K3;
+    strcpy(fname, "lsor_k3.txt");
+  }
+
+  else{
+    printf("Invalid solver\n");
+    exit(0);
+  }
+
+
+  printf("Iteratie Mehtod = %d\n", ls_type);
+
+  int tmp = (size[0] - 2*(SdW-GUIDE));
+  SdB = tmp/SdW;
+
+  printf("\nAlignment(byte) = %d\n", ALIGN_SIZE);
+  printf("SIMD width(bit) = %d\n", SIMD_WIDTH);
+  printf("REAL_TYPE(byte) = %d\n", sizeof(REAL_TYPE));
+  printf("SIMD word       = %d\n", SdW);
+  printf("SIMD body loop  = %d\n", SdB);
+
+  if ((tmp/SdW)*SdW != tmp || tmp<2) {
+    printf("NI is not appropriate N=%d > NI=%d\n",
+    SdB, SdW*SdB + 2*(SdW-GUIDE));
+    exit(1);
+  }
+
 
   /* 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
@@ -323,10 +365,6 @@ int CZ::Evaluate(int argc, char **argv)
     strcpy(fname, "lsor_simd.txt");
   }
   */
-  else{
-    printf("Invalid solver\n");
-    exit(0);
-  }
 
 
   // history title
@@ -361,6 +399,8 @@ int CZ::Evaluate(int argc, char **argv)
     //if( (EXS = czAllocR_S3D(size)) == NULL ) return 0;
     if( (ERR = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   }
+
+  //check_align(RHS, "rhs");
 
 
   if (ls_type == LS_BICGSTAB)
@@ -418,7 +458,10 @@ int CZ::Evaluate(int argc, char **argv)
       break;
 
     case LS_LSOR_J:
+    case LS_LSOR_J4:
     case LS_LSOR_K:
+    case LS_LSOR_K2:
+    case LS_LSOR_K3:
       bc_ikj_(size, &gc, P, pitch, origin, nID);
       if ( !Comm_S(P, 1) ) return 0;
 
@@ -428,6 +471,7 @@ int CZ::Evaluate(int argc, char **argv)
 
       imask_ikj_(MSK, size, innerFidx, &gc);
       break;
+
 
     default:
       // Apply BC
@@ -496,13 +540,13 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_A(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_A", flop);
       break;
-    */
+
     case LS_LSOR_B:
       TIMING_start("LSOR_B");
       if ( 0 == (itr=LSOR_B(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_B", flop);
       break;
-    /*
+
     case LS_LSOR_C:
       TIMING_start("LSOR_C");
       if ( 0 == (itr=LSOR_C(res, P, RHS, ItrMax, flop)) ) return 0;
@@ -564,15 +608,13 @@ int CZ::Evaluate(int argc, char **argv)
       break;
     */
     case LS_LSOR_J:
+    case LS_LSOR_J4:
+    case LS_LSOR_K:
+    case LS_LSOR_K2:
+    case LS_LSOR_K3:
       TIMING_start("LSOR_J");
       if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR_J", flop);
-      break;
-
-    case LS_LSOR_K:
-      TIMING_start("LSOR_K");
-      if ( 0 == (itr=LSOR_K(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_K", flop);
       break;
 
     default:
@@ -651,7 +693,10 @@ int CZ::Evaluate(int argc, char **argv)
         break;
 
       case LS_LSOR_J:
+      case LS_LSOR_J4:
       case LS_LSOR_K:
+      case LS_LSOR_K2:
+      case LS_LSOR_K3:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_ikj_(size, &gc, P, pitch, origin, tmp_fname);
         exact_ikj_(size, &gc, ERR, pitch, origin);

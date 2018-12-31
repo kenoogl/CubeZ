@@ -19,9 +19,9 @@ double CZ::relax4(const int i,
                  REAL_TYPE* m,
                  double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(m, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(m, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -82,9 +82,9 @@ double CZ::relax4s(const int i,
                    REAL_TYPE* m,
                    double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(m, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(m, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -182,9 +182,9 @@ double CZ::relax4c(const int* ia,
                    REAL_TYPE* restrict m,
                    double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(m, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(m, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -244,9 +244,9 @@ double CZ::relax8c(const int* ia,
                    REAL_TYPE* m,
                    double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(m, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(m, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -344,9 +344,9 @@ double CZ::relax_256(const int* ia,
                      REAL_TYPE* msk,
                      double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(msk, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -498,9 +498,9 @@ double CZ::relax_256s(const int* ia,
                       REAL_TYPE* msk,
                       double& flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(msk, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];

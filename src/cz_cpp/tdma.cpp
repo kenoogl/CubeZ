@@ -329,16 +329,16 @@ void CZ::tdma4(const int nx,
                double& flop
              )
 {
-  __assume_aligned(d0, ALIGN);
-  __assume_aligned(d1, ALIGN);
-  __assume_aligned(d2, ALIGN);
-  __assume_aligned(d3, ALIGN);
-  __assume_aligned(w0, ALIGN);
-  __assume_aligned(w1, ALIGN);
-  __assume_aligned(w2, ALIGN);
-  __assume_aligned(w3, ALIGN);
-  __assume_aligned(a,  ALIGN);
-  __assume_aligned(c,  ALIGN);
+  __assume_aligned(d0, ALIGN_SIZE);
+  __assume_aligned(d1, ALIGN_SIZE);
+  __assume_aligned(d2, ALIGN_SIZE);
+  __assume_aligned(d3, ALIGN_SIZE);
+  __assume_aligned(w0, ALIGN_SIZE);
+  __assume_aligned(w1, ALIGN_SIZE);
+  __assume_aligned(w2, ALIGN_SIZE);
+  __assume_aligned(w3, ALIGN_SIZE);
+  __assume_aligned(a,  ALIGN_SIZE);
+  __assume_aligned(c,  ALIGN_SIZE);
 
   REAL_TYPE e0, e1, e2, e3;
 
@@ -458,16 +458,16 @@ void CZ::tdma5(const int nx,
                double& flop
              )
 {
-  __assume_aligned(d0, ALIGN);
-  __assume_aligned(d1, ALIGN);
-  __assume_aligned(d2, ALIGN);
-  __assume_aligned(d3, ALIGN);
-  __assume_aligned(w0, ALIGN);
-  __assume_aligned(w1, ALIGN);
-  __assume_aligned(w2, ALIGN);
-  __assume_aligned(w3, ALIGN);
-  __assume_aligned(a,  ALIGN);
-  __assume_aligned(c,  ALIGN);
+  __assume_aligned(d0, ALIGN_SIZE);
+  __assume_aligned(d1, ALIGN_SIZE);
+  __assume_aligned(d2, ALIGN_SIZE);
+  __assume_aligned(d3, ALIGN_SIZE);
+  __assume_aligned(w0, ALIGN_SIZE);
+  __assume_aligned(w1, ALIGN_SIZE);
+  __assume_aligned(w2, ALIGN_SIZE);
+  __assume_aligned(w3, ALIGN_SIZE);
+  __assume_aligned(a,  ALIGN_SIZE);
+  __assume_aligned(c,  ALIGN_SIZE);
 
   REAL_TYPE e0, e1, e2, e3;
 
@@ -580,10 +580,10 @@ void CZ::tdma6(const int* ia,
                REAL_TYPE* dp,
                double& flop)
 {
-  __assume_aligned(ap, ALIGN);
-  __assume_aligned(ep, ALIGN);
-  __assume_aligned(wp, ALIGN);
-  __assume_aligned(dp, ALIGN);
+  __assume_aligned(ap, ALIGN_SIZE);
+  __assume_aligned(ep, ALIGN_SIZE);
+  __assume_aligned(wp, ALIGN_SIZE);
+  __assume_aligned(dp, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -692,10 +692,10 @@ void CZ::tdma6_8(const int* ia,
                  REAL_TYPE* restrict dp,
                  double& flop)
 {
-  __assume_aligned(ap, ALIGN);
-  __assume_aligned(ep, ALIGN);
-  __assume_aligned(wp, ALIGN);
-  __assume_aligned(dp, ALIGN);
+  __assume_aligned(ap, ALIGN_SIZE);
+  __assume_aligned(ep, ALIGN_SIZE);
+  __assume_aligned(wp, ALIGN_SIZE);
+  __assume_aligned(dp, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -834,10 +834,10 @@ void CZ::tdma6_8_4(const int* ia,
                    REAL_TYPE* restrict dp,
                    double& flop)
 {
-  __assume_aligned(ap, ALIGN);
-  __assume_aligned(ep, ALIGN);
-  __assume_aligned(wp, ALIGN);
-  __assume_aligned(dp, ALIGN);
+  __assume_aligned(ap, ALIGN_SIZE);
+  __assume_aligned(ep, ALIGN_SIZE);
+  __assume_aligned(wp, ALIGN_SIZE);
+  __assume_aligned(dp, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -1032,11 +1032,11 @@ void CZ::tdma7(const int* restrict ia,
                REAL_TYPE* restrict dw,
                double& flop)
 {
-  __assume_aligned(ap, ALIGN);
-  __assume_aligned(ep, ALIGN);
-  __assume_aligned(wp, ALIGN);
-  __assume_aligned(dp, ALIGN);
-  __assume_aligned(dw, ALIGN);
+  __assume_aligned(ap, ALIGN_SIZE);
+  __assume_aligned(ep, ALIGN_SIZE);
+  __assume_aligned(wp, ALIGN_SIZE);
+  __assume_aligned(dp, ALIGN_SIZE);
+  __assume_aligned(dw, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -1184,10 +1184,10 @@ void CZ::tdma8(const int* restrict ia,
                REAL_TYPE* restrict dp,
                double& flop)
 {
-  __assume_aligned(ap, ALIGN);
-  __assume_aligned(ep, ALIGN);
-  __assume_aligned(wp, ALIGN);
-  __assume_aligned(dp, ALIGN);
+  __assume_aligned(ap, ALIGN_SIZE);
+  __assume_aligned(ep, ALIGN_SIZE);
+  __assume_aligned(wp, ALIGN_SIZE);
+  __assume_aligned(dp, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];

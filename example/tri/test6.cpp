@@ -20,16 +20,12 @@ int order_of_PM_key=0;
 pm_lib::PerfMonitor PM;
 
 // c11のコンパイルオプションが必要
-#if defined(ENABLE_AVX512)
-static constexpr int ALIGN = alignof(__m512);
-#elif defined(ENABLE_AVX2)
-static constexpr int ALIGN = alignof(__m256);
-#elif defined(ENABLE_SSE)
-static constexpr int ALIGN = alignof(__m128);
-#elif defined(ENABLE_NEON)
-static constexpr int ALIGN = alignof(float32x4_t);
+#if defined(_MEM_ALIGN64)
+static constexpr int ALIGN = 64;
+#elif defined(_MEM_ALIGN32)
+static constexpr int ALIGN = 32;
 #else
-static constexpr int ALIGN = 8;
+static constexpr int ALIGN = 32;
 #endif  // defined(ENABLE_AVX512)
 
 

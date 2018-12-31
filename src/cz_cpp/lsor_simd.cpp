@@ -29,13 +29,13 @@ void CZ::lsor_simd(REAL_TYPE* d,
                    double &res,
                    double &flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(w, ALIGN);
-  __assume_aligned(a, ALIGN);
-  __assume_aligned(b, ALIGN);
-  __assume_aligned(c, ALIGN);
-  __assume_aligned(rhs, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(w, ALIGN_SIZE);
+  __assume_aligned(a, ALIGN_SIZE);
+  __assume_aligned(b, ALIGN_SIZE);
+  __assume_aligned(c, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
 
 
   int NI = size[0];
@@ -150,13 +150,13 @@ void CZ::lsor_simd2(REAL_TYPE* d,
                    double &res,
                    double &flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(w, ALIGN);
-  __assume_aligned(a, ALIGN);
-  __assume_aligned(c, ALIGN);
-  __assume_aligned(msk, ALIGN);
-  __assume_aligned(rhs, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(w, ALIGN_SIZE);
+  __assume_aligned(a, ALIGN_SIZE);
+  __assume_aligned(c, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -263,13 +263,13 @@ void CZ::lsor_simd3(REAL_TYPE* d,
                    double &res,
                    double &flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(w, ALIGN);
-  __assume_aligned(a, ALIGN);
-  __assume_aligned(c, ALIGN);
-  __assume_aligned(msk, ALIGN);
-  __assume_aligned(rhs, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(w, ALIGN_SIZE);
+  __assume_aligned(a, ALIGN_SIZE);
+  __assume_aligned(c, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -382,13 +382,13 @@ void CZ::lsor_simd4(REAL_TYPE* d,
                     double &res,
                     double &flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(w, ALIGN);
-  __assume_aligned(a, ALIGN);
-  __assume_aligned(e, ALIGN);
-  __assume_aligned(msk, ALIGN);
-  __assume_aligned(rhs, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(w, ALIGN_SIZE);
+  __assume_aligned(a, ALIGN_SIZE);
+  __assume_aligned(e, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];
@@ -476,14 +476,14 @@ void CZ::lsor_simd5(REAL_TYPE* d,
                     double &res,
                     double &flop)
 {
-  __assume_aligned(d, ALIGN);
-  __assume_aligned(x, ALIGN);
-  __assume_aligned(w, ALIGN);
-  __assume_aligned(a, ALIGN);
-  __assume_aligned(e, ALIGN);
-  __assume_aligned(msk, ALIGN);
-  __assume_aligned(rhs, ALIGN);
-  __assume_aligned(d2, ALIGN);
+  __assume_aligned(d, ALIGN_SIZE);
+  __assume_aligned(x, ALIGN_SIZE);
+  __assume_aligned(w, ALIGN_SIZE);
+  __assume_aligned(a, ALIGN_SIZE);
+  __assume_aligned(e, ALIGN_SIZE);
+  __assume_aligned(msk, ALIGN_SIZE);
+  __assume_aligned(rhs, ALIGN_SIZE);
+  __assume_aligned(d2, ALIGN_SIZE);
 
   int NI = size[0];
   int NJ = size[1];

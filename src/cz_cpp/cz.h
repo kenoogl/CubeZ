@@ -38,19 +38,27 @@
 #include <immintrin.h>
 
 // c11のコンパイルオプションが必要
-#if defined(ENABLE_AVX512)
-static constexpr int ALIGN = alignof(__m512);
-#elif defined(ENABLE_AVX2)
-static constexpr int ALIGN = alignof(__m256);
-#elif defined(ENABLE_NEON)
-static constexpr int ALIGN = alignof(float32x4_t);
+#if defined(_MEM_ALIGN64)
+  static constexpr int ALIGN_SIZE = 64;
+#elif defined(_MEM_ALIGN32)
+  static constexpr int ALIGN_SIZE = 32;
 #else
-static constexpr int ALIGN = 8;
+  static constexpr int ALIGN_SIZE = 32;
 #endif
 //////
 
 // SIMD幅 word数
-static constexpr int SdW = ALIGN / sizeof(REAL_TYPE);
+#if defined(_SIMD_512)
+  static constexpr int SIMD_WIDTH = 512;
+#elif defined(_SIMD_256)
+  static constexpr int SIMD_WIDTH = 256;
+#endif
+
+static constexpr int SdW = (SIMD_WIDTH / 8) / sizeof(REAL_TYPE);
+
+// resD[]のキャッシュラインサイズベース
+static constexpr int CL_SZ = ALIGN_SIZE / sizeof(double);
+
 
 // FX10 profiler
 #if defined __K_FPCOLL
@@ -73,6 +81,7 @@ private:
   int debug_mode;          ///< if 1, Debug mode
   int ItrMax;              ///< 最大反復回数
   int ls_type;             ///< 線形ソルバ種類
+  int pc_type;             ///< 前処理ソルバ種類
   double eps;              ///< convergence criteria
   REAL_TYPE ac1;           ///< acceleration coef.
   double res_normal;       ///< 全計算点数
@@ -124,6 +133,7 @@ public:
     debug_mode = 0;
     ItrMax = 0;
     ls_type = 0;
+    pc_type = 0;
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
@@ -486,6 +496,29 @@ public:
               double &res,
               double &flop);
 
+  void lsor_k2(REAL_TYPE* d,
+              REAL_TYPE* x,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* e,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              REAL_TYPE* d2,
+              double &res,
+              double &flop);
+
+  double lsor_k3(REAL_TYPE* d,
+              REAL_TYPE* x,
+              REAL_TYPE* w,
+              REAL_TYPE* a,
+              REAL_TYPE* e,
+              REAL_TYPE* rhs,
+              REAL_TYPE* msk,
+              REAL_TYPE* d2,
+              double* resD,
+              double* rd,
+              double &flop);
+
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
   int getNumStage(int n) {
@@ -751,13 +784,6 @@ private:
              double& flop,
              bool converge_check=true);
 
-  int LSOR_K(double& res,
-             REAL_TYPE* X,
-             REAL_TYPE* B,
-             const int itr_max,
-             double& flop,
-             bool converge_check=true);
-
   double Fdot1(REAL_TYPE* x, double& flop);
 
   double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
@@ -886,8 +912,8 @@ T* czAllocR_S3D(const int* sz, T type)
 
   nx = dims[0] * dims[1] * dims[2];
 
-#if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
-  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN);
+#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
+  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
 #elif
   T* var = new T[nx];
 #endif
@@ -906,8 +932,8 @@ T* czAllocR(const int sz, T type)
 
   size_t nx = sz;
 
-#if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
-  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN);
+#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
+  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
 #elif
   T* var = new T[nx];
 #endif
@@ -923,7 +949,7 @@ template <typename T>
 void czDelete(T* ptr)
 {
   if (ptr) {
-    #if defined(ENABLE_AVX512) || defined(ENABLE_AVX2)
+    #if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
       _mm_free(ptr);
     #elif
       delete [] ptr;
