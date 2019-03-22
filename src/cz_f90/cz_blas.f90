@@ -247,6 +247,40 @@ end subroutine blas_copy
 
 
 !> ********************************************************************
+!! @brief コピー
+!! @param [out]    y  コピー先
+!! @param [in]     x  ソース
+!! @param [in]     sz 配列長
+!! @param [in]     g  ガイドセル
+!<
+subroutine blas_copy_in(y, x, sz, g)
+implicit none
+integer                                                ::  i, j, k, ix, jx, kx, g
+integer, dimension(3)                                  ::  sz
+real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  y, x
+!dir$ assume_aligned x:64, y:64
+
+ix = sz(1)
+jx = sz(2)
+kx = sz(3)
+
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+do k=1,kx
+do j=1,jx
+!dir$ vector aligned
+!dir$ simd
+do i=1,ix
+y(i, j, k) = x(i, j, k)
+end do
+end do
+end do
+!$OMP END PARALLEL DO
+
+
+return
+end subroutine blas_copy_in
+
+!> ********************************************************************
 !! @brief AXPYZ
 !! @param [out]    z    ベクトル
 !! @param [in]     y    ベクトル

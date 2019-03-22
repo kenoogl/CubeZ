@@ -186,7 +186,9 @@ int CZ::LSOR_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
     int CZ::LSOR_C(double& res, REAL_TYPE* X, REAL_TYPE* B,
                  const int itr_max, double& flop, bool converge_check)
     {
+      
       int itr;
+      /*
       double flop_count = 0.0;
       int gc = GUIDE;
       REAL_TYPE mat[3]={-1.0/6.0, 1.0, -1.0/6.0};
@@ -228,6 +230,7 @@ int CZ::LSOR_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
       czDelete(q);
       czDelete(w);
+      */
 
       return itr;
     }
@@ -689,7 +692,7 @@ int CZ::LSOR_A(double& res, REAL_TYPE* X, REAL_TYPE* B,
      return itr;
    }
 
-
+#ifndef _REAL_IS_DOUBLE_
 /* #################################################################
 * @brief Line SOR Multi System
 * @param [in,out] res    残差
@@ -739,7 +742,7 @@ int CZ::LSOR_SIMD(double& res, REAL_TYPE* X, REAL_TYPE* B,
   }
 
 
-  TIMING_start("LSOR_simd_Itr");
+  TIMING_start("LSOR");
   for (itr=1; itr<=itr_max; itr++)
   {
     res = 0.0;
@@ -764,7 +767,7 @@ int CZ::LSOR_SIMD(double& res, REAL_TYPE* X, REAL_TYPE* B,
     }
 
   } // Iteration
-  TIMING_stop("LSOR_simd_Itr");
+  TIMING_stop("LSOR");
 
   czDelete(q);
   czDelete(w);
@@ -835,7 +838,7 @@ int CZ::LSOR_SIMD2(double& res, REAL_TYPE* X, REAL_TYPE* B,
   TIMING_stop("LSOR_LU_decomp", flop_count);
 
 
-  TIMING_start("LSOR_simd_Itr");
+  TIMING_start("LSOR");
   for (itr=1; itr<=itr_max; itr++)
   {
     res = 0.0;
@@ -860,7 +863,7 @@ int CZ::LSOR_SIMD2(double& res, REAL_TYPE* X, REAL_TYPE* B,
     }
 
   } // Iteration
-  TIMING_stop("LSOR_simd_Itr");
+  TIMING_stop("LSOR");
 
   czDelete(q);
   czDelete(w);
@@ -871,7 +874,7 @@ int CZ::LSOR_SIMD2(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
   return itr;
 }
-
+#endif
 
 
 void CZ::ms_rhs8v(const int* ia,

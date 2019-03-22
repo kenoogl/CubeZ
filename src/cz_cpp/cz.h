@@ -54,7 +54,11 @@
   static constexpr int SIMD_WIDTH = 256;
 #endif
 
-static constexpr int SdW = (SIMD_WIDTH / 8) / sizeof(REAL_TYPE);
+#ifdef _REAL_IS_DOUBLE_
+  static constexpr int SdW = (SIMD_WIDTH / 8) / 8;
+#else
+  static constexpr int SdW = (SIMD_WIDTH / 8) / 4;
+#endif
 
 // resD[]のキャッシュラインサイズベース
 static constexpr int CL_SZ = ALIGN_SIZE / sizeof(double);
@@ -171,7 +175,81 @@ public:
     x[3], x[2], x[1], x[0]);
   }
 
+  // #################################################################
+  /**
+   * @brief S3D配列のアロケート
+   * @param [in] sz 配列サイズ
+   * @ret pointer
+   */
+  template <typename T>
+  T* czAllocR_S3D(const int* sz, T type)
+  {
+    if ( !sz ) return NULL;
+    
+    size_t dims[3], nx;
+    
+    dims[0] = (size_t)(sz[0] + 2*GUIDE);
+    dims[1] = (size_t)(sz[1] + 2*GUIDE);
+    dims[2] = (size_t)(sz[2] + 2*GUIDE);
+    
+    nx = dims[0] * dims[1] * dims[2];
+    
+#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
+    T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
+#elif
+    T* var = new T[nx];
+#endif
+    
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<nx; i++) var[i]=0;
+    
+    return var;
+  }
+  
+  // #################################################################
+  template <typename T>
+  T* czAllocR(const int sz, T type)
+  {
+    if ( !sz ) return NULL;
+    
+    size_t nx = sz;
+    
+#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
+    T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
+#elif
+    T* var = new T[nx];
+#endif
+    
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<nx; i++) var[i]=0;
+    
+    return var;
+  }
+  
+  // #################################################################
+  template <typename T>
+  void czDelete(T* ptr)
+  {
+    if (ptr) {
+#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
+      _mm_free(ptr);
+#elif
+      delete [] ptr;
+#endif
+      ptr = NULL;
+    }
+  }
 
+  // #################################################################
+  template <typename T>
+  void check_align (T* var, std::string str)
+  {
+    long int li = (long int)var;
+    printf("\t%10s : addrs= %08x align(4=%2u, 8=%2u, 16=%2u, 32=%2d, 64=%2d)\n\n",
+           str.c_str(),li, li%4, li%8, li%16, li%32, li%64);
+  }
+
+  // #################################################################
   // cz_tdma.cpp
   void tdma_s(int nx,
               REAL_TYPE* d,
@@ -341,6 +419,8 @@ public:
                  REAL_TYPE* m,
                  double& flop);
 
+  
+#ifndef _REAL_IS_DOUBLE_
   double relax_256(const int* ia,
                    const int* ja,
                    const int kst,
@@ -358,7 +438,7 @@ public:
                     REAL_TYPE* x,
                     REAL_TYPE* msk,
                     double& flop);
-
+#endif
 
   // cz_lsor_rhs.cpp
   void ms_rhs8v(const int* ia,
@@ -393,14 +473,6 @@ public:
 
 
   // lsor_simd.cpp
-  void lsor_ms(REAL_TYPE* d,
-               REAL_TYPE* x,
-               REAL_TYPE* w,
-               REAL_TYPE* rhs,
-               double &res,
-               double &flop);
-
-
   void lsor_simd(REAL_TYPE* d,
                  REAL_TYPE* x,
                  REAL_TYPE* w,
@@ -518,7 +590,8 @@ public:
               double* resD,
               double* rd,
               double &flop);
-
+  
+  
   // @param [in] n 方程式の次元数
   // @retval nを超える最小の2べき数の乗数
   int getNumStage(int n) {
@@ -529,9 +602,6 @@ public:
     }
     return -1;
   }
-
-  void printA(int nx, int ss, REAL_TYPE* a, char* s);
-  void printB(int nx, REAL_TYPE* a, char* s);
 
 
   void pcr(const int nx,
@@ -544,13 +614,19 @@ public:
            REAL_TYPE* c1,
            double& flop);
 
-  void pcr2(const int nx,
-           const int pn,
-           REAL_TYPE* d,
-           REAL_TYPE* a,
-           REAL_TYPE* c,
-           double& flop);
-
+  void pcr_kernel(const int nx,
+                  const int s,
+                  REAL_TYPE* d,
+                  REAL_TYPE* a,
+                  REAL_TYPE* c,
+                  REAL_TYPE* dn,
+                  REAL_TYPE* an,
+                  REAL_TYPE* cn,
+                  double& flop);
+  
+  void printArray(int nx, REAL_TYPE* a, char* s);
+  
+  
 private:
   inline static void cIndex(int& i, int& j,
                 const int l, const int ni, const int is, const int js) {
@@ -620,38 +696,6 @@ private:
   // 計算する内点のインデクス範囲と点数
   double range_inner_index();
 
-  void pcr_kernel_1(const int nx,
-                    const int s,
-                    const int ss,
-                    REAL_TYPE* d,
-                    REAL_TYPE* a,
-                    REAL_TYPE* c);
-
-  void pcr_kernel_2(const int nx,
-                    const int s,
-                    const int ss,
-                    const int ip,
-                    REAL_TYPE* d,
-                    REAL_TYPE* a,
-                    REAL_TYPE* c);
-
-  void pcr_kernel_3(const int nx,
-                    const int s,
-                    const int ss,
-                    REAL_TYPE* d,
-                    REAL_TYPE* a,
-                    REAL_TYPE* c,
-                    double& flop);
-
-
-  void pcr_merge(const int nx,
-                 const int ss,
-                 REAL_TYPE* d,
-                 REAL_TYPE* a,
-                 REAL_TYPE* c,
-                 REAL_TYPE* d1,
-                 REAL_TYPE* a1,
-                 REAL_TYPE* c1);
 
   int JACOBI(double& res,
              REAL_TYPE* X,
@@ -783,7 +827,29 @@ private:
              const int itr_max,
              double& flop,
              bool converge_check=true);
+  
+  int LSOR_P1(double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itr_max,
+             double& flop,
+             bool converge_check=true);
 
+  int LSOR_P2(double& res,
+             REAL_TYPE* X,
+             REAL_TYPE* B,
+             const int itr_max,
+             double& flop,
+             bool converge_check=true);
+  
+  int LSOR_P3(double& res,
+              REAL_TYPE* X,
+              REAL_TYPE* B,
+              const int itr_max,
+              double& flop,
+              bool converge_check=true);
+  
+  
   double Fdot1(REAL_TYPE* x, double& flop);
 
   double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
@@ -893,78 +959,7 @@ std::string GetHostName()
   return std::string(name);
 }
 
-// #################################################################
-/**
- * @brief S3D配列のアロケート
- * @param [in] sz 配列サイズ
- * @ret pointer
- */
-template <typename T>
-T* czAllocR_S3D(const int* sz, T type)
-{
-  if ( !sz ) return NULL;
 
-  size_t dims[3], nx;
-
-  dims[0] = (size_t)(sz[0] + 2*GUIDE);
-  dims[1] = (size_t)(sz[1] + 2*GUIDE);
-  dims[2] = (size_t)(sz[2] + 2*GUIDE);
-
-  nx = dims[0] * dims[1] * dims[2];
-
-#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
-#elif
-  T* var = new T[nx];
-#endif
-
-#pragma omp parallel for
-  for (int i=0; i<nx; i++) var[i]=0;
-
-  return var;
-}
-
-
-template <typename T>
-T* czAllocR(const int sz, T type)
-{
-  if ( !sz ) return NULL;
-
-  size_t nx = sz;
-
-#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-  T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
-#elif
-  T* var = new T[nx];
-#endif
-
-#pragma omp parallel for
-  for (int i=0; i<nx; i++) var[i]=0;
-
-  return var;
-}
-
-
-template <typename T>
-void czDelete(T* ptr)
-{
-  if (ptr) {
-    #if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-      _mm_free(ptr);
-    #elif
-      delete [] ptr;
-    #endif
-    ptr = NULL;
-  }
-}
-
-template <typename T>
-void check_align (T* var, std::string str)
-{
-  long int li = (long int)var;
-  printf("\t%10s : addrs= %08x align(4=%2u, 8=%2u, 16=%2u, 32=%2d, 64=%2d)\n\n",
-                str.c_str(),li, li%4, li%8, li%16, li%32, li%64);
-}
 
 };
 

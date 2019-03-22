@@ -10,6 +10,7 @@
 */
 #include "cz.h"
 
+#ifndef _REAL_IS_DOUBLE_
 
 /*
  * @brief LSOR Multi-System
@@ -642,3 +643,5 @@ void CZ::lsor_simd6(REAL_TYPE* d,
     }
   }
 }
+
+#endif

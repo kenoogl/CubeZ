@@ -157,6 +157,7 @@ void CZ::tdma1(int nx, REAL_TYPE* d, REAL_TYPE* a, REAL_TYPE* c, REAL_TYPE* w)
 }
 
 
+#ifndef _REAL_IS_DOUBLE_
 /*
  * @brief Thomas Algorithm
  * @param [in      nx   配列長
@@ -1505,3 +1506,4 @@ void CZ::tdma8(const int* restrict ia,
   TIMING_stop("TDMA_R_body", f4);
   flop += f4;
 }
+#endif

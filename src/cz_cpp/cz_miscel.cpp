@@ -232,6 +232,8 @@ using namespace pm_lib;
 
   set_label("LSOR_LU_decomp",   PerfMonitor::CALC, true);
   set_label("TDMA_PRE",         PerfMonitor::CALC, true);
+  
+  set_label("LSOR_PCR",         PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
@@ -244,20 +246,6 @@ using namespace pm_lib;
   set_label("PSOR",             PerfMonitor::CALC, false);
   set_label("SOR2SMA",          PerfMonitor::CALC, false);
   set_label("PBiCGSTAB",        PerfMonitor::CALC, false);
-  set_label("LSOR_A",           PerfMonitor::CALC, false);
-  set_label("LSOR_B",           PerfMonitor::CALC, false);
-  set_label("LSOR_C",           PerfMonitor::CALC, false);
-  set_label("LSOR_D",           PerfMonitor::CALC, false);
-  set_label("LSOR_E",           PerfMonitor::CALC, false);
-  set_label("LSOR_F",           PerfMonitor::CALC, false);
-  set_label("LJCB_A",           PerfMonitor::CALC, false);
-  set_label("LJCB_B",           PerfMonitor::CALC, false);
-  set_label("LJCB_C",           PerfMonitor::CALC, false);
-  set_label("LJCB_D",           PerfMonitor::CALC, false);
-  set_label("LJCB_E",           PerfMonitor::CALC, false);
-  set_label("LSOR_SIMD",        PerfMonitor::CALC, false);
-  set_label("LSOR_simd_Itr",    PerfMonitor::CALC, false);
-  set_label("LSOR_simd_kernel", PerfMonitor::CALC, false);
-  set_label("LSOR_J",           PerfMonitor::CALC, false);
-  set_label("LSOR_K",           PerfMonitor::CALC, false);
+  set_label("LSOR",             PerfMonitor::CALC, false);
+  set_label("LJCB",             PerfMonitor::CALC, false);
 }

@@ -182,10 +182,14 @@ void CZ::lsor_k2(REAL_TYPE* d,
   double flop_count = 0.0;
 
   TIMING_start("LSOR_TDMA_Ex");
-  lsor_inner_b_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
-                  &ac1, &ItrInner, resD, &flop_count);
-  //lsor_inner_b4_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
+  //lsor_inner_b_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
   //                &ac1, &ItrInner, resD, &flop_count);
+  //lsor_inner_rb_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
+  //                &ac1, &ItrInner, resD, &flop_count);
+  //lsor_inner_cb_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
+  //                &ac1, &ItrInner, resD, &flop_count);
+  lsor_inner_d_(d, size, innerFidx, &gc, d2, x, a, e, w, msk, rhs,
+                  &ac1, &ItrInner, resD, &flop_count);
   TIMING_stop("LSOR_TDMA_Ex", flop_count);
 
   res = resD[0];

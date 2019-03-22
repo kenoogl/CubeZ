@@ -9,7 +9,7 @@
 ###################################################################################
  */
 
-// @file test4.cpp
+// @file test5.cpp
 // @note PCR test with Dirichlet BC
 
 #include "cz.h"
@@ -99,7 +99,8 @@ int main(int argc, char *argv[])
   // d[]はRHSと解ベクトルに利用、置換は端点以外
   // 端点には境界条件、それ以外はソース項
 
-  REAL_TYPE *a=NULL, *b=NULL, *c=NULL, *d=NULL, *p=NULL;
+  REAL_TYPE *a=NULL, *c=NULL, *d=NULL;
+  REAL_TYPE *a1=NULL, *c1=NULL, *d1=NULL;
   int n = N;
   int pn;
   int numThreads=0;
@@ -113,6 +114,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
   const int ss = 0x1 << (pn-1);
+  printf("n=%d, pn=%d, ss=%d\n", n, pn, ss);
 
 
   PM.initialize( PM_NUM_MAX );
@@ -132,49 +134,32 @@ int main(int argc, char *argv[])
     set_label("PCR",  PerfMonitor::CALC);
   }
 
-  //printf("n=%d : pn=%d , ss=%d \n", n, pn, ss);
-/*
-  int s=8;
-  for (int i=0; i<=n; i++)
-  {
-    int iL = i - s;
-    iL = std::max(iL,0);
-    printf("%2d : %d\n", i, iL);
-  }
-*/
 
   // array
   a = allocReal(n);
-  b = allocReal(n);
   c = allocReal(n);
   d = allocReal(n);
-  p = allocReal(n);
+  a1= allocReal(n);
+  c1= allocReal(n);
+  d1= allocReal(n);
 
   for (int i=2; i<=n; i++) a[i]=1.0;
-  for (int i=1; i<=n; i++) b[i]=-2.0;
   for (int i=1; i<=n-1; i++) c[i]=1.0;
   d[0] = -3.0;
   d[1] =  3.0;
   d[n] = -9.0;
-  d[n+1] =  9.0;
-
-  // b[]=1.0となるように正規化
+  d[n+1] = 9.0;
 
   for (int i=1; i<=n; i++)
   {
     a[i] /= -2.0;
-    b[i] /= -2.0;
     c[i] /= -2.0;
     d[i] /= -2.0;
   }
 
-  z.printB(n, a, "A");
-  z.printB(n, c, "C");
-  printf("\n");
-
   // 内点の個数と、その先頭アドレス、外点の両端は境界値
   TIMING_start("PCR");
-  z.pcr2(n, pn, d, a, c, flop);
+  z.pcr(n, pn, d, a, c, d1, a1, c1, flop);
   TIMING_stop("PCR", flop);
 
   // ok
@@ -189,7 +174,7 @@ int main(int argc, char *argv[])
   fp=fopen("result.txt", "w");
 
   for (int i=0; i<=n+1; i++) {
-    fprintf(fp,"%2d, %6.3f\n", i, d[i]);
+    fprintf(fp,"%2d, %e %e\n", i, d[i], d[i]-(-3.0+12/(float)(n+1)*(float)i) );
   }
 
   fclose(fp);

@@ -334,6 +334,7 @@ double CZ::relax8c(const int* ia,
 }
 
 
+#ifndef _REAL_IS_DOUBLE_
 // @note relax4c()をSIMD化
 double CZ::relax_256(const int* ia,
                      const int* ja,
@@ -667,3 +668,5 @@ double CZ::relax_256s(const int* ia,
 
   return (double)( tmp0 + tmp1 + tmp2 + tmp3 );
 }
+
+#endif

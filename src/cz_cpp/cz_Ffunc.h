@@ -84,8 +84,22 @@ void tdma_1_ (int* nx,
               REAL_TYPE* w,
               double* flop);
 
-
+  void tdma_p_(int* nx,
+               REAL_TYPE* d,
+               REAL_TYPE* a,
+               REAL_TYPE* c,
+               REAL_TYPE* w);
+  
+  void tdma_mp_(int* nx,
+                int* mp,
+                REAL_TYPE* d,
+                REAL_TYPE* a,
+                REAL_TYPE* c,
+                REAL_TYPE* w);
+  
 // cz_losr.f90
+  
+  
 void lsor_lu_rhs_jd_(REAL_TYPE* d,
                    int* sz,
                    int* idx,
@@ -243,6 +257,108 @@ void lsor_tdma_fwd_(REAL_TYPE* d,
                   REAL_TYPE* rhs,
                   double* flop);
 
+void lsor_pcr_kij_(int* sz,
+                   int* idx,
+                   int* g,
+                   int* pn,
+                   REAL_TYPE* x,
+                   REAL_TYPE* a,
+                   REAL_TYPE* c,
+                   REAL_TYPE* d,
+                   REAL_TYPE* a1,
+                   REAL_TYPE* c1,
+                   REAL_TYPE* d1,
+                   REAL_TYPE* msk,
+                   REAL_TYPE* rhs,
+                   REAL_TYPE* omg,
+                   double* res,
+                   double* flop);
+  
+  void lsor_pcr_kij2_(int* sz,
+                     int* idx,
+                     int* g,
+                     int* pn,
+                     REAL_TYPE* x,
+                     REAL_TYPE* a,
+                     REAL_TYPE* c,
+                     REAL_TYPE* d,
+                     REAL_TYPE* a1,
+                     REAL_TYPE* c1,
+                     REAL_TYPE* d1,
+                     REAL_TYPE* msk,
+                     REAL_TYPE* rhs,
+                     REAL_TYPE* omg,
+                     double* res,
+                     double* flop);
+  
+void lsor_pcr_src_(int* sz,
+                   int* idx,
+                   int* g,
+                   REAL_TYPE* x,
+                   REAL_TYPE* d,
+                   REAL_TYPE* msk,
+                   REAL_TYPE* rhs,
+                   double* flop);
+
+void lsor_pcr_(int* sz,
+               int* idx,
+               int* g,
+               int* s,
+               REAL_TYPE* a,
+               REAL_TYPE* c,
+               REAL_TYPE* d,
+               REAL_TYPE* a1,
+               REAL_TYPE* c1,
+               REAL_TYPE* d1,
+               double* flop);
+
+void lsor_pcr_relax_(int* sz,
+                     int* idx,
+                     int* g,
+                     REAL_TYPE* x,
+                     REAL_TYPE* d,
+                     REAL_TYPE* msk,
+                     REAL_TYPE* omg,
+                     double* res,
+                     double* flop);
+  
+void lsor_pcr_src_q_(int* sz,
+                     int* idx,
+                     int* g,
+                     int* i,
+                     int* j,
+                     REAL_TYPE* x,
+                     REAL_TYPE* d,
+                     REAL_TYPE* msk,
+                     REAL_TYPE* rhs,
+                     double* flop);
+  
+void lsor_pcr_q_(int* sz,
+                 int* idx,
+                 int* g,
+                 int* s,
+                 int* i,
+                 int* j,
+                 REAL_TYPE* a,
+                 REAL_TYPE* c,
+                 REAL_TYPE* d,
+                 REAL_TYPE* a1,
+                 REAL_TYPE* c1,
+                 REAL_TYPE* d1,
+                 double* flop);
+  
+void lsor_pcr_relax_q_(int* sz,
+                       int* idx,
+                       int* g,
+                       int* i,
+                       int* j,
+                       REAL_TYPE* x,
+                       REAL_TYPE* d,
+                       REAL_TYPE* msk,
+                       REAL_TYPE* omg,
+                       double* res,
+                       double* flop);
+  
 void lsor_inner_(REAL_TYPE* d,
                   int* sz,
                   int* idx,
@@ -275,7 +391,39 @@ void lsor_inner_b_(REAL_TYPE* d,
                   double* rd,
                   double* flop);
 
-void lsor_inner_b4_(REAL_TYPE* d,
+void lsor_inner_d_(REAL_TYPE* d,
+                  int* sz,
+                  int* idx,
+                  int* g,
+                  REAL_TYPE* d2,
+                  REAL_TYPE* x,
+                  REAL_TYPE* a,
+                  REAL_TYPE* e,
+                  REAL_TYPE* w,
+                  REAL_TYPE* msk,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* omg,
+                  int* ItrInner,
+                  double* rd,
+                  double* flop);
+
+void lsor_inner_cb_(REAL_TYPE* d,
+                  int* sz,
+                  int* idx,
+                  int* g,
+                  REAL_TYPE* d2,
+                  REAL_TYPE* x,
+                  REAL_TYPE* a,
+                  REAL_TYPE* e,
+                  REAL_TYPE* w,
+                  REAL_TYPE* msk,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* omg,
+                  int* ItrInner,
+                  double* rd,
+                  double* flop);
+
+void lsor_inner_rb_(REAL_TYPE* d,
                   int* sz,
                   int* idx,
                   int* g,
@@ -613,7 +761,13 @@ void blas_copy_     (REAL_TYPE* dst,
                      REAL_TYPE* src,
                      int* sz,
                      int* g);
-
+  
+  
+void blas_copy_in_   (REAL_TYPE* dst,
+                      REAL_TYPE* src,
+                      int* sz,
+                      int* g);
+  
 void blas_triad_    (REAL_TYPE* z,
                      REAL_TYPE* x,
                      REAL_TYPE* y,

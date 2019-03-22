@@ -753,7 +753,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      {
        res = 0.0;
 
-       TIMING_start("LSOR_simd_kernel");
        flop_count = 0.0;
        if (ls_type==LS_LSOR_J) {
          lsor_j(q, X, w, a, e, B, MSK, q2, res, flop_count);
@@ -770,7 +769,6 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        else if (ls_type==LS_LSOR_K3) {
          res = lsor_k3(q, X, w, a, e, B, MSK, q2, resD, rd, flop_count);
        }
-       TIMING_stop("LSOR_simd_kernel", flop_count);
 
 
        if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -798,3 +796,288 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      return itr;
    }
+
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P2(double& res, REAL_TYPE* X, REAL_TYPE* B,
+               const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  REAL_TYPE var_type=0;
+  
+  REAL_TYPE* a;
+  REAL_TYPE* c;
+  REAL_TYPE* d;
+  REAL_TYPE* a1;
+  REAL_TYPE* c1;
+  REAL_TYPE* d1;
+  
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+
+  a  = czAllocR_S3D(size, var_type);
+  c  = czAllocR_S3D(size, var_type);
+  d  = czAllocR_S3D(size, var_type);
+  a1 = czAllocR_S3D(size, var_type);
+  c1 = czAllocR_S3D(size, var_type);
+  d1 = czAllocR_S3D(size, var_type);
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    TIMING_start("LSOR_PCR");
+    
+    lsor_pcr_kij_(size, innerFidx, &gc, &pn, X, a, c, d, a1, c1, d1, MSK, B, &ac1, &res, &flop_count);
+
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  czDelete(a);
+  czDelete(c);
+  czDelete(d);
+  czDelete(a1);
+  czDelete(c1);
+  czDelete(d1);
+  
+  return itr;
+}
+
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P1(double& res, REAL_TYPE* X, REAL_TYPE* B,
+               const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  REAL_TYPE var_type=0;
+  
+  REAL_TYPE* a;
+  REAL_TYPE* c;
+  REAL_TYPE* d;
+  REAL_TYPE* a1;
+  REAL_TYPE* c1;
+  REAL_TYPE* d1;
+  
+  int ist = innerFidx[I_minus];
+  int ied = innerFidx[I_plus];
+  int jst = innerFidx[J_minus];
+  int jed = innerFidx[J_plus];
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  a  = czAllocR_S3D(size, var_type);
+  c  = czAllocR_S3D(size, var_type);
+  d  = czAllocR_S3D(size, var_type);
+  a1 = czAllocR_S3D(size, var_type);
+  c1 = czAllocR_S3D(size, var_type);
+  d1 = czAllocR_S3D(size, var_type);
+  
+
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    TIMING_start("LSOR_PCR");
+    
+    for (int j=jst; j<=jed; j++) {
+      for (int i=ist; i<=ied; i++) {
+        for (int k=kst+1; k<=ked; k++) {
+          size_t m = _F_IDX_S3D(k, i, j, NK, NI, NJ, GUIDE);
+          a[m] = -1.0/6.0;
+        }
+      }
+    }
+    
+    
+    for (int j=jst; j<=jed; j++) {
+      for (int i=ist; i<=ied; i++) {
+        for (int k=kst; k<=ked-1; k++) {
+          size_t m = _F_IDX_S3D(k, i, j, NK, NI, NJ, GUIDE);
+          c[m] = -1.0/6.0;
+        }
+      }
+    }
+    
+    res = 0.0;
+    
+    for (int j=jst; j<=jed; j++) {
+      for (int i=ist; i<=ied; i++) {
+    
+        lsor_pcr_src_q_(size, innerFidx, &gc, &i, &j, X, d, MSK, B, &flop_count);
+    
+        for (int p=1; p<=pn; p++)
+        {
+          int s = 0x1 << (p-1); // s=2^{p-1}
+          lsor_pcr_q_(size, innerFidx, &gc, &s, &i, &j, a, c, d, a1, c1, d1, &flop_count);
+        }
+    
+        lsor_pcr_relax_q_(size, innerFidx, &gc, &i, &j, X, d, MSK, &ac1, &res, &flop_count);
+      }
+    }
+    
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  czDelete(a);
+  czDelete(c);
+  czDelete(d);
+  czDelete(a1);
+  czDelete(c1);
+  czDelete(d1);
+  
+  return itr;
+}
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P3(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  REAL_TYPE var_type=0;
+  
+  REAL_TYPE* a;
+  REAL_TYPE* c;
+  REAL_TYPE* d;
+  REAL_TYPE* a1;
+  REAL_TYPE* c1;
+  REAL_TYPE* d1;
+  
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  int nx = NK + 2*GUIDE;
+  a  = czAllocR(nx, var_type);
+  c  = czAllocR(nx, var_type);
+  a1 = czAllocR(nx, var_type);
+  c1 = czAllocR(nx, var_type);
+  
+  d  = czAllocR_S3D(size, var_type);
+  d1 = czAllocR_S3D(size, var_type);
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    TIMING_start("LSOR_PCR");
+    
+    lsor_pcr_kij2_(size, innerFidx, &gc, &pn, X, a, c, d, a1, c1, d1, MSK, B, &ac1, &res, &flop_count);
+    
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  czDelete(a);
+  czDelete(c);
+  czDelete(d);
+  czDelete(a1);
+  czDelete(c1);
+  czDelete(d1);
+  
+  return itr;
+}
+

@@ -80,7 +80,7 @@ int CZ::Evaluate(int argc, char **argv)
     G_div[2] = atoi(argv[10]);
   }
 
-  // 等方
+  // Z方向を基準に等方
   pitch[0] = pitch[1] = pitch[2] = 1.0/(REAL_TYPE)(G_size[2]-1);
 
 
@@ -318,6 +318,18 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_K3;
     strcpy(fname, "lsor_k3.txt");
   }
+  else if ( !strcasecmp(q, "lsor_p1") ) {
+    ls_type = LS_LSOR_P1;
+    strcpy(fname, "lsor_p1.txt");
+  }
+  else if ( !strcasecmp(q, "lsor_p2") ) {
+    ls_type = LS_LSOR_P2;
+    strcpy(fname, "lsor_p2.txt");
+  }
+  else if ( !strcasecmp(q, "lsor_p3") ) {
+    ls_type = LS_LSOR_P3;
+    strcpy(fname, "lsor_p3.txt");
+  }
 
   else{
     printf("Invalid solver\n");
@@ -441,10 +453,14 @@ int CZ::Evaluate(int argc, char **argv)
 
   switch (ls_type)
   {
+    // (k,i,j)
     case LS_LSOR_SIMD:
     case LS_LJCB_D:
     case LS_LSOR_E:
     case LS_LSOR_F:
+    case LS_LSOR_P1:
+    case LS_LSOR_P2:
+    case LS_LSOR_P3:
       // Apply BC
       bc_k_(size, &gc, P, pitch, origin, nID);
       if ( !Comm_S(P, 1) ) return 0;
@@ -457,6 +473,7 @@ int CZ::Evaluate(int argc, char **argv)
 
       break;
 
+    // (i,k,j)
     case LS_LSOR_J:
     case LS_LSOR_J4:
     case LS_LSOR_K:
@@ -473,6 +490,7 @@ int CZ::Evaluate(int argc, char **argv)
       break;
 
 
+    // (i,j,k)
     default:
       // Apply BC
       bc_(size, &gc, P, pitch, origin, nID);
@@ -536,75 +554,75 @@ int CZ::Evaluate(int argc, char **argv)
       break;
     /*
     case LS_LSOR_A:
-      TIMING_start("LSOR_A");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_A(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_A", flop);
+      TIMING_stop("LSOR", flop);
       break;
 
     case LS_LSOR_B:
-      TIMING_start("LSOR_B");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_B(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_B", flop);
+      TIMING_stop("LSOR", flop);
       break;
 
     case LS_LSOR_C:
-      TIMING_start("LSOR_C");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_C(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_C", flop);
+      TIMING_stop("LSOR", flop);
       break;
 
     case LS_LSOR_D:
-      TIMING_start("LSOR_D");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_D(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_D", flop);
+      TIMING_stop("LSOR", flop);
       break;
     */
     case LS_LSOR_E:
-      TIMING_start("LSOR_E");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_E(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_E", flop);
+      TIMING_stop("LSOR", flop);
       break;
 
     case LS_LSOR_F:
-      TIMING_start("LSOR_F");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_F(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_F", flop);
+      TIMING_stop("LSOR", flop);
       break;
     /*
     case LS_LJCB_A:
-      TIMING_start("LJCB_A");
+      TIMING_start("LJCB");
       if ( 0 == (itr=LJCB_A(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_A", flop);
+      TIMING_stop("LJCB", flop);
       break;
 
     case LS_LJCB_B:
-      TIMING_start("LJCB_B");
+      TIMING_start("LJCB");
       if ( 0 == (itr=LJCB_B(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_B", flop);
+      TIMING_stop("LJCB", flop);
       break;
 
     case LS_LJCB_C:
-      TIMING_start("LJCB_C");
+      TIMING_start("LJCB");
       if ( 0 == (itr=LJCB_C(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_C", flop);
+      TIMING_stop("LJCB", flop);
       break;
 
     case LS_LJCB_D:
-      TIMING_start("LJCB_D");
+      TIMING_start("LJCB");
       if ( 0 == (itr=LJCB_D(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_D", flop);
+      TIMING_stop("LJCB", flop);
       break;
     */
     case LS_LJCB_E:
-      TIMING_start("LJCB_E");
+      TIMING_start("LJCB");
       if ( 0 == (itr=LJCB_E(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB_E", flop);
+      TIMING_stop("LJCB", flop);
       break;
     /*
     case LS_LSOR_SIMD:
-      TIMING_start("LSOR_SIMD");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_SIMD", flop);
+      TIMING_stop("LSOR", flop);
       break;
     */
     case LS_LSOR_J:
@@ -612,11 +630,29 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_LSOR_K:
     case LS_LSOR_K2:
     case LS_LSOR_K3:
-      TIMING_start("LSOR_J");
+      TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR_J", flop);
+      TIMING_stop("LSOR", flop);
       break;
 
+    case LS_LSOR_P1:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P1(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+    
+    case LS_LSOR_P2:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P2(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
+    case LS_LSOR_P3:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P3(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
     default:
       break;
   }
@@ -678,10 +714,14 @@ int CZ::Evaluate(int argc, char **argv)
     double errmax = 0.0;
     switch (ls_type)
     {
+      // kij
       case LS_LSOR_SIMD:
       case LS_LJCB_D:
       case LS_LSOR_E:
       case LS_LSOR_F:
+      case LS_LSOR_P1:
+      case LS_LSOR_P2:
+      case LS_LSOR_P3:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
         exact_t_(size, &gc, ERR, pitch, origin);
@@ -692,6 +732,7 @@ int CZ::Evaluate(int argc, char **argv)
         fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
         break;
 
+      // ikj
       case LS_LSOR_J:
       case LS_LSOR_J4:
       case LS_LSOR_K:
@@ -705,9 +746,9 @@ int CZ::Evaluate(int argc, char **argv)
         Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
         sprintf( tmp_fname, "e_%05d.sph", myRank );
         fileout_ikj_(size, &gc, ERR, pitch, origin, tmp_fname);
-
         break;
 
+      // ijk
       default:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_(size, &gc, P, pitch, origin, tmp_fname);
