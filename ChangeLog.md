@@ -10,6 +10,11 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 
 
 ---
+- 2019-3-21 Version 0.8.8
+  - lsor_pcr_kij  omp directive modify
+
+
+---
 - 2019-2-18 Version 0.8.7
    - PCR
    - lsor_pcr_kij2

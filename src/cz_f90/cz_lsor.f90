@@ -170,8 +170,12 @@ flop = flop + dble(  &
                  + 6.0                   &  ! BC
               ) )
 
+
+!$OMP PARALLEL
+
 ! Reflesh coef. due to override
-!$OMP PARALLEL DO SCHEDULE(static) collapse(2)
+
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
 do i=ist, ied
 do k=kst+1, ked
@@ -179,8 +183,9 @@ do k=kst+1, ked
 end do
 end do
 end do
+!$OMP END DO
 
-!$OMP PARALLEL DO SCHEDULE(static) collapse(2)
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
 do i=ist, ied
 do k=kst, ked-1
@@ -188,28 +193,31 @@ do k=kst, ked-1
 end do
 end do
 end do
+!$OMP END DO
 
-!$OMP PARALLEL DO SCHEDULE(static) collapse(2)
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
 do i=ist, ied
   a(kst,i,j) = 0.0
 end do
 end do
+!$OMP END DO
 
-!$OMP PARALLEL DO SCHEDULE(static) collapse(2)
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
 do i=ist, ied
   c(ked,i,j) = 0.0
 end do
 end do
+!$OMP END DO
 
 
 res = 0.0
 
 
-!$OMP PARALLEL DO SCHEDULE(static) collapse(2) &
-!$OMP          private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
-!$OMP          reduction(+:res)
+!$OMP DO SCHEDULE(static) collapse(2) &
+!$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$OMP reduction(+:res)
 do j=jst, jed
 do i=ist, ied
 
@@ -268,6 +276,9 @@ do i=ist, ied
 
 end do
 end do
+!$OMP END DO
+
+!$OMP END PARALLEL
 
 return
 end subroutine lsor_pcr_kij
