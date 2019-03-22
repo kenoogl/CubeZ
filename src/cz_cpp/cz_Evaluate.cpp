@@ -330,6 +330,10 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_P3;
     strcpy(fname, "lsor_p3.txt");
   }
+  else if ( !strcasecmp(q, "lsor_p4") ) {
+    ls_type = LS_LSOR_P4;
+    strcpy(fname, "lsor_p4.txt");
+  }
 
   else{
     printf("Invalid solver\n");
@@ -461,6 +465,7 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_LSOR_P1:
     case LS_LSOR_P2:
     case LS_LSOR_P3:
+    case LS_LSOR_P4:
       // Apply BC
       bc_k_(size, &gc, P, pitch, origin, nID);
       if ( !Comm_S(P, 1) ) return 0;
@@ -653,6 +658,12 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("LSOR", flop);
       break;
       
+    case LS_LSOR_P4:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P4(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
     default:
       break;
   }
@@ -722,6 +733,7 @@ int CZ::Evaluate(int argc, char **argv)
       case LS_LSOR_P1:
       case LS_LSOR_P2:
       case LS_LSOR_P3:
+      case LS_LSOR_P4:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
         exact_t_(size, &gc, ERR, pitch, origin);

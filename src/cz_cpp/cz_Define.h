@@ -95,7 +95,8 @@ enum LinearSolver
   LS_LSOR_K3,
   LS_LSOR_P1,
   LS_LSOR_P2,
-  LS_LSOR_P3
+  LS_LSOR_P3,
+  LS_LSOR_P4
 };
 
 
