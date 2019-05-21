@@ -334,6 +334,18 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_P4;
     strcpy(fname, "lsor_p4.txt");
   }
+  else if ( !strcasecmp(q, "lsor_p5") ) {
+    ls_type = LS_LSOR_P5;
+    strcpy(fname, "lsor_p5.txt");
+  }
+  else if ( !strcasecmp(q, "lsor_p6") ) {
+    ls_type = LS_LSOR_P6;
+    strcpy(fname, "lsor_p6.txt");
+  }
+  else if ( !strcasecmp(q, "lsor_p7") ) {
+    ls_type = LS_LSOR_P7;
+    strcpy(fname, "lsor_p7.txt");
+  }
 
   else{
     printf("Invalid solver\n");
@@ -466,6 +478,9 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_LSOR_P2:
     case LS_LSOR_P3:
     case LS_LSOR_P4:
+    case LS_LSOR_P5:
+    case LS_LSOR_P6:
+    case LS_LSOR_P7:
       // Apply BC
       bc_k_(size, &gc, P, pitch, origin, nID);
       if ( !Comm_S(P, 1) ) return 0;
@@ -664,6 +679,24 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("LSOR", flop);
       break;
       
+    case LS_LSOR_P5:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P5(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+    
+    case LS_LSOR_P6:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P6(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
+    case LS_LSOR_P7:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_P7(res, P, RHS, ItrMax, flop)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
     default:
       break;
   }
@@ -734,6 +767,9 @@ int CZ::Evaluate(int argc, char **argv)
       case LS_LSOR_P2:
       case LS_LSOR_P3:
       case LS_LSOR_P4:
+      case LS_LSOR_P5:
+      case LS_LSOR_P6:
+      case LS_LSOR_P7:
         sprintf( tmp_fname, "p_%05d.sph", myRank );
         fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
         exact_t_(size, &gc, ERR, pitch, origin);

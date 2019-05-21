@@ -342,6 +342,41 @@ void lsor_pcr_kij4_(int* sz,
                     double* res,
                     double* flop);
   
+void lsor_pcr_kij5_(int* sz,
+                    int* idx,
+                    int* g,
+                    int* pn,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* omg,
+                    double* res,
+                    double* flop);
+  
+void lsor_pcr_kij6_(int* sz,
+                    int* idx,
+                    int* g,
+                    int* pn,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* omg,
+                    double* res,
+                    double* flop);
+  
+void lsor_pcr_kij7_(int* sz,
+                    int* idx,
+                    int* g,
+                    int* pn,
+                    int* ofst,
+                    int* color,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* omg,
+                    double* res,
+                    double* flop);
+  
   
 void lsor_pcr_src_(int* sz,
                    int* idx,

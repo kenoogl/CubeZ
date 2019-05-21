@@ -1130,3 +1130,195 @@ int CZ::LSOR_P4(double& res, REAL_TYPE* X, REAL_TYPE* B,
   
   return itr;
 }
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P5(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    TIMING_start("LSOR_PCR");
+    
+    lsor_pcr_kij5_(size, innerFidx, &gc, &pn, X, MSK, B, &ac1, &res, &flop_count);
+    
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P6(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    TIMING_start("LSOR_PCR");
+    
+    lsor_pcr_kij6_(size, innerFidx, &gc, &pn, X, MSK, B, &ac1, &res, &flop_count);
+    
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ */
+int CZ::LSOR_P7(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                const int itr_max, double& flop, bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    
+    // 2色のマルチカラー(Red&Black)のセットアップ
+    int ip=0;
+    if ( numProc > 1 )
+    {
+      ip = (head[0] + head[1] + head[2]+1) % 2;
+    }
+    else
+    {
+      ip = 0;
+    }
+    
+    TIMING_start("LSOR_PCR");
+    for (int color=0; color<2; color++)
+    {
+      lsor_pcr_kij7_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, &ac1, &res, &flop_count);
+    }
+    TIMING_stop("LSOR_PCR", flop_count);
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
