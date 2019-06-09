@@ -126,6 +126,10 @@ public:
   REAL_TYPE* pcg_s_; ///< work for BiCGstab
   REAL_TYPE* pcg_t ; ///< work for BiCGstab
   REAL_TYPE* pcg_t_; ///< work for BiCGstab
+  
+  REAL_TYPE* xc; ///< 格子
+  REAL_TYPE* yc;
+  REAL_TYPE* zc;
 
 
 public:

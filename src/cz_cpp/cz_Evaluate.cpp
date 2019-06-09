@@ -82,6 +82,7 @@ int CZ::Evaluate(int argc, char **argv)
 
   // Z方向を基準に等方
   pitch[0] = pitch[1] = pitch[2] = 1.0/(REAL_TYPE)(G_size[2]-1);
+  
 
 
   // 分割数のチェック
@@ -216,6 +217,7 @@ int CZ::Evaluate(int argc, char **argv)
     }
   }
 
+  /*
   else if ( !strcasecmp(q, "lsor_p1") ) {
     ls_type = LS_LSOR_P1;
     strcpy(fname, "lsor_p1.txt");
@@ -240,11 +242,51 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_LSOR_P6;
     strcpy(fname, "lsor_p6.txt");
   }
+   */
   else if ( !strcasecmp(q, "lsor_p7") ) {
     ls_type = LS_LSOR_P7;
     strcpy(fname, "lsor_p7.txt");
   }
-
+  
+  // MAF
+  else if ( !strcasecmp(q, "jacobi_maf") ) {
+    ls_type = LS_JACOBI_MAF;
+    strcpy(fname, "jacobi_maf.txt");
+  }
+  
+  else if ( !strcasecmp(q, "psor_maf") ) {
+    ls_type = LS_PSOR_MAF;
+    strcpy(fname, "psor_maf.txt");
+  }
+  
+  else if ( !strcasecmp(q, "sor2sma_maf") ) {
+    ls_type = LS_SOR2SMA_MAF;
+    strcpy(fname, "sor2sma_maf.txt");
+  }
+  
+  else if ( !strcasecmp(q, "pbicgstab_maf") ) {
+    ls_type = LS_BICGSTAB_MAF;
+    strcpy(fname, "pbicgstab_maf.txt");
+    
+    if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
+      pc_type = LS_JACOBI_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "psor_maf") ) {
+      pc_type = LS_PSOR_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "sor2sma_maf") ) {
+      pc_type = LS_SOR2SMA_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_p7_maf") ) {
+      pc_type = LS_LSOR_P7_MAF;
+    }
+  }
+  
+  else if ( !strcasecmp(q, "lsor_p7_maf") ) {
+    ls_type = LS_LSOR_P7_MAF;
+    strcpy(fname, "lsor_p7_maf.txt");
+  }
+    
   else{
     printf("Invalid solver\n");
     exit(0);
@@ -315,6 +357,11 @@ int CZ::Evaluate(int argc, char **argv)
   if( (P   = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (WRK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (MSK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  
+  if( (xc = czAllocR(size[0]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (zc = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
@@ -361,6 +408,27 @@ int CZ::Evaluate(int argc, char **argv)
 
   // 最大反復回数
   ItrMax = atoi(argv[5]);
+  
+  
+  // 一次元格子  何か値をいれておく
+  for (int i=0; i<size[0]+2*GUIDE; i++)
+  {
+    xc[i] = (REAL_TYPE)(i-1) * pitch[0];
+  }
+  
+  for (int i=0; i<size[1]+2*GUIDE; i++)
+  {
+    yc[i] = (REAL_TYPE)(i-1) * pitch[1];
+  }
+  
+  for (int i=0; i<size[2]+2*GUIDE; i++)
+  {
+    zc[i] = (REAL_TYPE)(i-1) * pitch[2];
+  }
+  
+  
+  
+  
 
   // Apply BC
   bc_k_(size, &gc, P, pitch, origin, nID);
@@ -394,29 +462,34 @@ int CZ::Evaluate(int argc, char **argv)
   switch (ls_type)
   {
     case LS_JACOBI:
+    case LS_JACOBI_MAF:
       TIMING_start("JACOBI");
       if ( 0 == (itr=JACOBI(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("JACOBI", flop);
       break;
 
     case LS_PSOR:
+    case LS_PSOR_MAF:
       TIMING_start("PSOR");
       if ( 0 == (itr=PSOR(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("PSOR", flop);
       break;
 
     case LS_SOR2SMA:
+    case LS_SOR2SMA_MAF:
       TIMING_start("SOR2SMA");
       if ( 0 == (itr=RBSOR(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("SOR2SMA", flop);
       break;
 
     case LS_BICGSTAB:
+    case LS_BICGSTAB_MAF:
       TIMING_start("PBiCGSTAB");
       if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop)) ) return 0;
       TIMING_stop("PBiCGSTAB", flop);
       break;
 
+    /*
     case LS_LSOR_P1:
       TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_P1(res, P, RHS, ItrMax, flop)) ) return 0;
@@ -452,8 +525,10 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_P6(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
+     */
       
     case LS_LSOR_P7:
+    case LS_LSOR_P7_MAF:
       TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_P7(res, P, RHS, ItrMax, flop)) ) return 0;
       TIMING_stop("LSOR", flop);

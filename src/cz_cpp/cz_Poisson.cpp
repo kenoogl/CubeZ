@@ -37,10 +37,20 @@
     {
       res = 0.0;
 
-      TIMING_start("JACOBI_kernel");
-      flop_count = 0.0;
-      jacobi_(X, size, innerFidx, &gc, cf, &ac1, B, &res, WRK, &flop_count);
-      TIMING_stop("JACOBI_kernel", flop_count);
+      if (ls_type==LS_JACOBI_MAF)
+      {
+        TIMING_start("JACOBI_MAF_kernel");
+        flop_count = 0.0;
+        jacobi_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, WRK, &flop_count);
+        TIMING_stop("JACOBI_MAF_kernel", flop_count);
+      }
+      else
+      {
+        TIMING_start("JACOBI_kernel");
+        flop_count = 0.0;
+        jacobi_(X, size, innerFidx, &gc, cf, &ac1, B, &res, WRK, &flop_count);
+        TIMING_stop("JACOBI_kernel", flop_count);
+      }
       flop += flop_count;
 
       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -85,10 +95,21 @@
     {
       res = 0.0;
 
-      TIMING_start("SOR_kernel");
-      flop_count = 0.0;
-      psor_(X, size, innerFidx, &gc, cf, &ac1, B, &res, &flop_count);
-      TIMING_stop("SOR_kernel", flop_count);
+      if (ls_type==LS_PSOR_MAF)
+      {
+        TIMING_start("SOR_MAF_kernel");
+        flop_count = 0.0;
+        psor_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, &flop_count);
+        TIMING_stop("SOR_MAF_kernel", flop_count);
+      }
+      else
+      {
+        TIMING_start("SOR_kernel");
+        flop_count = 0.0;
+        psor_(X, size, innerFidx, &gc, cf, &ac1, B, &res, &flop_count);
+        TIMING_stop("SOR_kernel", flop_count);
+      }
+      flop += flop_count;
 
       if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
 
@@ -150,14 +171,30 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      // 各カラー毎の間に同期, 残差は色間で積算する
      // R - color=0 / B - color=1
-     TIMING_start("SOR2SMA_kernel");
-     flop_count = 0.0;
-     for (int color=0; color<2; color++)
+     if (ls_type==LS_SOR2SMA_MAF)
      {
-       // res_p >> 反復残差の二乗和
-       psor2sma_core_(X, size, innerFidx, &gc, cf, &ip, &color, &ac1, B, &res, &flop_count);
+       TIMING_start("SOR2SMA_MAF_kernel");
+       flop_count = 0.0;
+       for (int color=0; color<2; color++)
+       {
+         // res_p >> 反復残差の二乗和
+         psor2sma_core_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ip, &color, &ac1, B, &res, &flop_count);
+       }
+       TIMING_stop("SOR2SMA_MAF_kernel", flop_count);
      }
-     TIMING_stop("SOR2SMA_kernel", flop_count);
+     else
+     {
+       TIMING_start("SOR2SMA_kernel");
+       flop_count = 0.0;
+       for (int color=0; color<2; color++)
+       {
+         // res_p >> 反復残差の二乗和
+         psor2sma_core_(X, size, innerFidx, &gc, cf, &ip, &color, &ac1, B, &res, &flop_count);
+       }
+       TIMING_stop("SOR2SMA_kernel", flop_count);
+     }
+     flop += flop_count;
+     
 
      if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
 

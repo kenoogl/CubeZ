@@ -204,6 +204,10 @@ using namespace pm_lib;
   set_label("LJCB_f2_kernel",   PerfMonitor::CALC, true);
   set_label("LJCB_f3_kernel",   PerfMonitor::CALC, true);
   set_label("LJCB_f4_kernel",   PerfMonitor::CALC, true);
+  
+  set_label("JACOBI_MAF_kernel",    PerfMonitor::CALC, true);
+  set_label("SOR_MAF_kernel",       PerfMonitor::CALC, true);
+  set_label("SOR2SMA_MAF_kernel",   PerfMonitor::CALC, true);
 
   set_label("LSOR_TDMA_BC",     PerfMonitor::CALC, true);
   set_label("LSOR_TDMA",        PerfMonitor::CALC, false);

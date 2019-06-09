@@ -1,14 +1,20 @@
 # Memo for CubeZ
 
 
-#### 2019-05-22 ver 0.9.2
+
+#### 2019-06-09 ver 0.9.3
+- cz_lsor.f90  >> 最終的にはテストしないソース
+- cz_solver.f90 >> 比較対象コード　jacobi, sor2sma, pbicgstab, lsor_p7
+- cz_maf.f90 MAFバージョン (jacobi, psor, sor2sma)
+
+
+#### 2019-06-09 ver 0.9.2
 -  lsor_p7を前処理に追加
 - 比較ターゲットはjacobi, sor2sma, pbicgstab, lsor_p7
-- 
 
 
 
-#### 2019-05-22 ver 0.9.1
+#### 2019-06-09 ver 0.9.1
 -  SIMD_AVX512へ変更
 
 - 各メソッドにコメント追加(LSOR_P1~P7)

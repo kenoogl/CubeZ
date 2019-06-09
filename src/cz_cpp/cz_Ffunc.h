@@ -57,6 +57,77 @@ void psor2sma_core_ (REAL_TYPE* p,
                      double* res,
                      double* flop);
 
+void lsor_pcr_kij7_(int* sz,
+                    int* idx,
+                    int* g,
+                    int* pn,
+                    int* ofst,
+                    int* color,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* omg,
+                    double* res,
+                    double* flop);
+    
+// cz_maf.f90
+void jacobi_maf_   (REAL_TYPE* p,
+                    int* sz,
+                    int* idx,
+                    int* g,
+                    REAL_TYPE* X,
+                    REAL_TYPE* Y,
+                    REAL_TYPE* Z,
+                    REAL_TYPE* omg,
+                    REAL_TYPE* b,
+                    double* res,
+                    REAL_TYPE* wk2,
+                    double* flop);
+    
+void psor_maf_     (REAL_TYPE* p,
+                    int* sz,
+                    int* idx,
+                    int* g,
+                    REAL_TYPE* X,
+                    REAL_TYPE* Y,
+                    REAL_TYPE* Z,
+                    REAL_TYPE* omg,
+                    REAL_TYPE* b,
+                    double* res,
+                    double* flop);
+    
+void psor2sma_core_maf_ (REAL_TYPE* p,
+                         int* sz,
+                         int* idx,
+                         int* g,
+                         REAL_TYPE* X,
+                         REAL_TYPE* Y,
+                         REAL_TYPE* Z,
+                         int* ip,
+                         int* color,
+                         REAL_TYPE* omg,
+                         REAL_TYPE* b,
+                         double* res,
+                         double* flop);
+    
+void lsor_pcr_kij7_maf_(int* sz,
+                        int* idx,
+                        int* g,
+                        int* pn,
+                        int* ofst,
+                        int* color,
+                        REAL_TYPE* x,
+                        REAL_TYPE* msk,
+                        REAL_TYPE* rhs,
+                        REAL_TYPE* XX,
+                        REAL_TYPE* YY,
+                        REAL_TYPE* ZZ,
+                        REAL_TYPE* omg,
+                        double* res,
+                        double* flop);
+
+    
+// obsolete.f90
 void tdma_0_ (int* nx,
               REAL_TYPE* d,
               REAL_TYPE* a,
@@ -83,7 +154,7 @@ void tdma_1_ (int* nx,
                 REAL_TYPE* c,
                 REAL_TYPE* w);
   
-// cz_losr.f90
+// cz_lsor.f90
 void lsor_pcr_kij_(int* sz,
                    int* idx,
                    int* g,
@@ -100,23 +171,6 @@ void lsor_pcr_kij_(int* sz,
                    REAL_TYPE* omg,
                    double* res,
                    double* flop);
-  
-  void lsor_pcr_kij_1d_(int* sz,
-                     int* idx,
-                     int* g,
-                     int* pn,
-                     REAL_TYPE* x,
-                     REAL_TYPE* a,
-                     REAL_TYPE* c,
-                     REAL_TYPE* d,
-                     REAL_TYPE* a1,
-                     REAL_TYPE* c1,
-                     REAL_TYPE* d1,
-                     REAL_TYPE* msk,
-                     REAL_TYPE* rhs,
-                     REAL_TYPE* omg,
-                     double* res,
-                     double* flop);
   
 void lsor_pcr_kij2_(int* sz,
                     int* idx,
@@ -191,32 +245,6 @@ void lsor_pcr_kij6_(int* sz,
                     double* res,
                     double* flop);
   
-void lsor_pcr_kij7_(int* sz,
-                    int* idx,
-                    int* g,
-                    int* pn,
-                    int* ofst,
-                    int* color,
-                    REAL_TYPE* x,
-                    REAL_TYPE* msk,
-                    REAL_TYPE* rhs,
-                    REAL_TYPE* omg,
-                    double* res,
-                    double* flop);
-  
-void lsor_pcr_q_(int* sz,
-                 int* idx,
-                 int* g,
-                 int* s,
-                 int* i,
-                 int* j,
-                 REAL_TYPE* a,
-                 REAL_TYPE* c,
-                 REAL_TYPE* d,
-                 REAL_TYPE* a1,
-                 REAL_TYPE* c1,
-                 REAL_TYPE* d1,
-                 double* flop);
 
 
 // cz_blas.f90

@@ -9,140 +9,35 @@
 
 
 !> ********************************************************************
-!! @brief Boundary condition
-!! @param [in]     sz    配列長
-!! @param [in]     g     ガイドセル長
-!! @param [in]     p     soution vector
-!! @param [out]    dh    grid width
-!! @param [in]     org   起点
-!! @param [in]     nID   隣接ランクテーブル
-!! @note resは積算
-!!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
-!<
-subroutine bc_k (sz, g, p, dh, org, nID)
-implicit none
-include 'cz_fparam.fi'
-integer                                                :: i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  :: sz
-integer, dimension(0:5)                                :: nID
-real, dimension(3)                                     :: org
-real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) :: p
-real                                                   :: pi, x, y, dh
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-pi = 2.0*asin(1.0)
-
-! ZMINUS Dirichlet
-if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(1,i,j) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! ZPLUS Dirichlet
-if( nID(K_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(kx,i,j) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XMINUS
-if( nID(I_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  p(k,1,j) = 0.0 !p(2, j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XPLUS
-if( nID(I_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  p(k,ix,j) = 0.0 !p(ix-1,j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YMINUS
-if( nID(J_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(k,i,1) = 0.0 !p(i,2, k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YPLUS
-if( nID(J_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(k,i,jx) = 0.0 !p(i,jx-1,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-return
-end subroutine bc_k
-
-
-!> ********************************************************************
 !! @brief point SOR法
 !! @param [in,out] p    圧力
 !! @param [in]     sz   配列長
-!! @param [in]     idx         インデクス範囲
+!! @param [in]     idx  インデクス範囲
 !! @param [in]     g    ガイドセル長
-!! @param [in]     cf   係数
+!! @param [in]     X,Y,Z  座標
 !! @param [in]     omg  加速係数
 !! @param [in]     b    RHS vector
 !! @param [out]    res  residual
 !! @param [in,out] flop flop count
 !<
-subroutine psor (p, sz, idx, g, cf, omg, b, res, flop)
+subroutine psor_maf (p, sz, idx, g, X, Y, Z, omg, b, res, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  res
 double precision                                       ::  flop
-real                                                   ::  omg, dd, ss, dp, pp, bb, pn
-real                                                   ::  c1, c2, c3, c4, c5, c6
+real                                                   ::  omg, dd, dp, pp, bb, pn, rp
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
-real, dimension(7)                                     ::  cf
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
 
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 res = 0.0
 
@@ -153,44 +48,70 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
-c1 = cf(1)
-c2 = cf(2)
-c3 = cf(3)
-c4 = cf(4)
-c5 = cf(5)
-c6 = cf(6)
-dd = cf(7)
 
-flop = flop + 25.0     &
-     * dble(ied-ist+1) &
-     * dble(jed-jst+1) &
-     * dble(ked-kst+1)
+flop = flop + 76.0d0      &
+* dble(ied-ist+1) &
+* dble(jed-jst+1) &
+* dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
+
+!$OMP PARALLEL DO Collapse(2) &
 !$OMP REDUCTION(+:res) &
-!$OMP PRIVATE(pp, bb, ss, dp, pn)
+!$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
-  pp = p(k,i,j)
-  bb = b(k,i,j)
-  ss = c1 * p(k  , i+1,j  ) &
-     + c2 * p(k  , i-1,j  ) &
-     + c3 * p(k  , i  ,j+1) &
-     + c4 * p(k  , i  ,j-1) &
-     + c5 * p(k+1, i  ,j  ) &
-     + c6 * p(k-1, i  ,j  )
-  dp = ( (ss - bb)/dd - pp ) * omg
-  pn = pp + dp
-  p(k,i,j) = pn
-  res = res + dp*dp
-end do
-end do
-end do
+bb = b(k,i,j)
+pp = p(k,i,j)
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 8 + 2
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+
+dd = C1 + C2 + C3
+rp = 0.5 *((C1 * (P(k  , i+1, j  ) + P(k  , i-1, j  ))        &
+   +        C2 * (P(k  , i  , j+1) + P(k  , i  , j-1))        &
+   +        C3 * (P(k+1, i  , j  ) + P(k-1, i  , j  ))        &
+   +        C7 * (P(k  , i+1, j  ) - P(k  , i-1, j  )) * 0.5  &
+   +        C8 * (P(k  , i  , j+1) - P(k  , i  , j-1)) * 0.5  &
+   +        C9 * (P(k+1, i  , j  ) - P(k-1, i  , j  )) * 0.5) &
+   + bb)
+dp = ( rp / dd - pp ) * omg
+pn = pp + dp
+P(k,i,j) = pn
+res = res + real(dp * dp, kind=8) ! 30
+enddo
+enddo
+enddo
 !$OMP END PARALLEL DO
 
 return
-end subroutine psor
+end subroutine psor_maf
 
 
 !> **********************************************************************
@@ -199,30 +120,31 @@ end subroutine psor
 !! @param [in]     sz   配列長
 !! @param [in]     idx         インデクス範囲
 !! @param [in]     g    ガイドセル長
+!! @param [in]     X,Y,Z  座標
 !! @param [in]     omg  加速係数
 !! @param [in]     b    RHS vector
 !! @param [in,out] res  residual
 !! @param [out]    wk2  ワーク用配列
 !! @param [in,out] flop flop count
 !<
-subroutine jacobi (p, sz, idx, g, cf, omg, b, res, wk2, flop)
+subroutine jacobi_maf (p, sz, idx, g, X, Y, Z, omg, b, res, wk2, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  res
 double precision                                       ::  flop
-real                                                   ::  omg, dd, ss, dp, pp, bb, pn
-real                                                   ::  c1, c2, c3, c4, c5, c6
+real                                                   ::  omg, dd, dp, pp, bb, pn, rp
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b, wk2
-real, dimension(7)                                     ::  cf
-!dir$ assume_aligned p:64, b:64, wk2:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
+!dir$ assume_aligned p:64, b:64, wk2:64, X:64, Y:64, Z:64
 
 ist = idx(0)
 ied = idx(1)
@@ -233,45 +155,70 @@ ked = idx(5)
 
 res = 0.0
 
-c1 = cf(1)
-c2 = cf(2)
-c3 = cf(3)
-c4 = cf(4)
-c5 = cf(5)
-c6 = cf(6)
-dd = cf(7)
 
-flop = flop + 25.0  &
-            * dble(ied-ist+1) &
-            * dble(jed-jst+1) &
-            * dble(ked-kst+1)
+flop = flop + 76.0d0  &
+* dble(ied-ist+1) &
+* dble(jed-jst+1) &
+* dble(ked-kst+1)
 
-!$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
-!$OMP REDUCTION(+:res)
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+!$OMP PARALLEL &
+!$OMP REDUCTION(+:res) &
+!$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+!$OMP DO SCHEDULE(static) Collapse(2)
 do j = jst, jed
 do i = ist, ied
-
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
-  pp = p(k,i,j)
-  bb = b(k,i,j)
-  ss = c1 * p(k  , i+1,j  ) &
-     + c2 * p(k  , i-1,j  ) &
-     + c3 * p(k  , i  ,j+1) &
-     + c4 * p(k  , i  ,j-1) &
-     + c5 * p(k+1, i  ,j  ) &
-     + c6 * p(k-1, i  ,j  )
-  dp = ( (ss - bb)/dd - pp ) * omg
-  pn = pp + dp
-  wk2(k,i,j) = pn
-  res = res + dp*dp
-end do
-end do
-end do
+bb = b(k,i,j)
+pp = p(k,i,j)
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 8 + 2
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+
+dd = C1 + C2 + C3
+rp = 0.5 *((C1 * (P(k  , i+1, j  ) + P(k  , i-1, j  ))        &
++        C2 * (P(k  , i  , j+1) + P(k  , i  , j-1))        &
++        C3 * (P(k+1, i  , j  ) + P(k-1, i  , j  ))        &
++        C7 * (P(k  , i+1, j  ) - P(k  , i-1, j  )) * 0.5  &
++        C8 * (P(k  , i  , j+1) - P(k  , i  , j-1)) * 0.5  &
++        C9 * (P(k+1, i  , j  ) - P(k-1, i  , j  )) * 0.5) &
++ bb)
+dp = ( rp / dd - pp ) * omg
+pn = pp + dp
+wk2(k,i,j) = pn
+res = res + real(dp * dp, kind=8) ! 30
+enddo
+enddo
+enddo
 !$OMP END DO
 
+
+
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
 do j = jst, jed
 do i = ist, ied
@@ -279,7 +226,7 @@ do i = ist, ied
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-  p(k,i,j)=wk2(k,i,j)
+p(k,i,j)=wk2(k,i,j)
 end do
 end do
 end do
@@ -288,7 +235,7 @@ end do
 !$OMP END PARALLEL
 
 return
-end subroutine jacobi
+end subroutine jacobi_maf
 
 
 !> ********************************************************************
@@ -297,6 +244,7 @@ end subroutine jacobi
 !! @param [in]     sz    配列長
 !! @param [in]     idx   インデクス範囲
 !! @param [in]     g     ガイドセル長
+!! @param [in]     X,Y,Z  座標
 !! @param [in]     ofst  開始点オフセット
 !! @param [in]     color グループ番号
 !! @param [in]     omg   加速係数
@@ -305,25 +253,26 @@ end subroutine jacobi
 !! @param [in,out] flop  浮動小数演算数
 !! @note resは積算
 !<
-subroutine psor2sma_core (p, sz, idx, g, cf, ofst, color, omg, b, res, flop)
+subroutine psor2sma_core_maf (p, sz, idx, g, X, Y, Z, ofst, color, omg, b, res, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 double precision                                       ::  flop
 double precision                                       ::  res
-real                                                   ::  omg, dd, ss, dp, pp, bb, pn
-real                                                   ::  c1, c2, c3, c4, c5, c6
+real                                                   ::  omg, dd, dp, pp, bb, pn, rp
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 integer                                                ::  kp, color, ofst
-real, dimension(7)                                     ::  cf
-!dir$ assume_aligned p:64, b:64
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
+!dir$ assume_aligned p:64, b:64, X:64, Y:64, Z:64
 
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 kp = ofst+color
 
 ist = idx(0)
@@ -333,51 +282,76 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
-c1 = cf(1)
-c2 = cf(2)
-c3 = cf(3)
-c4 = cf(4)
-c5 = cf(5)
-c6 = cf(6)
-dd = cf(7)
+flop = flop + 76.0d0*0.5d0  &
+* dble(ied-ist+1) &
+* dble(jed-jst+1) &
+* dble(ked-kst+1)
 
-flop = flop + 25.0d0*0.5d0  &
-     * dble(ied-ist+1) &
-     * dble(jed-jst+1) &
-     * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
+!$OMP PARALLEL DO Collapse(2) &
 !$OMP REDUCTION(+:res) &
-!$OMP PRIVATE(pp, bb, ss, dp, pn)
+!$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
 do j=jst,jed
 do i=ist,ied
 
 !dir$ vector aligned
 !dir$ simd
 do k=kst+mod(i+j+kp,2), ked, 2
-  pp = p(k,i,j)
-  bb = b(k,i,j)
-  ss = c1 * p(k  , i+1,j  ) &
-     + c2 * p(k  , i-1,j  ) &
-     + c3 * p(k  , i  ,j+1) &
-     + c4 * p(k  , i  ,j-1) &
-     + c5 * p(k+1, i  ,j  ) &
-     + c6 * p(k-1, i  ,j  )
-  dp = ( (ss - bb)/dd - pp ) * omg
-  pn = pp + dp
-  p(k,i,j) = pn
-  res = res + dp*dp
+pp = p(k,i,j)
+bb = b(k,i,j)
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 8 + 2
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+
+dd = C1 + C2 + C3
+rp = 0.5 *((C1 * (P(k  , i+1, j  ) + P(k  , i-1, j  ))        &
++        C2 * (P(k  , i  , j+1) + P(k  , i  , j-1))        &
++        C3 * (P(k+1, i  , j  ) + P(k-1, i  , j  ))        &
++        C7 * (P(k  , i+1, j  ) - P(k  , i-1, j  )) * 0.5  &
++        C8 * (P(k  , i  , j+1) - P(k  , i  , j-1)) * 0.5  &
++        C9 * (P(k+1, i  , j  ) - P(k-1, i  , j  )) * 0.5) &
++ bb)
+dp = ( rp / dd - pp ) * omg
+pn = pp + dp
+P(k,i,j) = pn
+res = res + real(dp * dp, kind=8) ! 30
 end do
 end do
 end do
 !$OMP END PARALLEL DO
 
 return
-end subroutine psor2sma_core
+end subroutine psor2sma_core_maf
 
 
 !********************************************************************************
-subroutine lsor_pcr_kij7 (sz, idx, g, pn, ofst, color, x, msk, rhs, omg, res, flop)
+subroutine lsor_pcr_kij7_maf (sz, idx, g, pn, ofst, color, x, msk, rhs, XX, YY, ZZ, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -392,7 +366,10 @@ integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp
 real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
-!dir$ assume_aligned x:64, msk:64, rhs:64, a:64, c:64, d:64, a1:64, c1:64, d1:64
+real, dimension(-1:sz(1)+2)                            ::  XX
+real, dimension(-1:sz(2)+2)                            ::  YY
+real, dimension(-1:sz(3)+2)                            ::  ZZ
+!dir$ assume_aligned x:64, msk:64, rhs:64, a:64, c:64, d:64, a1:64, c1:64, d1:64, XX:64, YY:64, ZZ:64
 
 ist = idx(0)
 ied = idx(1)
@@ -565,4 +542,5 @@ end do
 !$OMP END PARALLEL
 
 return
-end subroutine lsor_pcr_kij7
+end subroutine lsor_pcr_kij7_maf
+
