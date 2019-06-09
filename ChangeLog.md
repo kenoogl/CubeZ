@@ -9,13 +9,21 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
-- 2019-4-8 Version 0.9.0
-- lsor_P5, P6, P7
+- 2019-6-9 Version 0.9.1
+  - SIMD_width => SIMD_AVX512
+  - Halt test6 and 7 due to SIMD intrinsic
+  - lsor_pcr_kij7 : remove collapse(2) due to loop  i= , , 2
+  - remove extra source
+    - jacobi, psor, sor2sma, pbicgstab, lsor_p{1-7}
 
 
 ---
+- 2019-4-8 Version 0.9.0
+  - lsor_P5, P6, P7
+
+---
 - 2019-3-22 Version 0.8.9
-- lsor_pcr_kij4, 5
+  - lsor_pcr_kij4, 5
 
 ---
 - 2019-3-21 Version 0.8.8

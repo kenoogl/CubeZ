@@ -6,7 +6,7 @@ CubeZ is a platform for testing iterative solvers.
 
 
 ## Copyright
-- Copyright (c) 2018 Research Institute for Information Technology(RIIT), Kyushu University. All rights reserved.
+- Copyright (c) 2018-2019 Research Institute for Information Technology(RIIT), Kyushu University. All rights reserved.
 
 
 
@@ -15,6 +15,7 @@ CubeZ is a platform for testing iterative solvers.
 - Cmake
 - MPI library (if parallel)
 - PMlib
+- PAPI (Optional)
 - CBrick (Even compiling without MPI, a header file CB_Define.h is essential. See serial build.)
 
 
@@ -35,34 +36,41 @@ $ sudo make install
 ### Options
 
 `-D INSTALL_DIR=` *Install_directory*
-
 >  Specify the directory that this library will be installed. Built library is
    installed at `install_directory/lib` and the header files are placed at
    `install_directory/include`.
 
 `-D enable_OPENMP=` {yes | no}
-
 >  This option makes OpenMP directives effect. Default is yes.
 
 `-D with_MPI=` {yes | no}
-
 >  If you use an MPI library, specify `with_MPI=yes` (default).
 
 `-D real_type=` {float | double}
-
 >  Specify the type of floating point. If this option is omitted, the default is float.
 
 `-D with_PM=` {*Installed_Directory* | OFF}
-
 > Specify the directory path that PMlib is installed, or OFF.
 
 `-D with_CBR=` *Installed_Directory*
-
 > Specify the directory path that CBrick is installed.
 
 `-D with_PAPI=` *Installed_Directory*
-
 > Specify the directory path that PAPI is installed.
+
+`-D SIMD_AVX512=` {OFF | ON}
+> Specify SIMD length. The default is OFF, which means AVX2. If you want to use AVX512 specify ON.
+
+
+### Default settng
+~~~
+with_MPI = ON
+enable_OPENMP = ON
+real_type = float
+with_PAPI = OFF
+Alignment = 64
+SIMD_AVX512 = OFF
+~~~
 
 
 ## Configure Examples
@@ -71,21 +79,46 @@ $ sudo make install
 
 In following examples, assuming that TextParser, PMlib, and CBrick are installed under the CZ_HOME directory. If not, please specify applicable directory paths.
 
-### INTEL/GNU compiler
 
-~~~
-$ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ \
-        -Dreal_type=float \
-        -Denable_OPENMP=yes \
-        -Dwith_MPI=yes \
-        -Dwith_PM=${CZ_HOME}/PMlib \
-        -Dwith_PAPI=OFF \
-        -Dwith_CBR=${CZ_HOME}/CBrick ..
-~~~
+### Serial build
+When even compiling without MPI, the heaｄder files `CB_Define.h` and `CB_SubDomain.h` in CBrick library are required.
+Copy them form CBrick directory into cz_cpp, then make. In this case, specify `-D with_CBR=OFF` to suppress linking to CBrick library.
 
-#### Note
 In case of some Intel compiler environment, please specify environment variables before compilation.
 `export CC=icc CXX=icpc F90=ifort FC=ifort`
+
+#### INTEL/GNU compiler serial without PAPI
+
+~~~
+cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+-Dwith_MPI=no \
+-Dwith_PM=${CZ_HOME}/CubeZ/PMlib \
+-Dwith_CBR=OFF ..
+~~~
+
+### ITO A/B with PAPI
+
+~~~
+$ module load intel/2018
+export CC=icc CXX=icpc F90=ifort FC=ifort
+
+cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_intel_SKL.cmake \
+-Dwith_MPI=no \
+-Dwith_PM=${HOME}/CZ/PMlib \
+-Dwith_PAPI=${HOME}/CZ/PAPI\
+-Dwith_CBR=OFF ..
+~~~
+
+
+
+
+
+
+
+
+
+
 
 
 ### FUJITSU compiler / FX100, K computer on login nodes (Cross compilation) and Fujitsu TCS environment for intel PC
@@ -124,9 +157,7 @@ $ cmake -DINSTALL_DIR=${CZ_HOME}/RAinWATER \
 - Before building, execute following command to clean for sure. `$ make distclean`
 
 
-### Serial build
-When even compiling without MPI, the hearer file CB_Define.h in CBrick library is required.
-Copy CB_Define.h form CBrick directory into cz_cpp, then make. In this case, specify `-D with_CBR=OFF`, then CBrick library is not linked.
+
 
 
 ## Contributors
@@ -140,7 +171,10 @@ For example, the `-CcdRR8` option for fortran preprocessor convert variables, fu
 ## 使い方
 
 ~~~
-$ ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax [gdv_x, gdv_y, gdv_z]
+$ ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax coef [gdv_x, gdv_y, gdv_z]
+$ ./cz 124 124 124 sor2sma 10000 1.5
+$ ./cz 124 124 124 pbicgstab 10000 1.5 sor2sma
+$ ./cz 124 124 124 lsor_p1 10000 1.5
 ~~~
  - gsz_x, gsz_y, gsz_z  全計算領域の要素数
  - linear_solver        線形ソルバの指定
@@ -150,4 +184,5 @@ $ ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax [gdv_x, gdv_y, gdv_z]
    - pbicgstab
    - lsor
  - IterationMax         最大反復回数
+ - coef  緩和/加速係数
  - gdv_x, gdv_y, gdv_z  領域分割数の指定、指定しない場合には自動分割

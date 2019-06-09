@@ -31,7 +31,7 @@
 #
 # -D Alignment=(64|32)
 #
-# -D SIMD_width=(256|512)
+# -D SIMD_AVX512=(OFF|ON)
 #
 
 cmake_minimum_required(VERSION 2.6)
@@ -46,7 +46,7 @@ option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
 option(Alignment "Alignment" "64")
-option(SIMD_width "SIMD width" "256")
+option(SIMD_AVX512 "AVX512" "OFF")
 
 #######
 # Project setting
@@ -72,8 +72,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.9.0")
-set(LIB_REVISION "20190408_1930")
+set(PROJECT_VERSION "0.9.1")
+set(LIB_REVISION "20190521_1800")
 #######
 
 
@@ -113,16 +113,16 @@ if(NOT with_MPI)
 endif()
 
 # Memory alignment
-if(Alignment STREQUAL "32")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN32")
-elseif(Alignment STREQUAL "64")
+#if(Alignment STREQUAL "32")
+#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN32")
+#elseif(Alignment STREQUAL "64")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN64")
-endif()
+#endif()
 
 # SIMD
-if(SIMD_width STREQUAL "256")
+if(SIMD_AVX512 STREQUAL "OFF")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SIMD_256")
-elseif(SIMD_width STREQUAL "512")
+else()
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SIMD_512 -qopt-zmm-usage=high")
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qopt-zmm-usage=high")
   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
@@ -149,7 +149,7 @@ message( STATUS "PMlib support         : "      ${with_PM})
 message( STATUS "PAPI support          : "      ${with_PAPI})
 message( STATUS "CBrick support        : "      ${with_CBR})
 message( STATUS "Alignment             : "      ${Alignment})
-message( STATUS "SIMD width            : "      ${SIMD_width})
+message( STATUS "SIMD AVX512           : "      ${SIMD_AVX512})
 message(" ")
 
 

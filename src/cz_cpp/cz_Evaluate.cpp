@@ -211,113 +211,8 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
       pc_type = LS_SOR2SMA;
     }
-    else if ( !strcasecmp(precon.c_str(), "lsor_a") ) {
-      pc_type = LS_LSOR_A;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_e") ) {
-      pc_type = LS_LSOR_E;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_f") ) {
-      pc_type = LS_LSOR_F;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_j") ) {
-      pc_type = LS_LSOR_J;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_j4") ) {
-      pc_type = LS_LSOR_J4;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_k") ) {
-      pc_type = LS_LSOR_K;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_k2") ) {
-      pc_type = LS_LSOR_K2;
-    }
-    else if ( !strcasecmp(precon.c_str(), "lsor_k3") ) {
-      pc_type = LS_LSOR_K3;
-    }
-    else if ( !strcasecmp(precon.c_str(), "ljcb_e") ) {
-      pc_type = LS_LJCB_E;
-    }
-  }
-  /*
-  else if ( !strcasecmp(q, "lsor_a") ) {
-    ls_type = LS_LSOR_A;
-    strcpy(fname, "lsor_a.txt");
   }
 
-  else if ( !strcasecmp(q, "lsor_b") ) {
-    ls_type = LS_LSOR_B;
-    strcpy(fname, "lsor_b.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_c") ) {
-    ls_type = LS_LSOR_C;
-    strcpy(fname, "lsor_c.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_d") ) {
-    ls_type = LS_LSOR_D;
-    strcpy(fname, "lsor_d.txt");
-  }
-  */
-  else if ( !strcasecmp(q, "lsor_e") ) {
-    ls_type = LS_LSOR_E;
-    strcpy(fname, "lsor_e.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_f") ) {
-    ls_type = LS_LSOR_F;
-    strcpy(fname, "lsor_f.txt");
-  }
-  /*
-  else if ( !strcasecmp(q, "ljcb_a") ) {
-    ls_type = LS_LJCB_A;
-    strcpy(fname, "ljcb_a.txt");
-  }
-
-  else if ( !strcasecmp(q, "ljcb_b") ) {
-    ls_type = LS_LJCB_B;
-    strcpy(fname, "ljcb_b.txt");
-  }
-
-  else if ( !strcasecmp(q, "ljcb_c") ) {
-    ls_type = LS_LJCB_C;
-    strcpy(fname, "ljcb_c.txt");
-  }
-
-  else if ( !strcasecmp(q, "ljcb_d") ) {
-    ls_type = LS_LJCB_D;
-    strcpy(fname, "ljcb_d.txt");
-  }
-  */
-  else if ( !strcasecmp(q, "ljcb_e") ) {
-    ls_type = LS_LJCB_E;
-    strcpy(fname, "ljcb_e.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_j") ) {
-    ls_type = LS_LSOR_J;
-    strcpy(fname, "lsor_j.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_j4") ) {
-    ls_type = LS_LSOR_J4;
-    strcpy(fname, "lsor_j4.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_k") ) {
-    ls_type = LS_LSOR_K;
-    strcpy(fname, "lsor_k.txt");
-  }
-
-  else if ( !strcasecmp(q, "lsor_k2") ) {
-    ls_type = LS_LSOR_K2;
-    strcpy(fname, "lsor_k2.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_k3") ) {
-    ls_type = LS_LSOR_K3;
-    strcpy(fname, "lsor_k3.txt");
-  }
   else if ( !strcasecmp(q, "lsor_p1") ) {
     ls_type = LS_LSOR_P1;
     strcpy(fname, "lsor_p1.txt");
@@ -388,9 +283,6 @@ int CZ::Evaluate(int argc, char **argv)
       SdB, SdW*SdB + 2*(SdW-GUIDE));
       exit(1);
     }
-
-    ls_type = LS_LSOR_SIMD;
-    strcpy(fname, "lsor_simd.txt");
   }
   */
 
@@ -467,66 +359,15 @@ int CZ::Evaluate(int argc, char **argv)
   // 最大反復回数
   ItrMax = atoi(argv[5]);
 
-  switch (ls_type)
-  {
-    // (k,i,j)
-    case LS_LSOR_SIMD:
-    case LS_LJCB_D:
-    case LS_LSOR_E:
-    case LS_LSOR_F:
-    case LS_LSOR_P1:
-    case LS_LSOR_P2:
-    case LS_LSOR_P3:
-    case LS_LSOR_P4:
-    case LS_LSOR_P5:
-    case LS_LSOR_P6:
-    case LS_LSOR_P7:
-      // Apply BC
-      bc_k_(size, &gc, P, pitch, origin, nID);
-      if ( !Comm_S(P, 1) ) return 0;
-
-      // source term >> ソース項ゼロ
-      bc_k_(size, &gc, RHS, pitch, origin, nID);
-      if ( !Comm_S(RHS, 1) ) return 0;
-
-      imask_k_(MSK, size, innerFidx, &gc);
-
-      break;
-
-    // (i,k,j)
-    case LS_LSOR_J:
-    case LS_LSOR_J4:
-    case LS_LSOR_K:
-    case LS_LSOR_K2:
-    case LS_LSOR_K3:
-      bc_ikj_(size, &gc, P, pitch, origin, nID);
-      if ( !Comm_S(P, 1) ) return 0;
-
-      // source term >> ソース項ゼロ
-      bc_ikj_(size, &gc, RHS, pitch, origin, nID);
-      if ( !Comm_S(RHS, 1) ) return 0;
-
-      imask_ikj_(MSK, size, innerFidx, &gc);
-      break;
-
-
-    // (i,j,k)
-    default:
-      // Apply BC
-      bc_(size, &gc, P, pitch, origin, nID);
-      if ( !Comm_S(P, 1) ) return 0;
-
-      // source term >> ソース項ゼロ
-      bc_(size, &gc, RHS, pitch, origin, nID);
-      if ( !Comm_S(RHS, 1) ) return 0;
-
-      init_mask_(MSK, size, innerFidx, &gc);
-
-      break;
-  }
-
-
-
+  // Apply BC
+  bc_k_(size, &gc, P, pitch, origin, nID);
+  if ( !Comm_S(P, 1) ) return 0;
+    
+  // source term >> ソース項ゼロ
+  bc_k_(size, &gc, RHS, pitch, origin, nID);
+  if ( !Comm_S(RHS, 1) ) return 0;
+    
+  imask_k_(MSK, size, innerFidx, &gc);
 
 
 
@@ -571,88 +412,6 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_start("PBiCGSTAB");
       if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop)) ) return 0;
       TIMING_stop("PBiCGSTAB", flop);
-      break;
-    /*
-    case LS_LSOR_A:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_A(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-
-    case LS_LSOR_B:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_B(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-
-    case LS_LSOR_C:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_C(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-
-    case LS_LSOR_D:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_D(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-    */
-    case LS_LSOR_E:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_E(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-
-    case LS_LSOR_F:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_F(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-    /*
-    case LS_LJCB_A:
-      TIMING_start("LJCB");
-      if ( 0 == (itr=LJCB_A(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB", flop);
-      break;
-
-    case LS_LJCB_B:
-      TIMING_start("LJCB");
-      if ( 0 == (itr=LJCB_B(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB", flop);
-      break;
-
-    case LS_LJCB_C:
-      TIMING_start("LJCB");
-      if ( 0 == (itr=LJCB_C(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB", flop);
-      break;
-
-    case LS_LJCB_D:
-      TIMING_start("LJCB");
-      if ( 0 == (itr=LJCB_D(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB", flop);
-      break;
-    */
-    case LS_LJCB_E:
-      TIMING_start("LJCB");
-      if ( 0 == (itr=LJCB_E(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LJCB", flop);
-      break;
-    /*
-    case LS_LSOR_SIMD:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_SIMD(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-    */
-    case LS_LSOR_J:
-    case LS_LSOR_J4:
-    case LS_LSOR_K:
-    case LS_LSOR_K2:
-    case LS_LSOR_K3:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_J(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
       break;
 
     case LS_LSOR_P1:
@@ -756,58 +515,16 @@ int CZ::Evaluate(int argc, char **argv)
   if (debug_mode==1) {
 
     double errmax = 0.0;
-    switch (ls_type)
-    {
-      // kij
-      case LS_LSOR_SIMD:
-      case LS_LJCB_D:
-      case LS_LSOR_E:
-      case LS_LSOR_F:
-      case LS_LSOR_P1:
-      case LS_LSOR_P2:
-      case LS_LSOR_P3:
-      case LS_LSOR_P4:
-      case LS_LSOR_P5:
-      case LS_LSOR_P6:
-      case LS_LSOR_P7:
-        sprintf( tmp_fname, "p_%05d.sph", myRank );
-        fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
-        exact_t_(size, &gc, ERR, pitch, origin);
-        err_t_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
-        sprintf( tmp_fname, "e_%05d.sph", myRank );
-        fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
-        break;
 
-      // ikj
-      case LS_LSOR_J:
-      case LS_LSOR_J4:
-      case LS_LSOR_K:
-      case LS_LSOR_K2:
-      case LS_LSOR_K3:
-        sprintf( tmp_fname, "p_%05d.sph", myRank );
-        fileout_ikj_(size, &gc, P, pitch, origin, tmp_fname);
-        exact_ikj_(size, &gc, ERR, pitch, origin);
-        err_ikj_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
-        sprintf( tmp_fname, "e_%05d.sph", myRank );
-        fileout_ikj_(size, &gc, ERR, pitch, origin, tmp_fname);
-        break;
+    sprintf( tmp_fname, "p_%05d.sph", myRank );
+    fileout_t_(size, &gc, P, pitch, origin, tmp_fname);
+    exact_t_(size, &gc, ERR, pitch, origin);
+    err_t_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
+    if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
+    Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
+    sprintf( tmp_fname, "e_%05d.sph", myRank );
+    fileout_t_(size, &gc, ERR, pitch, origin, tmp_fname);
 
-      // ijk
-      default:
-        sprintf( tmp_fname, "p_%05d.sph", myRank );
-        fileout_(size, &gc, P, pitch, origin, tmp_fname);
-        exact_(size, &gc, ERR, pitch, origin);
-        err_  (size, innerFidx, &gc, &errmax, P, ERR, loc);
-        if ( !Comm_MAX_1(&errmax, "Comm_Res_Poisson") ) return 0;
-        Hostonly_ printf("\nError max = %e at (%d %d %d)\n\n", errmax, loc[0],loc[1],loc[2]);
-        sprintf( tmp_fname, "e_%05d.sph", myRank );
-        fileout_(size, &gc, ERR, pitch, origin, tmp_fname);
-        break;
-    }
   } // debug
 
 

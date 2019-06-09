@@ -19,111 +19,6 @@
 !! @note resは積算
 !!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
 !<
-subroutine bc (sz, g, p, dh, org, nID)
-implicit none
-include 'cz_fparam.fi'
-integer                                                :: i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  :: sz
-integer, dimension(0:5)                                :: nID
-real, dimension(3)                                     :: org
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) :: p
-real                                                   :: pi, x, y, dh
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-pi = 2.0*asin(1.0)
-
-! ZMINUS Dirichlet
-if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(i,j,1) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! ZPLUS Dirichlet
-if( nID(K_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(i,j,kx) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XMINUS
-if( nID(I_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  p(1,j,k) = 0.0 !p(2, j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XPLUS
-if( nID(I_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do j=1,jx
-  p(ix,j,k) = 0.0 !p(ix-1,j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YMINUS
-if( nID(J_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(i,1, k) = 0.0 !p(i,2, k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YPLUS
-if( nID(J_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(i,jx,k) = 0.0 !p(i,jx-1,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-return
-end subroutine bc
-
-!> ********************************************************************
-!! @brief Boundary condition
-!! @param [in]     sz    配列長
-!! @param [in]     g     ガイドセル長
-!! @param [in]     p     soution vector
-!! @param [out]    dh    grid width
-!! @param [in]     org   起点
-!! @param [in]     nID   隣接ランクテーブル
-!! @note resは積算
-!!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
-!<
 subroutine bc_k (sz, g, p, dh, org, nID)
 implicit none
 include 'cz_fparam.fi'
@@ -218,111 +113,6 @@ endif
 return
 end subroutine bc_k
 
-!> ********************************************************************
-!! @brief Boundary condition
-!! @param [in]     sz    配列長
-!! @param [in]     g     ガイドセル長
-!! @param [in]     p     soution vector
-!! @param [out]    dh    grid width
-!! @param [in]     org   起点
-!! @param [in]     nID   隣接ランクテーブル
-!! @note resは積算
-!!       側面の境界条件はディリクレ。pBiCGSTABの係数がディリクレを想定している実装のため。
-!<
-subroutine bc_ikj (sz, g, p, dh, org, nID)
-implicit none
-include 'cz_fparam.fi'
-integer                                                :: i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  :: sz
-integer, dimension(0:5)                                :: nID
-real, dimension(3)                                     :: org
-real, dimension(1-g:sz(1)+g, 1-g:sz(3)+g, 1-g:sz(2)+g) :: p
-real                                                   :: pi, x, y, dh
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-pi = 2.0*asin(1.0)
-
-! ZMINUS Dirichlet
-if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(i,1,j) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! ZPLUS Dirichlet
-if( nID(K_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
-do j=1,jx
-do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(i,kx,j) = sin(pi*x)*sin(pi*y)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XMINUS
-if( nID(I_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do j=1,jx
-do k=1,kx
-  p(1,k,j) = 0.0 !p(2, j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! XPLUS
-if( nID(I_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do j=1,jx
-do k=1,kx
-  p(ix,k,j) = 0.0 !p(ix-1,j,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YMINUS
-if( nID(J_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(i,k,1) = 0.0 !p(i,2, k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-
-! YPLUS
-if( nID(J_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
-do k=1,kx
-do i=1,ix
-  p(i,k,jx) = 0.0 !p(i,jx-1,k)
-end do
-end do
-!$OMP END PARALLEL DO
-endif
-
-return
-end subroutine bc_ikj
-
 
 !> ********************************************************************
 !! @brief point SOR法
@@ -347,7 +137,7 @@ double precision                                       ::  res
 double precision                                       ::  flop
 real                                                   ::  omg, dd, ss, dp, pp, bb, pn
 real                                                   ::  c1, c2, c3, c4, c5, c6
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 real, dimension(7)                                     ::  cf
 
 ix = sz(1)
@@ -371,25 +161,28 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + dble(ix*jx*kx)*25.0
+flop = flop + 25.0     &
+     * dble(ied-ist+1) &
+     * dble(jed-jst+1) &
+     * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
 !$OMP REDUCTION(+:res) &
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
-do k = kst, ked
 do j = jst, jed
 do i = ist, ied
-  pp = p(i,j,k)
-  bb = b(i,j,k)
-  ss = c1 * p(i+1,j  ,k  ) &
-     + c2 * p(i-1,j  ,k  ) &
-     + c3 * p(i  ,j+1,k  ) &
-     + c4 * p(i  ,j-1,k  ) &
-     + c5 * p(i  ,j  ,k+1) &
-     + c6 * p(i  ,j  ,k-1)
+do k = kst, ked
+  pp = p(k,i,j)
+  bb = b(k,i,j)
+  ss = c1 * p(k  , i+1,j  ) &
+     + c2 * p(k  , i-1,j  ) &
+     + c3 * p(k  , i  ,j+1) &
+     + c4 * p(k  , i  ,j-1) &
+     + c5 * p(k+1, i  ,j  ) &
+     + c6 * p(k-1, i  ,j  )
   dp = ( (ss - bb)/dd - pp ) * omg
   pn = pp + dp
-  p(i,j,k) = pn
+  p(k,i,j) = pn
   res = res + dp*dp
 end do
 end do
@@ -423,7 +216,7 @@ double precision                                       ::  res
 double precision                                       ::  flop
 real                                                   ::  omg, dd, ss, dp, pp, bb, pn
 real                                                   ::  c1, c2, c3, c4, c5, c6
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b, wk2
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b, wk2
 real, dimension(7)                                     ::  cf
 !dir$ assume_aligned p:64, b:64, wk2:64
 
@@ -448,28 +241,31 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + dble((kx*jx*ix)*25.0)
+flop = flop + 25.0  &
+            * dble(ied-ist+1) &
+            * dble(jed-jst+1) &
+            * dble(ked-kst+1)
 
 !$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
 !$OMP REDUCTION(+:res)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
-do k = kst, ked
 do j = jst, jed
+do i = ist, ied
 
 !dir$ vector aligned
 !dir$ simd
-do i = ist, ied
-  pp = p(i,j,k)
-  bb = b(i,j,k)
-  ss = c1 * p(i+1,j  ,k  ) &
-     + c2 * p(i-1,j  ,k  ) &
-     + c3 * p(i  ,j+1,k  ) &
-     + c4 * p(i  ,j-1,k  ) &
-     + c5 * p(i  ,j  ,k+1) &
-     + c6 * p(i  ,j  ,k-1)
+do k = kst, ked
+  pp = p(k,i,j)
+  bb = b(k,i,j)
+  ss = c1 * p(k  , i+1,j  ) &
+     + c2 * p(k  , i-1,j  ) &
+     + c3 * p(k  , i  ,j+1) &
+     + c4 * p(k  , i  ,j-1) &
+     + c5 * p(k+1, i  ,j  ) &
+     + c6 * p(k-1, i  ,j  )
   dp = ( (ss - bb)/dd - pp ) * omg
   pn = pp + dp
-  wk2(i,j,k) = pn
+  wk2(k,i,j) = pn
   res = res + dp*dp
 end do
 end do
@@ -477,12 +273,13 @@ end do
 !$OMP END DO
 
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
-do k = kst, ked
 do j = jst, jed
+do i = ist, ied
+
 !dir$ vector aligned
 !dir$ simd
-do i = ist, ied
-  p(i,j,k)=wk2(i,j,k)
+do k = kst, ked
+  p(k,i,j)=wk2(k,i,j)
 end do
 end do
 end do
@@ -519,15 +316,15 @@ double precision                                       ::  flop
 double precision                                       ::  res
 real                                                   ::  omg, dd, ss, dp, pp, bb, pn
 real                                                   ::  c1, c2, c3, c4, c5, c6
-real, dimension(1-g:sz(1)+g, 1-g:sz(2)+g, 1-g:sz(3)+g) ::  p, b
-integer                                                ::  ip, color, ofst
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
+integer                                                ::  kp, color, ofst
 real, dimension(7)                                     ::  cf
 !dir$ assume_aligned p:64, b:64
 
 ix = sz(1)
 jx = sz(2)
 kx = sz(3)
-ip = ofst+color
+kp = ofst+color
 
 ist = idx(0)
 ied = idx(1)
@@ -544,27 +341,31 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + dble(ix*jx*kx)*25.0*0.5d0
+flop = flop + 25.0d0*0.5d0  &
+     * dble(ied-ist+1) &
+     * dble(jed-jst+1) &
+     * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
 !$OMP REDUCTION(+:res) &
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
-do k=kst,ked
 do j=jst,jed
+do i=ist,ied
+
 !dir$ vector aligned
 !dir$ simd
-do i=ist+mod(k+j+ip,2), ied, 2
-  pp = p(i,j,k)
-  bb = b(i,j,k)
-  ss = c1 * p(i+1,j  ,k  ) &
-     + c2 * p(i-1,j  ,k  ) &
-     + c3 * p(i  ,j+1,k  ) &
-     + c4 * p(i  ,j-1,k  ) &
-     + c5 * p(i  ,j  ,k+1) &
-     + c6 * p(i  ,j  ,k-1)
+do k=kst+mod(i+j+kp,2), ked, 2
+  pp = p(k,i,j)
+  bb = b(k,i,j)
+  ss = c1 * p(k  , i+1,j  ) &
+     + c2 * p(k  , i-1,j  ) &
+     + c3 * p(k  , i  ,j+1) &
+     + c4 * p(k  , i  ,j-1) &
+     + c5 * p(k+1, i  ,j  ) &
+     + c6 * p(k-1, i  ,j  )
   dp = ( (ss - bb)/dd - pp ) * omg
   pn = pp + dp
-  p(i,j,k) = pn
+  p(k,i,j) = pn
   res = res + dp*dp
 end do
 end do

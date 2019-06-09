@@ -45,10 +45,6 @@ set(cz_files
        cz_Poisson.cpp
        cz_comm.cpp
        cz_pcr.cpp
-       cz_lsor.cpp
-       lsor_relax.cpp
-       lsor_simd.cpp
-       obsolete.cpp
        tdma.cpp
 )
 
