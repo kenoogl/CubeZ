@@ -9,6 +9,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-9 Version 0.9.2
+  - add lsor_p7 to preconditioner
+
+---
 - 2019-6-9 Version 0.9.1
   - SIMD_width => SIMD_AVX512
   - Halt test6 and 7 due to SIMD intrinsic

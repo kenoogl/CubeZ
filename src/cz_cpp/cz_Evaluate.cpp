@@ -211,6 +211,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
       pc_type = LS_SOR2SMA;
     }
+    else if ( !strcasecmp(precon.c_str(), "lsor_p7") ) {
+      pc_type = LS_LSOR_P7;
+    }
   }
 
   else if ( !strcasecmp(q, "lsor_p1") ) {

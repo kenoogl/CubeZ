@@ -238,6 +238,10 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      case LS_SOR2SMA:
        RBSOR(res, xx, bb, lc_max, flop, false);
        break;
+           
+     case LS_LSOR_P7:
+       LSOR_P7(res, xx, bb, lc_max, flop, false);
+       break;
 
      default:
        blas_copy_(xx, bb, size, &gc);

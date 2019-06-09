@@ -173,7 +173,7 @@ For example, the `-CcdRR8` option for fortran preprocessor convert variables, fu
 ~~~
 $ ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax coef [gdv_x, gdv_y, gdv_z]
 $ ./cz 124 124 124 sor2sma 10000 1.5
-$ ./cz 124 124 124 pbicgstab 10000 1.5 sor2sma
+$ ./cz 124 124 124 pbicgstab 10000 1.5 {jacobi, psor, sor2sma, lsor_p7}
 $ ./cz 124 124 124 lsor_p1 10000 1.5
 ~~~
  - gsz_x, gsz_y, gsz_z  全計算領域の要素数
