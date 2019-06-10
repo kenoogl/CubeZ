@@ -1,5 +1,11 @@
 # Memo for CubeZ
 
+#### 2019-06-10 ver 0.9.5
+- pbicgstabとpbicgstab_mafでmafの方が収束が遅いので調査。前者は係数が1，後者は10^4のオーダー。スケーリングを導入し、`calc_ax_maf`, `calc_rk_maf`でテスト。同程度になることを確認。
+
+
+#### 2019-06-09 ver 0.9.4
+- cz_maf.f90 pbicgstab_mafの実装
 
 
 #### 2019-06-09 ver 0.9.3

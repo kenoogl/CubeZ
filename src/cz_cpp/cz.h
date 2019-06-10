@@ -130,6 +130,7 @@ public:
   REAL_TYPE* xc; ///< 格子
   REAL_TYPE* yc;
   REAL_TYPE* zc;
+  REAL_TYPE* pvt; ///< 行の最大要素
 
 
 public:
@@ -380,6 +381,7 @@ private:
              REAL_TYPE* B,
              const int itrMax,
              double& flop,
+             int s_type,
              bool converge_check=true);
 
   int PSOR  (double& res,
@@ -387,6 +389,7 @@ private:
              REAL_TYPE* B,
              const int itrMax,
              double& flop,
+             int s_type,
              bool converge_check=true);
 
   int RBSOR (double& res,
@@ -394,12 +397,14 @@ private:
              REAL_TYPE* B,
              const int itrMax,
              double& flop,
+             int s_type,
              bool converge_check=true);
 
   int PBiCGSTAB(double& res,
                 REAL_TYPE* X,
                 REAL_TYPE* B,
-                double& flop);
+                double& flop,
+                int s_type);
   
   int LSOR_P1(double& res,
              REAL_TYPE* X,
@@ -448,6 +453,7 @@ private:
               REAL_TYPE* B,
               const int itr_max,
               double& flop,
+              int s_type,
               bool converge_check=true);
   
   double Fdot1(REAL_TYPE* x, double& flop);
@@ -456,7 +462,8 @@ private:
 
   void Preconditioner(REAL_TYPE* xx,
                       REAL_TYPE* bb,
-                      double& flop);
+                      double& flop,
+                      int s_type);
 
 
 

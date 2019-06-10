@@ -339,6 +339,38 @@ void blas_calc_r2_  (double* res,
                      REAL_TYPE* cf,
                      double* flop);
 
+void calc_rk_maf_  (REAL_TYPE* r,
+                    REAL_TYPE* p,
+                    REAL_TYPE* b,
+                    int* sz,
+                    int* idx,
+                    int* g,
+                    REAL_TYPE* xc,
+                    REAL_TYPE* yc,
+                    REAL_TYPE* zc,
+                    REAL_TYPE* pvt,
+                    double* flop);
+  
+void calc_ax_maf_  (REAL_TYPE* ap,
+                    REAL_TYPE* p,
+                    int* sz,
+                    int* idx,
+                    int* g,
+                    REAL_TYPE* xc,
+                    REAL_TYPE* yc,
+                    REAL_TYPE* zc,
+                    REAL_TYPE* pvt,
+                    double* flop);
+
+void search_pivot_ (REAL_TYPE* pvt,
+                    int* sz,
+                    int* idx,
+                    int* g,
+                    REAL_TYPE* X,
+                    REAL_TYPE* Y,
+                    REAL_TYPE* Z);
+  
+  
 // utility.f90
 
 void fileout_t_ (int* sz,

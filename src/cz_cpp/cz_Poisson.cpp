@@ -24,10 +24,13 @@
  * @param [in]     B      RHSベクトル
  * @param [in]     itr_max 最大反復数
  * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
  * @param [in]     converge_check 0のとき、収束判定しない
  */
  int CZ::JACOBI(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
+                const int itr_max, double& flop,
+                int s_type,
+                bool converge_check)
   {
     int itr;
     double flop_count = 0.0;
@@ -37,7 +40,7 @@
     {
       res = 0.0;
 
-      if (ls_type==LS_JACOBI_MAF)
+      if (s_type==LS_JACOBI_MAF)
       {
         TIMING_start("JACOBI_MAF_kernel");
         flop_count = 0.0;
@@ -82,10 +85,13 @@
  * @param [in]     B      RHSベクトル
  * @param [in]     itr_max 最大反復数
  * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
  * @param [in]     converge_check 0のとき、収束判定しない
  */
  int CZ::PSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
-              const int itr_max, double& flop, bool converge_check)
+              const int itr_max, double& flop,
+              int s_type,
+              bool converge_check)
   {
     int itr;
     double flop_count = 0.0;
@@ -95,7 +101,7 @@
     {
       res = 0.0;
 
-      if (ls_type==LS_PSOR_MAF)
+      if (s_type==LS_PSOR_MAF)
       {
         TIMING_start("SOR_MAF_kernel");
         flop_count = 0.0;
@@ -143,10 +149,13 @@
 * @param [in]     B      RHSベクトル
 * @param [in]     itr_max 最大反復数
 * @param [in]     flop   浮動小数点演算数
+* @param [in]     s_type ソルバーの指定
 * @param [in]     converge_check 0のとき、収束判定しない
 */
 int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
-              const int itr_max, double& flop, bool converge_check)
+              const int itr_max, double& flop,
+              int s_type,
+              bool converge_check)
  {
    int itr;
    double flop_count = 0.0;
@@ -171,7 +180,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
      // 各カラー毎の間に同期, 残差は色間で積算する
      // R - color=0 / B - color=1
-     if (ls_type==LS_SOR2SMA_MAF)
+     if (s_type==LS_SOR2SMA_MAF)
      {
        TIMING_start("SOR2SMA_MAF_kernel");
        flop_count = 0.0;
@@ -256,28 +265,33 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  // #################################################################
  void CZ::Preconditioner(REAL_TYPE* xx,
                          REAL_TYPE* bb,
-                         double& flop)
+                         double& flop,
+                         int s_type)
  {
    int gc = GUIDE;
    double res = 0.0;
    int lc_max = 4;
 
-   switch (pc_type)
+   switch (s_type)
    {
      case LS_JACOBI:
-       JACOBI(res, xx, bb, lc_max, flop, false);
+     case LS_JACOBI_MAF:
+       JACOBI(res, xx, bb, lc_max, flop, s_type, false);
        break;
 
      case LS_PSOR:
-       PSOR(res, xx, bb, lc_max, flop, false);
+     case LS_PSOR_MAF:
+       PSOR(res, xx, bb, lc_max, flop, s_type, false);
        break;
 
      case LS_SOR2SMA:
-       RBSOR(res, xx, bb, lc_max, flop, false);
+     case LS_SOR2SMA_MAF:
+       RBSOR(res, xx, bb, lc_max, flop, s_type, false);
        break;
            
      case LS_LSOR_P7:
-       LSOR_P7(res, xx, bb, lc_max, flop, false);
+     case LS_LSOR_P7_MAF:
+       LSOR_P7(res, xx, bb, lc_max, flop, s_type, false);
        break;
 
      default:
@@ -292,10 +306,12 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 // @param [in,out] X      解ベクトル
 // @param [in]     B      RHSベクトル
 // @param [in]     flop   浮動小数点演算数
+// @param [in]     s_type ソルバーの指定
  int CZ::PBiCGSTAB(double& res,
                    REAL_TYPE* X,
                    REAL_TYPE* B,
-                   double& flop)
+                   double& flop,
+                   int s_type)
  {
    int itr;
    double flop_count = 0.0;
@@ -306,12 +322,21 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    blas_clear_(pcg_q , size, &gc);
    TIMING_stop("Blas_Clear");
 
+   
    TIMING_start("Blas_Residual");
    flop_count = 0.0;
-   blas_calc_rk_(pcg_r, X, B, size, innerFidx, &gc, cf, &flop_count);
+   if (s_type==LS_BICGSTAB_MAF)
+   {
+     calc_rk_maf_(pcg_r, X, B, size, innerFidx, &gc, xc, yc, zc, pvt, &flop_count);
+   }
+   else
+   {
+     blas_calc_rk_(pcg_r, X, B, size, innerFidx, &gc, cf, &flop_count);
+   }
    TIMING_stop("Blas_Residual", flop_count);
    flop += flop_count;
 
+   
    if ( !Comm_S(pcg_r, 1, "Comm_Poisson") ) return 0;
 
    TIMING_start("Blas_Copy");
@@ -359,12 +384,20 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      TIMING_stop("Blas_Clear");
 
      flop_count = 0.0;
-     Preconditioner(pcg_p_, pcg_p, flop_count);
+     Preconditioner(pcg_p_, pcg_p, flop_count, pc_type);
      flop += flop_count;
 
+     
      TIMING_start("Blas_AX");
      flop_count = 0.0;
-     blas_calc_ax_(pcg_q, pcg_p_, size, innerFidx, &gc, cf, &flop_count);
+     if (s_type==LS_BICGSTAB_MAF)
+     {
+       calc_ax_maf_(pcg_q, pcg_p_, size, innerFidx, &gc, xc, yc, zc, pvt, &flop_count);
+     }
+     else
+     {
+       blas_calc_ax_(pcg_q, pcg_p_, size, innerFidx, &gc, cf, &flop_count);
+     }
      TIMING_stop("Blas_AX", flop_count);
      flop += flop_count;
 
@@ -372,6 +405,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      alpha = rho / Fdot2(pcg_q, pcg_r0, flop_count);
      flop += flop_count;
 
+     
      double r_alpha = -alpha;
      TIMING_start("Blas_TRIAD");
      flop_count = 0.0;
@@ -386,15 +420,24 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      TIMING_stop("Blas_Clear");
 
      flop_count = 0.0;
-     Preconditioner(pcg_s_, pcg_s, flop_count);
+     Preconditioner(pcg_s_, pcg_s, flop_count, pc_type);
      flop += flop_count;
 
+     
      TIMING_start("Blas_AX");
      flop_count = 0.0;
-     blas_calc_ax_(pcg_t_, pcg_s_, size, innerFidx, &gc, cf, &flop_count);
+     if (s_type==LS_BICGSTAB_MAF)
+     {
+       calc_ax_maf_(pcg_t_, pcg_s_, size, innerFidx, &gc, xc, yc, zc, pvt, &flop_count);
+     }
+     else
+     {
+       blas_calc_ax_(pcg_t_, pcg_s_, size, innerFidx, &gc, cf, &flop_count);
+     }
      TIMING_stop("Blas_AX", flop_count);
      flop += flop_count;
 
+     
      flop_count = 0.0;
      omega = Fdot2(pcg_t_, pcg_s, flop_count) / Fdot1(pcg_t_, flop_count);
      r_omega = -omega;
@@ -903,10 +946,13 @@ int CZ::LSOR_P6(double& res, REAL_TYPE* X, REAL_TYPE* B,
  * @param [in]     B      RHSベクトル
  * @param [in]     itr_max 最大反復数
  * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
  * @note LSOR_P6から、マルチカラー化
  */
 int CZ::LSOR_P7(double& res, REAL_TYPE* X, REAL_TYPE* B,
-                const int itr_max, double& flop, bool converge_check)
+                const int itr_max, double& flop,
+                int s_type,
+                bool converge_check)
 {
   int itr;
   double flop_count = 0.0;

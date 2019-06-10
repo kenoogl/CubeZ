@@ -9,6 +9,11 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-9 Version 0.9.4
+- pbicgstab_maf
+
+
+---
 - 2019-6-9 Version 0.9.3
 - add cz_maf.f90
 

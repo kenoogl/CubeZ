@@ -658,3 +658,278 @@ end do
 
 return
 end subroutine blas_calc_r2
+
+
+!> ********************************************************************
+!! @brief 残差ベクトルの計算
+!! @param [out]    r    残差ベクトル
+!! @param [in]     p    解ベクトル
+!! @param [in]     b    定数項
+!! @param [in]     sz   配列長
+!! @param [in]     idx  インデクス範囲
+!! @param [in]     g    ガイドセル
+!! @param [in]     X,Y,Z  座標
+!! @param [in]     pvt  行の最大係数
+!! @param [in,out] flop flop count
+!<
+subroutine calc_rk_maf(r, p, b, sz, idx, g, X, Y, Z, pvt, flop)
+implicit none
+integer                                                ::  i, j, k, g
+integer                                                ::  ist, jst, kst
+integer                                                ::  ied, jed, ked
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  r, p, b, pvt
+double precision                                       ::  flop
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
+!dir$ assume_aligned r:64, p:64, b:64, X:64, Y:64, Z:64, pvt:64
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+flop = flop + 63.0d0   &
+     * dble(ied-ist+1) &
+     * dble(jed-jst+1) &
+     * dble(ked-kst+1)
+
+!$OMP PARALLEL DO Collapse(2) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+do j = jst, jed
+do i = ist, ied
+do k = kst, ked
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 3
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+r(k,i,j) = ( b(k,i,j)                           &
+         + 2.0 * (C1 + C2 + C3) * P(k,i,j)      &
+         - (C1 + 0.5 * C7) * P(k  , i+1, j  )   &
+         - (C1 - 0.5 * C7) * P(k  , i-1, j  )   &
+         - (C2 + 0.5 * C8) * P(k  , i  , j+1)   &
+         - (C2 - 0.5 * C8) * P(k  , i  , j-1)   &
+         - (C3 + 0.5 * C9) * P(k+1, i  , j  )   &
+         - (C3 - 0.5 * C9) * P(k-1, i  , j  ) ) &
+         * pvt(k,i,j) ! 30
+enddo
+enddo
+enddo
+!$OMP END PARALLEL DO
+
+
+return
+end subroutine calc_rk_maf
+
+
+!> ********************************************************************
+!! @brief AX
+!! @param [out] ap   AX
+!! @param [in]  p    解ベクトル
+!! @param [in]  sz   配列長
+!! @param [in]  idx  インデクス範囲
+!! @param [in]  g    ガイドセル
+!! @param [in]     X,Y,Z  座標
+!! @param [in]     pvt  行の最大係数
+!! @param [in,out] flop flop count
+!<
+subroutine calc_ax_maf(ap, p, sz, idx, g, X, Y, Z, pvt, flop)
+implicit none
+integer                                                ::  i, j, k, g
+integer, dimension(3)                                  ::  sz
+integer                                                ::  ist, jst, kst
+integer                                                ::  ied, jed, ked
+integer, dimension(0:5)                                ::  idx
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  ap, p, pvt
+double precision                                       ::  flop
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
+!dir$ assume_aligned ap:64, p:64, X:64, Y:64, Z:64, pvt:64
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+flop = flop + 63.0d0   &
+     * dble(ied-ist+1) &
+     * dble(jed-jst+1) &
+     * dble(ked-kst+1)
+
+!$OMP PARALLEL DO Collapse(2) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+do j = jst, jed
+do i = ist, ied
+do k = kst, ked
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 3
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+ap(k,i,j) = (                                  &
+          + (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
+          + (C1 - 0.5 * C7) * P(k  , i-1, j  ) &
+          + (C2 + 0.5 * C8) * P(k  , i  , j+1) &
+          + (C2 - 0.5 * C8) * P(k  , i  , j-1) &
+          + (C3 + 0.5 * C9) * P(k+1, i  , j  ) &
+          + (C3 - 0.5 * C9) * P(k-1, i  , j  ) &
+          - 2.0 * (C1 + C2 + C3) * P(k,i,j)  ) &
+          * pvt(k,i,j) ! 30
+enddo
+enddo
+enddo
+!$OMP END PARALLEL DO
+
+return
+end subroutine calc_ax_maf
+
+
+!> ********************************************************************
+!! @brief 最大要素探索
+!! @param [out]    pvt  行の最大要素
+!! @param [in]     sz   配列長
+!! @param [in]     idx  インデクス範囲
+!! @param [in]     g    ガイドセル
+!! @param [in]     X,Y,Z  座標
+!<
+subroutine search_pivot(pvt, sz, idx, g, X, Y, Z)
+implicit none
+integer                                                ::  i, j, k, g
+integer                                                ::  ist, jst, kst
+integer                                                ::  ied, jed, ked
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+real                                                   ::  GX, EY, TZ, YJA, YJAI
+real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
+real                                                   ::  C1, C2, C3, C7, C8, C9
+real                                                   ::  s1, s2, s3, s4, s5, s6, s7, ss
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  pvt
+real, dimension(-1:sz(1)+2)                            ::  X
+real, dimension(-1:sz(2)+2)                            ::  Y
+real, dimension(-1:sz(3)+2)                            ::  Z
+!dir$ assume_aligned pvt:64, X:64, Y:64, Z:64
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+!$OMP PARALLEL DO Collapse(2) &
+!$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
+!$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
+!$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
+!$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7, ss)
+do j = jst, jed
+do i = ist, ied
+do k = kst, ked
+
+XG = 0.5 * (X(i+1) - X(i-1))
+YE = 0.5 * (Y(j+1) - Y(j-1))
+ZT = 0.5 * (Z(k+1) - Z(k-1)) ! 6
+
+XGG= X(i+1) - 2.0*X(i) + X(i-1)
+YEE= Y(j+1) - 2.0*Y(j) + Y(j-1)
+ZTT= Z(k+1) - 2.0*Z(k) + Z(k-1) ! 9
+
+! Jacobian
+YJA  = XG * YE * ZT
+YJAI = 1.0 / YJA    ! 3
+
+! 1st order
+GX =  YE * ZT * YJAI
+EY =  XG * ZT * YJAI
+TZ =  XG * YE * YJAI ! 6
+
+! Laplacian
+C1 =  GX * GX
+C2 =  EY * EY
+C3 =  TZ * TZ
+C7 = -XGG * C1 * GX
+C8 = -YEE * C2 * EY
+C9 = -ZTT * C3 * TZ ! 9
+
+s1 = abs(C1 + 0.5 * C7)
+s2 = abs(C1 - 0.5 * C7)
+s3 = abs(C2 + 0.5 * C8)
+s4 = abs(C2 - 0.5 * C8)
+s5 = abs(C3 + 0.5 * C9)
+s6 = abs(C3 - 0.5 * C9)
+s7 = abs(2.0 * (C1 + C2 + C3))
+ss = max(s1, s2, s3, s4, s5, s6, s7)
+
+if (ss /= 0.0) then
+  pvt(k,i,j) = 1.0/ss
+else
+  write(*,*) 'Error pivot', i,j,k
+end if
+
+enddo
+enddo
+enddo
+!$OMP END PARALLEL DO
+
+
+return
+end subroutine search_pivot

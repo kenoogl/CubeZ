@@ -328,7 +328,6 @@ C7 = -XGG * C1 * GX
 C8 = -YEE * C2 * EY
 C9 = -ZTT * C3 * TZ ! 9
 
-
 dd = C1 + C2 + C3
 rp = 0.5 *((C1 * (P(k  , i+1, j  ) + P(k  , i-1, j  ))        &
 +        C2 * (P(k  , i  , j+1) + P(k  , i  , j-1))        &

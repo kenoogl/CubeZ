@@ -56,7 +56,7 @@ int CZ::Evaluate(int argc, char **argv)
   // pbicgstab preconditoner
   char* q = argv[4];
 
-  if ( !strcasecmp(q, "pbicgstab") )
+  if ( !strcasecmp(q, "pbicgstab") || !strcasecmp(q, "pbicgstab_maf") )
     {
       if (argc!=8 && argc!=11) {
         Hostonly_ printf("command line error : pbicgstab\n");
@@ -215,6 +215,19 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "lsor_p7") ) {
       pc_type = LS_LSOR_P7;
     }
+    else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
+      pc_type = LS_JACOBI_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "psor_maf") ) {
+      pc_type = LS_PSOR_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "sor2sma_maf") ) {
+      pc_type = LS_SOR2SMA_MAF;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_p7_maf") ) {
+      pc_type = LS_LSOR_P7_MAF;
+    }
+    else printf("precon=%s\n", precon.c_str());
   }
 
   /*
@@ -268,7 +281,19 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_BICGSTAB_MAF;
     strcpy(fname, "pbicgstab_maf.txt");
     
-    if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
+    if ( !strcasecmp(precon.c_str(), "jacobi") ) {
+      pc_type = LS_JACOBI;
+    }
+    else if ( !strcasecmp(precon.c_str(), "psor") ) {
+      pc_type = LS_PSOR;
+    }
+    else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
+      pc_type = LS_SOR2SMA;
+    }
+    else if ( !strcasecmp(precon.c_str(), "lsor_p7") ) {
+      pc_type = LS_LSOR_P7;
+    }
+    else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
     }
     else if ( !strcasecmp(precon.c_str(), "psor_maf") ) {
@@ -280,6 +305,7 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "lsor_p7_maf") ) {
       pc_type = LS_LSOR_P7_MAF;
     }
+    else printf("precon=%s\n", precon.c_str());
   }
   
   else if ( !strcasecmp(q, "lsor_p7_maf") ) {
@@ -294,6 +320,41 @@ int CZ::Evaluate(int argc, char **argv)
 
 
   printf("Iteratie Mehtod = %d\n", ls_type);
+  if (ls_type==LS_BICGSTAB || ls_type==LS_BICGSTAB_MAF)
+  {
+    if (pc_type==LS_JACOBI)
+    {
+      printf("Preconditioner = Jacobi\n");
+    }
+    else if (pc_type==LS_PSOR)
+    {
+      printf("Preconditioner = PSOR\n");
+    }
+    else if (pc_type==LS_SOR2SMA)
+    {
+      printf("Preconditioner = SOR2SMA\n");
+    }
+    else if (pc_type==LS_LSOR_P7)
+    {
+      printf("Preconditioner = LSOR_P7\n");
+    }
+    else if (pc_type==LS_JACOBI_MAF)
+    {
+      printf("Preconditioner = Jacobi_MAF\n");
+    }
+    else if (pc_type==LS_PSOR_MAF)
+    {
+      printf("Preconditioner = PSOR_MAF\n");
+    }
+    else if (pc_type==LS_SOR2SMA_MAF)
+    {
+      printf("Preconditioner = SOR2SMA_MAF\n");
+    }
+    else if (pc_type==LS_LSOR_P7_MAF)
+    {
+      printf("Preconditioner = LSOR_P7_MAF\n");
+    }
+  }
 
   int tmp = (size[0] - 2*(SdW-GUIDE));
   SdB = tmp/SdW;
@@ -357,6 +418,7 @@ int CZ::Evaluate(int argc, char **argv)
   if( (P   = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (WRK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (MSK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  if( (pvt = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   
   if( (xc = czAllocR(size[0]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
@@ -373,7 +435,7 @@ int CZ::Evaluate(int argc, char **argv)
   //check_align(RHS, "rhs");
 
 
-  if (ls_type == LS_BICGSTAB)
+  if (ls_type == LS_BICGSTAB || ls_type == LS_BICGSTAB_MAF)
   {
     L_Memory += ( array_size * 9 ) * (double)sizeof(REAL_TYPE);
 
@@ -426,8 +488,8 @@ int CZ::Evaluate(int argc, char **argv)
     zc[i] = (REAL_TYPE)(i-1) * pitch[2];
   }
   
-  
-  
+  // 行の最大値の逆数
+  search_pivot_(pvt, size, innerFidx, &gc, xc, yc, zc);
   
 
   // Apply BC
@@ -464,28 +526,28 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_JACOBI:
     case LS_JACOBI_MAF:
       TIMING_start("JACOBI");
-      if ( 0 == (itr=JACOBI(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=JACOBI(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("JACOBI", flop);
       break;
 
     case LS_PSOR:
     case LS_PSOR_MAF:
       TIMING_start("PSOR");
-      if ( 0 == (itr=PSOR(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=PSOR(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("PSOR", flop);
       break;
 
     case LS_SOR2SMA:
     case LS_SOR2SMA_MAF:
       TIMING_start("SOR2SMA");
-      if ( 0 == (itr=RBSOR(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=RBSOR(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("SOR2SMA", flop);
       break;
 
     case LS_BICGSTAB:
     case LS_BICGSTAB_MAF:
       TIMING_start("PBiCGSTAB");
-      if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop)) ) return 0;
+      if ( 0 == (itr=PBiCGSTAB(res, P, RHS, flop, ls_type)) ) return 0;
       TIMING_stop("PBiCGSTAB", flop);
       break;
 
@@ -530,7 +592,7 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_LSOR_P7:
     case LS_LSOR_P7_MAF:
       TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P7(res, P, RHS, ItrMax, flop)) ) return 0;
+      if ( 0 == (itr=LSOR_P7(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
       
