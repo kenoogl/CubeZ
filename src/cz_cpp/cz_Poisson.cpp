@@ -163,6 +163,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
    for (itr=1; itr<=itr_max; itr++)
    {
+     flop_count = 0.0;
      res = 0.0;
 
      // 2色のマルチカラー(Red&Black)のセットアップ
@@ -988,12 +989,25 @@ int CZ::LSOR_P7(double& res, REAL_TYPE* X, REAL_TYPE* B,
       ip = 0;
     }
     
-    TIMING_start("LSOR_PCR");
-    for (int color=0; color<2; color++)
+    if (s_type==LS_LSOR_P7_MAF)
     {
-      lsor_pcr_kij7_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, &ac1, &res, &flop_count);
+      TIMING_start("LSOR_PCR_MAF");
+      for (int color=0; color<2; color++)
+      {
+        lsor_pcr7_maf_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, xc, yc, zc, &ac1, &res, &flop_count);
+      }
+      TIMING_stop("LSOR_PCR_MAF", flop_count);
     }
-    TIMING_stop("LSOR_PCR", flop_count);
+    else
+    {
+      TIMING_start("LSOR_PCR");
+      for (int color=0; color<2; color++)
+      {
+        lsor_pcr_kij7_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, &ac1, &res, &flop_count);
+      }
+      TIMING_stop("LSOR_PCR", flop_count);
+    }
+    flop += flop_count;
     
     
     if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;

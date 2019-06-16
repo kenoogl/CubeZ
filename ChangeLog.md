@@ -9,8 +9,16 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-16 Version 0.9.6
+  - fix `lsor_p7_maf`
+
+---
+- 2019-6-10 Version 0.9.5
+  - scaling for `calc_ax_maf`, `calc_rk_maf`
+
+---
 - 2019-6-9 Version 0.9.4
-- pbicgstab_maf
+  - pbicgstab_maf
 
 
 ---

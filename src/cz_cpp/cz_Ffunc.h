@@ -110,21 +110,21 @@ void psor2sma_core_maf_ (REAL_TYPE* p,
                          double* res,
                          double* flop);
     
-void lsor_pcr_kij7_maf_(int* sz,
-                        int* idx,
-                        int* g,
-                        int* pn,
-                        int* ofst,
-                        int* color,
-                        REAL_TYPE* x,
-                        REAL_TYPE* msk,
-                        REAL_TYPE* rhs,
-                        REAL_TYPE* XX,
-                        REAL_TYPE* YY,
-                        REAL_TYPE* ZZ,
-                        REAL_TYPE* omg,
-                        double* res,
-                        double* flop);
+void lsor_pcr7_maf_(int* sz,
+                    int* idx,
+                    int* g,
+                    int* pn,
+                    int* ofst,
+                    int* color,
+                    REAL_TYPE* x,
+                    REAL_TYPE* msk,
+                    REAL_TYPE* rhs,
+                    REAL_TYPE* XX,
+                    REAL_TYPE* YY,
+                    REAL_TYPE* ZZ,
+                    REAL_TYPE* omg,
+                    double* res,
+                    double* flop);
 
     
 // obsolete.f90
@@ -322,15 +322,6 @@ void blas_calc_ax_  (REAL_TYPE* ap,
                      double* flop);
 
 void blas_calc_rk_  (REAL_TYPE* r,
-                     REAL_TYPE* p,
-                     REAL_TYPE* b,
-                     int* sz,
-                     int* idx,
-                     int* g,
-                     REAL_TYPE* cf,
-                     double* flop);
-
-void blas_calc_r2_  (double* res,
                      REAL_TYPE* p,
                      REAL_TYPE* b,
                      int* sz,

@@ -161,7 +161,7 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + 25.0     &
+flop = flop + 18.0     &
      * dble(ied-ist+1) &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
@@ -241,7 +241,7 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + 25.0  &
+flop = flop + 18.0  &
             * dble(ied-ist+1) &
             * dble(jed-jst+1) &
             * dble(ked-kst+1)
@@ -341,7 +341,7 @@ c5 = cf(5)
 c6 = cf(6)
 dd = cf(7)
 
-flop = flop + 25.0d0*0.5d0  &
+flop = flop + 18.0d0*0.5d0  &
      * dble(ied-ist+1) &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
@@ -405,21 +405,19 @@ r = 1.0/6.0
 s = 2**(pn-1)
 
 flop = flop + dble(          &
-(jed-jst+1)*(ied-ist+1)* ( &
-(ked-kst+1)* 6.0        &  ! Source
-+ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ 2*s*9.0                 &
-+ (ked-kst-2*s+1)*25.0    &
-+ (ked-kst+1)*6.0         &  ! Relaxation
-+ 6.0 )                 &  ! BC
-) * 0.5
+  (jed-jst+1)*(ied-ist+1)* ( &
+     (ked-kst+1)* 6.0        &  ! Source
+   + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
+   + 2*s*9.0                 &
+   + (ked-kst-2*s+1)*25.0    &
+   + (ked-kst+1)*6.0         &  ! Relaxation
+     + 6.0 )                 &  ! BC
+  ) * 0.5
 
 
 ip = ofst + color
 
 !$OMP PARALLEL
-
-res = 0.0
 
 !$OMP DO SCHEDULE(static) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
@@ -445,15 +443,18 @@ c(ked) = 0.0
 !dir$ simd
 do k = kst, ked
 d(k) = (   ( x(k, i  , j-1)        &
-+     x(k, i  , j+1)        &
-+     x(k, i-1, j  )        &
-+     x(k, i+1, j  ) ) * r + rhs(k, i, j) ) &
-*   msk(k, i, j)
-end do
+       +     x(k, i  , j+1)        &
+       +     x(k, i-1, j  )        &
+       +     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
+       *   msk(k, i, j)
+end do ! 6 flops
 
-! BC
-d(kst) = ( d(kst) + rhs(kst-1, i, j) * r ) * msk(kst, i, j)
-d(ked) = ( d(ked) + rhs(ked+1, i, j) * r ) * msk(ked, i, j)
+! BC  6 flops
+d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+
+!d(kst) = ( d(kst) + rhs(kst-1, i, j) * r ) * msk(kst, i, j)
+!d(ked) = ( d(ked) + rhs(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止

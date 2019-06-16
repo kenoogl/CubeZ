@@ -238,6 +238,7 @@ using namespace pm_lib;
   set_label("TDMA_PRE",         PerfMonitor::CALC, true);
   
   set_label("LSOR_PCR",         PerfMonitor::CALC, true);
+  set_label("LSOR_PCR_MAF",     PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);

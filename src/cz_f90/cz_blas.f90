@@ -587,80 +587,6 @@ end subroutine blas_calc_rk
 
 
 !> ********************************************************************
-!! @brief 残差の自乗和のみ
-!! @param [out] res  残差の自乗和
-!! @param [in]  p    圧力
-!! @param [in]  b    RHS vector
-!! @param [in]  sz   配列長
-!! @param [in]  idx  インデクス範囲
-!! @param [in]  g    ガイドセル長
-!! @param [in,out] flop flop count
-!<
-subroutine blas_calc_r2 (res, p, b, sz, idx, g, cf, flop)
-implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
-integer, dimension(3)                                  ::  sz
-integer                                                ::  ist, jst, kst
-integer                                                ::  ied, jed, ked
-integer, dimension(0:5)                                ::  idx
-double precision                                       ::  flop, res
-real                                                   ::  dd, ss, dp, c1, c2, c3, c4, c5, c6
-real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
-real, dimension(7)                                     ::  cf
-!dir$ assume_aligned p:64, b:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
-
-ist = idx(0)
-ied = idx(1)
-jst = idx(2)
-jed = idx(3)
-kst = idx(4)
-ked = idx(5)
-
-res = 0.0
-
-c1 = cf(1)
-c2 = cf(2)
-c3 = cf(3)
-c4 = cf(4)
-c5 = cf(5)
-c6 = cf(6)
-dd = cf(7)
-
-flop = flop + 16.0d0   &
-     * dble(ied-ist+1) &
-     * dble(jed-jst+1) &
-     * dble(ked-kst+1)
-
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(+:res) &
-!$OMP PRIVATE(ss, dp)
-do j = jst, jed
-do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
-do k = kst, ked
-  ss = c1 * p(k  , i+1,j  ) &
-     + c2 * p(k  , i-1,j  ) &
-     + c3 * p(k  , i  ,j+1) &
-     + c4 * p(k  , i  ,j-1) &
-     + c5 * p(k+1, i  ,j  ) &
-     + c6 * p(k-1, i  ,j  )
-  dp = ( b(k,i,j) - (ss - dd * p(k,i,j)) )
-  res = res + dble(dp*dp)
-end do
-end do
-end do
-!$OMP END PARALLEL DO
-
-return
-end subroutine blas_calc_r2
-
-
-!> ********************************************************************
 !! @brief 残差ベクトルの計算
 !! @param [out]    r    残差ベクトル
 !! @param [in]     p    解ベクトル
@@ -779,7 +705,6 @@ double precision                                       ::  flop
 real, dimension(-1:sz(1)+2)                            ::  X
 real, dimension(-1:sz(2)+2)                            ::  Y
 real, dimension(-1:sz(3)+2)                            ::  Z
-!dir$ assume_aligned ap:64, p:64, X:64, Y:64, Z:64, pvt:64
 
 ist = idx(0)
 ied = idx(1)
@@ -880,7 +805,8 @@ ked = idx(5)
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
-!$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7, ss)
+!$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7) &
+!$OMP reduction(max:ss)
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
@@ -929,7 +855,6 @@ enddo
 enddo
 enddo
 !$OMP END PARALLEL DO
-
 
 return
 end subroutine search_pivot

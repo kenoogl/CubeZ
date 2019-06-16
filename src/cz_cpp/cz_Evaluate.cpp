@@ -358,13 +358,13 @@ int CZ::Evaluate(int argc, char **argv)
 
   int tmp = (size[0] - 2*(SdW-GUIDE));
   SdB = tmp/SdW;
-
+/*
   printf("\nAlignment(byte) = %d\n", ALIGN_SIZE);
   printf("SIMD width(bit) = %d\n", SIMD_WIDTH);
   printf("REAL_TYPE(byte) = %d\n", sizeof(REAL_TYPE));
   printf("SIMD word       = %d\n", SdW);
   printf("SIMD body loop  = %d\n", SdB);
-
+*/
   if ((tmp/SdW)*SdW != tmp || tmp<2) {
     printf("NI is not appropriate N=%d > NI=%d\n",
     SdB, SdW*SdB + 2*(SdW-GUIDE));

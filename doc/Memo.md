@@ -1,7 +1,13 @@
 # Memo for CubeZ
 
+#### 2019-06-16 ver 0.9.6
+- ピボット計算の !OMPreduction(max:ss) を追加
+- `lsor_p7_maf`で係数の計算を修正。lsor_p7と一致を確認
+
+
 #### 2019-06-10 ver 0.9.5
 - pbicgstabとpbicgstab_mafでmafの方が収束が遅いので調査。前者は係数が1，後者は10^4のオーダー。スケーリングを導入し、`calc_ax_maf`, `calc_rk_maf`でテスト。同程度になることを確認。
+- psorなどはrpをddで除くとpvt()が相殺して1になるので不要
 
 
 #### 2019-06-09 ver 0.9.4
