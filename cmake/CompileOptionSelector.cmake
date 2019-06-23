@@ -21,8 +21,8 @@ macro (AddOptimizeOption)
     set(CMAKE_LINKER /opt/nec/ve/bin/nld CACHE FILEPATH "Aurora linker")
     set(CMAKE_AR /opt/nec/ve/bin/nar CACHE FILEPATH "Aurora archiver")
     set(CMAKE_RANLIB /opt/nec/ve/bin/nranlib CACHE FILEPATH "Aurora ranlib")
-    set(CMAKE_CXX_FLAGS "-O3 -proginf -DAurora_VE")
-    set(CMAKE_Fortran_FLAGS "-Wall -O3 -proginfo -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95 -DAurora_VE")
+    set(CMAKE_CXX_FLAGS "-O3 -proginf")
+    set(CMAKE_Fortran_FLAGS "-fpp -Wall -O3 -proginf -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95")
     
 
   elseif (TARGET_ARCH STREQUAL "INTEL_F_TCS")

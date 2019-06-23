@@ -9,7 +9,11 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
-- 2019-6-20 Version 0.9.9
+- 2019-6-23 Version 1.0.0
+  - Aurora compiled
+
+---
+- 2019-6-23 Version 0.9.9
   - branch aurora
 
 ---

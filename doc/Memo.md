@@ -1,5 +1,10 @@
 # Memo for CubeZ
 
+#### ver 1.0.0
+- aurora でコンパイル
+- ファイル出力は マクロ`_aurora_` を使ってコンパイルしないように制御
+
+
 #### ver 0.9.9
 - aurora ブランチを作成、auroraのビルド対応
 - PMlibを外すときの処理　> `DISABLE_PMLIB`

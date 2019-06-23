@@ -30,7 +30,7 @@ kx = sz(3)
 nn = 0
 rtime = 0.0
 
-#ifdef Aurora_VE
+#if _aurora_==1
 
 open (unit=22, file=fname, form='unformatted')
 write (22) 1, 1
