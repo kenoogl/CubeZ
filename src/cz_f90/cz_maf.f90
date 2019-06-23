@@ -346,7 +346,7 @@ end subroutine psor2sma_core_maf
 
 
 !********************************************************************************
-subroutine lsor_pcr7_maf (sz, idx, g, pn, ofst, color, x, msk, rhs, XX, YY, ZZ, omg, res, flop)
+subroutine pcr_rb_maf (sz, idx, g, pn, ofst, color, x, msk, rhs, XX, YY, ZZ, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -394,14 +394,13 @@ flop = flop + dble(           &
 ip = ofst + color
 
 
-!$OMP PARALLEL
-
-!$OMP DO SCHEDULE(static) &
+!$OMP PARALLEL reduction(+:res) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
 !$OMP private(a, c, d, aw, cw, dw) &
-!$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT) &
-!$OMP reduction(+:res)
+!$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
+
+!$OMP DO SCHEDULE(static)
 do j=jst, jed
 do i=ist+mod(j+ip,2), ied, 2
 
@@ -561,13 +560,13 @@ do k = kst, ked
   dp = ( dw(k) - pp ) * omg * msk(k, i, j)
   x(k, i, j) = pp + dp
   res = res + real(dp*dp, kind=8)
-end do
+end do  !  >> 6 flops
 
 end do
-end do  !  >> 6 flops
+end do
 !$OMP END DO
 
 !$OMP END PARALLEL
 
 return
-end subroutine lsor_pcr7_maf
+end subroutine pcr_rb_maf

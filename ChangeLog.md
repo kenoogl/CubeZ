@@ -9,6 +9,16 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-20 Version 0.9.8
+  - `lsor_p7` >> `pcr`
+  - `lsor_pcr_kij7` >> `pcr`
+
+---
+- 2019-6-17 Version 0.9.7
+  - confirm OMP behavior
+  - change ITO A/B configure script in Readme.md
+
+---
 - 2019-6-16 Version 0.9.6
   - fix `lsor_p7_maf`
 

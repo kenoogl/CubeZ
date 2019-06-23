@@ -57,7 +57,7 @@ void psor2sma_core_ (REAL_TYPE* p,
                      double* res,
                      double* flop);
 
-void lsor_pcr_kij7_(int* sz,
+void pcr_rb_(int* sz,
                     int* idx,
                     int* g,
                     int* pn,
@@ -69,7 +69,18 @@ void lsor_pcr_kij7_(int* sz,
                     REAL_TYPE* omg,
                     double* res,
                     double* flop);
-    
+ 
+void pcr_(int* sz,
+               int* idx,
+               int* g,
+               int* pn,
+               REAL_TYPE* x,
+               REAL_TYPE* msk,
+               REAL_TYPE* rhs,
+               REAL_TYPE* omg,
+               double* res,
+               double* flop);
+  
 // cz_maf.f90
 void jacobi_maf_   (REAL_TYPE* p,
                     int* sz,
@@ -110,7 +121,7 @@ void psor2sma_core_maf_ (REAL_TYPE* p,
                          double* res,
                          double* flop);
     
-void lsor_pcr7_maf_(int* sz,
+void pcr_rb_maf_(int* sz,
                     int* idx,
                     int* g,
                     int* pn,
@@ -125,7 +136,20 @@ void lsor_pcr7_maf_(int* sz,
                     REAL_TYPE* omg,
                     double* res,
                     double* flop);
-
+  
+void pcr_maf_(int* sz,
+                   int* idx,
+                   int* g,
+                   int* pn,
+                   REAL_TYPE* x,
+                   REAL_TYPE* msk,
+                   REAL_TYPE* rhs,
+                   REAL_TYPE* XX,
+                   REAL_TYPE* YY,
+                   REAL_TYPE* ZZ,
+                   REAL_TYPE* omg,
+                   double* res,
+                   double* flop);
     
 // obsolete.f90
 void tdma_0_ (int* nx,

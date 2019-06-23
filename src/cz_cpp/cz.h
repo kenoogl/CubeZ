@@ -405,56 +405,23 @@ private:
                 REAL_TYPE* B,
                 double& flop,
                 int s_type);
-  
-  int LSOR_P1(double& res,
-             REAL_TYPE* X,
-             REAL_TYPE* B,
-             const int itr_max,
-             double& flop,
-             bool converge_check=true);
 
-  int LSOR_P2(double& res,
-             REAL_TYPE* X,
-             REAL_TYPE* B,
-             const int itr_max,
-             double& flop,
-             bool converge_check=true);
+  int LSOR_PCR(double& res,
+               REAL_TYPE* X,
+               REAL_TYPE* B,
+               const int itr_max,
+               double& flop,
+               int s_type,
+               bool converge_check=true);
   
-  int LSOR_P3(double& res,
-              REAL_TYPE* X,
-              REAL_TYPE* B,
-              const int itr_max,
-              double& flop,
-              bool converge_check=true);
-  
-  int LSOR_P4(double& res,
-              REAL_TYPE* X,
-              REAL_TYPE* B,
-              const int itr_max,
-              double& flop,
-              bool converge_check=true);
-  
-  int LSOR_P5(double& res,
-              REAL_TYPE* X,
-              REAL_TYPE* B,
-              const int itr_max,
-              double& flop,
-              bool converge_check=true);
-  
-  int LSOR_P6(double& res,
-              REAL_TYPE* X,
-              REAL_TYPE* B,
-              const int itr_max,
-              double& flop,
-              bool converge_check=true);
-  
-  int LSOR_P7(double& res,
+  int LSOR_PCR_RB(double& res,
               REAL_TYPE* X,
               REAL_TYPE* B,
               const int itr_max,
               double& flop,
               int s_type,
               bool converge_check=true);
+
   
   double Fdot1(REAL_TYPE* x, double& flop);
 

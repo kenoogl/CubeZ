@@ -1,5 +1,9 @@
 # Memo for CubeZ
 
+#### ver 0.9.8
+- PCR, PCR_RBにフォーカスした構成
+
+
 #### 2019-06-16 ver 0.9.6
 - ピボット計算の !OMPreduction(max:ss) を追加
 - `lsor_p7_maf`で係数の計算を修正。lsor_p7と一致を確認

@@ -86,6 +86,7 @@ Copy them form CBrick directory into cz_cpp, then make. In this case, specify `-
 
 In case of some Intel compiler environment, please specify environment variables before compilation.
 `export CC=icc CXX=icpc F90=ifort FC=ifort`
+`export CZ_HOME=hoge`
 
 #### INTEL/GNU compiler serial without PAPI
 
@@ -106,7 +107,7 @@ cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_intel_SKL.cmake \
 -Dwith_MPI=no \
 -Dwith_PM=${HOME}/CZ/PMlib \
--Dwith_PAPI=${HOME}/CZ/PAPI\
+-Dwith_PAPI=${HOME}/CZ/PAPI \
 -Dwith_CBR=OFF ..
 ~~~
 
@@ -174,10 +175,10 @@ For example, the `-CcdRR8` option for fortran preprocessor convert variables, fu
 $ ./cz gsz_x, gsz_y, gsz_z, linear_solver, IterationMax coef [gdv_x, gdv_y, gdv_z]
 $ ./cz 124 124 124 sor2sma 10000 1.5
 $ ./cz 124 124 124 sor2sma_maf 10000 1.5
-$ ./cz 124 124 124 pbicgstab 10000 1.5 {jacobi, psor, sor2sma, lsor_p7}
-$ ./cz 124 124 124 pbicgstab_maf 10000 1.5 {jacobi, psor, sor2sma, lsor_p7}
-$ ./cz 124 124 124 lsor_p1 10000 1.5
-$ ./cz 124 124 124 lsor_p1_maf 10000 1.5
+$ ./cz 124 124 124 pbicgstab 10000 1.5 {jacobi, psor, sor2sma, pcr}
+$ ./cz 124 124 124 pbicgstab_maf 10000 1.5 {jacobi, psor, sor2sma, pcr}
+$ ./cz 124 124 124 pcr 10000 1.5
+$ ./cz 124 124 124 pcr_maf 10000 1.5
 ~~~
  - gsz_x, gsz_y, gsz_z  全計算領域の要素数
  - linear_solver        線形ソルバの指定
@@ -185,7 +186,7 @@ $ ./cz 124 124 124 lsor_p1_maf 10000 1.5
    - sor
    - sor2sma
    - pbicgstab
-   - lsor
+   - pcr
  - IterationMax         最大反復回数
  - coef  緩和/加速係数
  - gdv_x, gdv_y, gdv_z  領域分割数の指定、指定しない場合には自動分割

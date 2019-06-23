@@ -377,7 +377,7 @@ end subroutine psor2sma_core
 
 
 !********************************************************************************
-subroutine lsor_pcr_kij7 (sz, idx, g, pn, ofst, color, x, msk, rhs, omg, res, flop)
+subroutine pcr_rb (sz, idx, g, pn, ofst, color, x, msk, rhs, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -566,4 +566,194 @@ end do
 !$OMP END PARALLEL
 
 return
-end subroutine lsor_pcr_kij7
+end subroutine pcr_rb
+
+
+!********************************************************************************
+subroutine pcr (sz, idx, g, pn, x, msk, rhs, omg, res, flop)
+implicit none
+!args
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+integer                                                ::  g, pn
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
+real                                                   ::  omg
+double precision                                       ::  res, flop
+! work
+integer                                  ::  i, j, k, kl, kr, s, p
+integer                                  ::  ist, ied, jst, jed, kst, ked
+real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
+real                                     ::  r, ap, cp, e, pp, dp
+real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
+!dir$ assume_aligned x:64, msk:64, rhs:64, a:64, c:64, d:64, a1:64, c1:64, d1:64
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+r = 1.0/6.0
+s = 2**(pn-1)
+
+flop = flop + dble(          &
+(jed-jst+1)*(ied-ist+1)* ( &
+(ked-kst+1)* 6.0        &  ! Source
++ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
++ 2*s*9.0                 &
++ (ked-kst-2*s+1)*25.0    &
++ (ked-kst+1)*6.0         &  ! Relaxation
++ 6.0 )                 &  ! BC
+)
+
+
+!$OMP PARALLEL reduction(+:res) &
+!$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$OMP private(a, c, d, a1, c1, d1)
+
+!$OMP DO SCHEDULE(static) Collapse(2)
+do j=jst, jed
+do i=ist, ied
+
+! Reflesh coef. due to override
+a(kst) = 0.0
+do k=kst+1, ked
+a(k) = -r
+end do
+
+do k=kst, ked-1
+c(k) = -r
+end do
+c(ked) = 0.0
+
+! Source
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+d(k) = (   ( x(k, i  , j-1)        &
++     x(k, i  , j+1)        &
++     x(k, i-1, j  )        &
++     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
+*   msk(k, i, j)
+end do ! 6 flops
+
+! BC  6 flops
+d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+
+!d(kst) = ( d(kst) + rhs(kst-1, i, j) * r ) * msk(kst, i, j)
+!d(ked) = ( d(ked) + rhs(ked+1, i, j) * r ) * msk(ked, i, j)
+
+
+! PCR  最終段の一つ手前で停止
+do p=1, pn-1
+s = 2**(p-1)
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+kl = max(k-s, kst-1)
+kr = min(k+s, ked+1)
+ap = a(k)
+cp = c(k)
+e = 1.0 / ( 1.0 - ap * c(kl) - cp * a(kr) )
+a1(k) =  -e * ap * a(kl)
+c1(k) =  -e * cp * c(kr)
+d1(k) =   e * ( d(k) - ap * d(kl) - cp * d(kr) )
+end do
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+a(k) = a1(k)
+c(k) = c1(k)
+d(k) = d1(k)
+end do
+
+end do ! p反復
+
+
+! 最終段の反転
+s = 2**(pn-1)
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, kst+s-1
+kl = max(k-s, kst-1)
+kr = min(k+s, ked+1)
+cc1 = c(k)
+aa2 = a(kr)
+f1  = d(k)
+f2  = d(kr)
+jj  = 1.0 / (1.0 - aa2 * cc1)
+dd1 = (f1 - cc1 * f2) * jj
+dd2 = (f2 - aa2 * f1) * jj
+d1(k ) = dd1
+d1(kr) = dd2
+end do
+
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst+s, ked-s
+kl  = max(k-s, kst-1)
+kr  = min(k+s, ked+1)
+cc1 = c(kr)
+aa2 = a(k)
+cc2 = c(k)
+aa3 = a(kl)
+f1  = d(kr)
+f2  = d(k)
+f3  = d(kl)
+jj = 1.0 / (1.0 - cc2 * aa3 - cc1 * aa2)
+dd1 = ( f1 * (3.0-cc2*aa3) - cc1*f2 ) * jj
+dd2 = (1.0 - f1*aa2 + 2.0*f2 - cc2*f3) * jj
+dd3 = (1.0 + 2.0*f3 - aa3*f2 - aa2*cc1) * jj
+d1(kr) = dd1
+d1(k ) = dd2
+d1(kl) = dd3
+end do
+
+
+!dir$ vector aligned
+!dir$ simd
+do k = ked-s+1, ked
+kl = max(k-s, kst-1)
+kr = min(k+s, ked+1)
+cc1 = c(kl)
+aa2 = a(k)
+f1  = d(kl)
+f2  = d(k)
+jj  = 1.0 / (1.0 - aa2 * cc1)
+dd1 = (f1 - cc1 * f2) * jj
+dd2 = (f2 - aa2 * f1) * jj
+d1(kl) = dd1
+d1(k ) = dd2
+end do
+
+
+! a_{i-1} x_{i-2} + x_{i-1} + c_{i-1} x_i     = d_{i-1}
+! a_{i}   x_{i-1} + x_{i}   + c_{i}   x_{i+1} = d_{i}
+! a_{i+1} x_{i}   + x_{i+1} + c_{i+1} x_{i+2} = d_{i+1}
+
+
+! Relaxation
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+pp =   x(k, i, j)
+dp = ( d1(k) - pp ) * omg * msk(k, i, j)
+x(k, i, j) = pp + dp
+res = res + real(dp*dp, kind=8)
+end do
+
+end do
+end do
+!$OMP END DO
+
+!$OMP END PARALLEL
+
+return
+end subroutine pcr

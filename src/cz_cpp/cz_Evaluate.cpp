@@ -212,8 +212,8 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
       pc_type = LS_SOR2SMA;
     }
-    else if ( !strcasecmp(precon.c_str(), "lsor_p7") ) {
-      pc_type = LS_LSOR_P7;
+    else if ( !strcasecmp(precon.c_str(), "pcr_rb") ) {
+      pc_type = LS_PCR_RB;
     }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
@@ -224,41 +224,15 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma_maf") ) {
       pc_type = LS_SOR2SMA_MAF;
     }
-    else if ( !strcasecmp(precon.c_str(), "lsor_p7_maf") ) {
-      pc_type = LS_LSOR_P7_MAF;
+    else if ( !strcasecmp(precon.c_str(), "pcr_rb_maf") ) {
+      pc_type = LS_PCR_RB_MAF;
     }
     else printf("precon=%s\n", precon.c_str());
   }
 
-  /*
-  else if ( !strcasecmp(q, "lsor_p1") ) {
-    ls_type = LS_LSOR_P1;
-    strcpy(fname, "lsor_p1.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_p2") ) {
-    ls_type = LS_LSOR_P2;
-    strcpy(fname, "lsor_p2.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_p3") ) {
-    ls_type = LS_LSOR_P3;
-    strcpy(fname, "lsor_p3.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_p4") ) {
-    ls_type = LS_LSOR_P4;
-    strcpy(fname, "lsor_p4.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_p5") ) {
-    ls_type = LS_LSOR_P5;
-    strcpy(fname, "lsor_p5.txt");
-  }
-  else if ( !strcasecmp(q, "lsor_p6") ) {
-    ls_type = LS_LSOR_P6;
-    strcpy(fname, "lsor_p6.txt");
-  }
-   */
-  else if ( !strcasecmp(q, "lsor_p7") ) {
-    ls_type = LS_LSOR_P7;
-    strcpy(fname, "lsor_p7.txt");
+  else if ( !strcasecmp(q, "pcr_rb") ) {
+    ls_type = LS_PCR_RB;
+    strcpy(fname, "pcr_rb.txt");
   }
   
   // MAF
@@ -290,8 +264,8 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma") ) {
       pc_type = LS_SOR2SMA;
     }
-    else if ( !strcasecmp(precon.c_str(), "lsor_p7") ) {
-      pc_type = LS_LSOR_P7;
+    else if ( !strcasecmp(precon.c_str(), "pcr_rb") ) {
+      pc_type = LS_PCR_RB;
     }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
@@ -302,15 +276,15 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "sor2sma_maf") ) {
       pc_type = LS_SOR2SMA_MAF;
     }
-    else if ( !strcasecmp(precon.c_str(), "lsor_p7_maf") ) {
-      pc_type = LS_LSOR_P7_MAF;
+    else if ( !strcasecmp(precon.c_str(), "pcr_rb_maf") ) {
+      pc_type = LS_PCR_RB_MAF;
     }
     else printf("precon=%s\n", precon.c_str());
   }
   
-  else if ( !strcasecmp(q, "lsor_p7_maf") ) {
-    ls_type = LS_LSOR_P7_MAF;
-    strcpy(fname, "lsor_p7_maf.txt");
+  else if ( !strcasecmp(q, "pcr_rb_maf") ) {
+    ls_type = LS_PCR_RB_MAF;
+    strcpy(fname, "pcr_rb_maf.txt");
   }
     
   else{
@@ -334,9 +308,9 @@ int CZ::Evaluate(int argc, char **argv)
     {
       printf("Preconditioner = SOR2SMA\n");
     }
-    else if (pc_type==LS_LSOR_P7)
+    else if (pc_type==LS_PCR_RB)
     {
-      printf("Preconditioner = LSOR_P7\n");
+      printf("Preconditioner = PCR_RB\n");
     }
     else if (pc_type==LS_JACOBI_MAF)
     {
@@ -350,9 +324,9 @@ int CZ::Evaluate(int argc, char **argv)
     {
       printf("Preconditioner = SOR2SMA_MAF\n");
     }
-    else if (pc_type==LS_LSOR_P7_MAF)
+    else if (pc_type==LS_PCR_RB_MAF)
     {
-      printf("Preconditioner = LSOR_P7_MAF\n");
+      printf("Preconditioner = PCR_RB_MAF\n");
     }
   }
 
@@ -551,48 +525,10 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("PBiCGSTAB", flop);
       break;
 
-    /*
-    case LS_LSOR_P1:
+    case LS_PCR_RB:
+    case LS_PCR_RB_MAF:
       TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P1(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-    
-    case LS_LSOR_P2:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P2(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-      
-    case LS_LSOR_P3:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P3(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-      
-    case LS_LSOR_P4:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P4(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-      
-    case LS_LSOR_P5:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P5(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-    
-    case LS_LSOR_P6:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P6(res, P, RHS, ItrMax, flop)) ) return 0;
-      TIMING_stop("LSOR", flop);
-      break;
-     */
-      
-    case LS_LSOR_P7:
-    case LS_LSOR_P7_MAF:
-      TIMING_start("LSOR");
-      if ( 0 == (itr=LSOR_P7(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+      if ( 0 == (itr=LSOR_PCR_RB(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
       
