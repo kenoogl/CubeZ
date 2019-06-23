@@ -61,6 +61,9 @@ $ sudo make install
 `-D SIMD_AVX512=` {OFF | ON}
 > Specify SIMD length. The default is OFF, which means AVX2. If you want to use AVX512 specify ON.
 
+`-D Ftrace=` (off | on)
+> In the case of Aurora, if you want to use Ftrace option, specify turn on this option.
+
 
 ### Default settng
 ~~~
@@ -69,6 +72,7 @@ enable_OPENMP = ON
 real_type = float
 with_PAPI = OFF
 SIMD_AVX512 = OFF
+Ftrace = OFF
 ~~~
 
 
@@ -120,7 +124,8 @@ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
 -Dwith_MPI=no \
 -Dwith_PM=OFF \
--Dwith_CBR=OFF ..
+-Dwith_CBR=OFF \
+-DFtrace=ON ..
 ~~~
 
 

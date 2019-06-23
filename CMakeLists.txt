@@ -31,6 +31,8 @@
 #
 # -D SIMD_AVX512=(OFF|ON)
 #
+# -D Ftrace=(off|on)
+#
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -44,6 +46,7 @@ option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
 option(SIMD_AVX512 "AVX512" "OFF")
+option(trace "Ftrace Option" "OFF")
 
 #######
 # Project setting
@@ -69,8 +72,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.0.0")
-set(LIB_REVISION "20190623_1600")
+set(PROJECT_VERSION "1.0.1")
+set(LIB_REVISION "20190623_1900")
 #######
 
 
@@ -102,6 +105,11 @@ checkOpenMP()
 # Real type
 precision()
 
+# Trace iff Aurora
+if(Ftrace)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrace")
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ftrace")
+endif()
 
 
 # Serial flag

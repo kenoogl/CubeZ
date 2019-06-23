@@ -464,6 +464,7 @@ s = 2**(p-1)
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = kst, ked
   kl = max(k-s, kst-1)
   kr = min(k+s, ked+1)
@@ -491,6 +492,7 @@ s = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = kst, kst+s-1
   kl = max(k-s, kst-1)
   kr = min(k+s, ked+1)
@@ -508,6 +510,7 @@ end do  ! >>  11 flops
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = kst+s, ked-s
   kl  = max(k-s, kst-1)
   kr  = min(k+s, ked+1)
@@ -530,6 +533,7 @@ end do  !  >>  27 flops
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = ked-s+1, ked
   kl = max(k-s, kst-1)
   kr = min(k+s, ked+1)
@@ -715,6 +719,7 @@ s = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = kst, kst+s-1
 kl = max(k-s, kst-1)
 kr = min(k+s, ked+1)
@@ -732,6 +737,7 @@ end do  ! >>  11 flops
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = kst+s, ked-s
 kl  = max(k-s, kst-1)
 kr  = min(k+s, ked+1)
@@ -754,6 +760,7 @@ end do  !  >>  27 flops
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k = ked-s+1, ked
 kl = max(k-s, kst-1)
 kr = min(k+s, ked+1)

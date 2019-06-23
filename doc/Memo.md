@@ -1,5 +1,11 @@
 # Memo for CubeZ
 
+#### ver 1.0.1
+- ftraceオプションを追加（Auroraの場合のみ）`-fpp` を指定すると`_aurora_(=1)`が定義されることを利用
+- IVDEPディレクティブを追加し、効果あり
+- shortloop, -mretain-noneは効果なし
+
+
 #### ver 1.0.0
 - aurora でコンパイル
 - ファイル出力は マクロ`_aurora_` を使ってコンパイルしないように制御
