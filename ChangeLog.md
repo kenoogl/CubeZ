@@ -9,6 +9,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-20 Version 0.9.9
+  - branch aurora
+
+---
 - 2019-6-20 Version 0.9.8
   - `lsor_p7` >> `pcr`
   - `lsor_pcr_kij7` >> `pcr`

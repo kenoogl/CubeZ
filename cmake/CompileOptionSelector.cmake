@@ -13,7 +13,19 @@
 
 
 macro (AddOptimizeOption)
-  if (TARGET_ARCH STREQUAL "INTEL_F_TCS")
+  # from https://github.com/SX-Aurora/CMake-toolchain-file
+  if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+    set(CMAKE_Fortran_COMPILER /opt/nec/ve/bin/nfort CACHE FILEPATH "Aurora Fortran compiler")
+    set(CMAKE_CXX_COMPILER /opt/nec/ve/bin/nc++ CACHE FILEPATH "Aurora C++ compiler")
+    set(CMAKE_C_COMPILER /opt/nec/ve/bin/ncc CACHE FILEPATH "Aurora C compiler")
+    set(CMAKE_LINKER /opt/nec/ve/bin/nld CACHE FILEPATH "Aurora linker")
+    set(CMAKE_AR /opt/nec/ve/bin/nar CACHE FILEPATH "Aurora archiver")
+    set(CMAKE_RANLIB /opt/nec/ve/bin/nranlib CACHE FILEPATH "Aurora ranlib")
+    set(CMAKE_CXX_FLAGS "-O3 -proginf -DAurora_VE")
+    set(CMAKE_Fortran_FLAGS "-Wall -O3 -proginfo -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95 -DAurora_VE")
+    
+
+  elseif (TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,parallel,optmsg=2 -V -Xg")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast,parallel,optmsg=2 -Xg")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Kfast,parallel,optmsg=2 -V")
@@ -52,7 +64,10 @@ endmacro()
 
 
 macro (FreeForm)
-  if(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
+  if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-form")
+
+  elseif(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
     #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
 
   elseif(TARGET_ARCH STREQUAL "INTEL_F_TCS")
@@ -93,7 +108,12 @@ endmacro()
 
 macro(checkOpenMP)
   if(enable_OPENMP)
-    if(USE_F_TCS STREQUAL "YES")
+    if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+     set(OpenMP_Fortran_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+     set(OpenMP_CXX_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+     set(OpenMP_C_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+
+    elseif(USE_F_TCS STREQUAL "YES")
       set(OpenMP_C_FLAGS "-Kopenmp")
       set(OpenMP_CXX_FLAGS "-Kopenmp")
       set(OpenMP_Fortran_FLAGS "-Kopenmp")

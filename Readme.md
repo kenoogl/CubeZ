@@ -68,7 +68,6 @@ with_MPI = ON
 enable_OPENMP = ON
 real_type = float
 with_PAPI = OFF
-Alignment = 64
 SIMD_AVX512 = OFF
 ~~~
 
@@ -112,9 +111,17 @@ cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
 ~~~
 
 
+### Aurora without PAPI
 
-
-
+~~~
+export CZ_HOME=${HOME}
+export CC=ncc CXX=nc++ F90=nfort FC=nfort
+cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
+-Dwith_MPI=no \
+-Dwith_PM=OFF \
+-Dwith_CBR=OFF ..
+~~~
 
 
 

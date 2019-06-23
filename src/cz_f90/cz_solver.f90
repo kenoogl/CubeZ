@@ -128,7 +128,7 @@ end subroutine bc_k
 !<
 subroutine psor (p, sz, idx, g, cf, omg, b, res, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
@@ -139,10 +139,6 @@ real                                                   ::  omg, dd, ss, dp, pp, 
 real                                                   ::  c1, c2, c3, c4, c5, c6
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 real, dimension(7)                                     ::  cf
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 res = 0.0
 
@@ -207,7 +203,7 @@ end subroutine psor
 !<
 subroutine jacobi (p, sz, idx, g, cf, omg, b, res, wk2, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
@@ -218,11 +214,6 @@ real                                                   ::  omg, dd, ss, dp, pp, 
 real                                                   ::  c1, c2, c3, c4, c5, c6
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b, wk2
 real, dimension(7)                                     ::  cf
-!dir$ assume_aligned p:64, b:64, wk2:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -307,7 +298,7 @@ end subroutine jacobi
 !<
 subroutine psor2sma_core (p, sz, idx, g, cf, ofst, color, omg, b, res, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
@@ -319,11 +310,7 @@ real                                                   ::  c1, c2, c3, c4, c5, c
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 integer                                                ::  kp, color, ofst
 real, dimension(7)                                     ::  cf
-!dir$ assume_aligned p:64, b:64
 
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 kp = ofst+color
 
 ist = idx(0)
@@ -377,7 +364,7 @@ end subroutine psor2sma_core
 
 
 !********************************************************************************
-subroutine pcr_rb (sz, idx, g, pn, ofst, color, x, msk, rhs, omg, res, flop)
+subroutine PCR_RB (sz, idx, g, pn, ofst, color, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -389,10 +376,9 @@ double precision                                       ::  res, flop
 ! work
 integer                                  ::  i, j, k, kl, kr, s, p, color, ip, ofst
 integer                                  ::  ist, ied, jst, jed, kst, ked
-real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
+real, dimension(-1:sz(3)+2)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp
 real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
-!dir$ assume_aligned x:64, msk:64, rhs:64, a:64, c:64, d:64, a1:64, c1:64, d1:64
 
 ist = idx(0)
 ied = idx(1)
@@ -417,13 +403,12 @@ flop = flop + dble(          &
 
 ip = ofst + color
 
-!$OMP PARALLEL
-
-!$OMP DO SCHEDULE(static) &
+!$OMP PARALLEL reduction(+:res) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
-!$OMP private(a, c, d, a1, c1, d1) &
-!$OMP reduction(+:res)
+!$OMP private(a, c, d, a1, c1, d1)
+
+!$OMP DO SCHEDULE(static)
 do j=jst, jed
 do i=ist+mod(j+ip,2), ied, 2
 
@@ -566,11 +551,11 @@ end do
 !$OMP END PARALLEL
 
 return
-end subroutine pcr_rb
+end subroutine PCR_RB
 
 
 !********************************************************************************
-subroutine pcr (sz, idx, g, pn, x, msk, rhs, omg, res, flop)
+subroutine pcr (sz, idx, g, pn, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -585,7 +570,6 @@ integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp
 real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
-!dir$ assume_aligned x:64, msk:64, rhs:64, a:64, c:64, d:64, a1:64, c1:64, d1:64
 
 ist = idx(0)
 ied = idx(1)

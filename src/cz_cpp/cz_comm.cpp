@@ -97,6 +97,7 @@ bool CZ::Comm_SUM_1(int* var, const string label)
 {
   if ( numProc == 1 ) return true;
 
+#ifndef DISABLE_MPI
   int tmp = *var;
   bool flag = true;
 
@@ -109,6 +110,7 @@ bool CZ::Comm_SUM_1(int* var, const string label)
                                     MPI_COMM_WORLD) ) flag=false;
   if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(int));
   return (flag)?true:false;
+#endif
 }
 
 
@@ -123,6 +125,7 @@ bool CZ::Comm_SUM_1(double* var, const string label)
 {
   if ( numProc == 1 ) return true;
 
+#ifndef DISABLE_MPI
   double tmp = *var;
   bool flag = true;
 
@@ -135,6 +138,7 @@ bool CZ::Comm_SUM_1(double* var, const string label)
                                     MPI_COMM_WORLD) ) flag=false;
   if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(double));
   return (flag)?true:false;
+#endif
 }
 
 // #################################################################
@@ -148,6 +152,7 @@ bool CZ::Comm_MIN_1(double* var, const string label)
 {
   if ( numProc == 1 ) return true;
 
+#ifndef DISABLE_MPI
   double tmp = *var;
   bool flag = true;
 
@@ -160,6 +165,7 @@ bool CZ::Comm_MIN_1(double* var, const string label)
                                     MPI_COMM_WORLD) ) flag=false;
   if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(double));
   return (flag)?true:false;
+#endif
 }
 
 // #################################################################
@@ -173,6 +179,7 @@ bool CZ::Comm_MAX_1(double* var, const string label)
 {
   if ( numProc == 1 ) return true;
 
+#ifndef DISABLE_MPI
   double tmp = *var;
   bool flag = true;
 
@@ -185,6 +192,7 @@ bool CZ::Comm_MAX_1(double* var, const string label)
                                     MPI_COMM_WORLD) ) flag=false;
   if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(double));
   return (flag)?true:false;
+#endif
 }
 
 // #################################################################
@@ -199,6 +207,7 @@ bool CZ::Comm_SUM_2(double* var1, double* var2, const string label)
 {
   if ( numProc == 1 ) return true;
 
+#ifndef DISABLE_MPI
   double buf[2], tmp[2];
   tmp[0] = buf[0] = *var1;
   tmp[1] = buf[1] = *var2;
@@ -216,4 +225,5 @@ bool CZ::Comm_SUM_2(double* var1, double* var2, const string label)
   *var2 = buf[1];
 
   return (flag)?true:false;
+#endif
 }

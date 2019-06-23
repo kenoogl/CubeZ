@@ -1,8 +1,15 @@
 # Memo for CubeZ
 
+#### ver 0.9.9
+- aurora ブランチを作成、auroraのビルド対応
+- PMlibを外すときの処理　> `DISABLE_PMLIB`
+- pcr / pcr_rbの変数 `a,c,d,a1,c1,d1`を渡すように変更 >> `NEC2003f_Alloc_var`エラーがでるため
+- ALIGNMENT, SIMD_WIDTH削除
+
+
+
 #### ver 0.9.8
 - PCR, PCR_RBにフォーカスした構成
-
 
 #### 2019-06-16 ver 0.9.6
 - ピボット計算の !OMPreduction(max:ss) を追加

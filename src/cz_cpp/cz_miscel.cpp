@@ -139,6 +139,7 @@ void CZ::MemoryRequirement(const char* mode, const double Memory, const double l
 }
 
 
+#ifndef DISABLE_PMLIB
 // #################################################################
 /**
  * @brief タイミング測定区間にラベルを与えるラッパー
@@ -166,8 +167,10 @@ void CZ::set_label(const string label, pm_lib::PerfMonitor::Type type, bool excl
   // Performance Monitorへの登録
   PM.setProperties(label, type, exclusive);
 }
+#endif
 
 
+#ifndef DISABLE_PMLIB
 // #################################################################
 /**
  * @brief タイミング測定区間にラベルを与える
@@ -256,3 +259,5 @@ using namespace pm_lib;
   set_label("LSOR",             PerfMonitor::CALC, false);
   set_label("LJCB",             PerfMonitor::CALC, false);
 }
+#endif
+

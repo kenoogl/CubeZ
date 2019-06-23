@@ -30,6 +30,8 @@ kx = sz(3)
 nn = 0
 rtime = 0.0
 
+#ifdef Aurora_VE
+
 open (unit=22, file=fname, form='unformatted')
 write (22) 1, 1
 write (22) ix, jx, kx
@@ -38,6 +40,8 @@ write (22) dh, dh, dh
 write (22) nn, rtime
 write (22) (((s(k,i,j),i=1,ix),j=1,jx),k=1,kx)
 close (unit=22)
+
+#endif
 
 return
 end subroutine fileout_t

@@ -29,8 +29,6 @@
 #
 # -D with_PAPI=installed_directory or OFF
 #
-# -D Alignment=(64|32)
-#
 # -D SIMD_AVX512=(OFF|ON)
 #
 
@@ -45,7 +43,6 @@ option(with_MPI "Enable MPI" "ON")
 option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
-option(Alignment "Alignment" "64")
 option(SIMD_AVX512 "AVX512" "OFF")
 
 #######
@@ -72,8 +69,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.9.8")
-set(LIB_REVISION "20190621_1900")
+set(PROJECT_VERSION "0.9.9")
+set(LIB_REVISION "20190623_1700")
 #######
 
 
@@ -92,10 +89,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/cz_package.cmake)
 # Options
 #######
 
+AddOptimizeOption()
+
 # Fortran free form
 FreeForm()
 
-AddOptimizeOption()
 
 # OpennMP
 checkOpenMP()
@@ -112,12 +110,6 @@ if(NOT with_MPI)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_MPI")
 endif()
 
-# Memory alignment
-#if(Alignment STREQUAL "32")
-#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN32")
-#elseif(Alignment STREQUAL "64")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN64")
-#endif()
 
 # SIMD
 if(SIMD_AVX512 STREQUAL "OFF")
@@ -128,29 +120,6 @@ else()
   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
 endif()
 
-
-#######
-# Display options
-#######
-
-message(" ")
-message("${PROJECT_NAME} Version : ${PROJECT_VERSION}")
-message(" ")
-message( STATUS "Destination PATH      : "      ${CMAKE_INSTALL_PREFIX})
-message( STATUS "CMAKE_CXX_COMPILER    : "      ${CMAKE_CXX_COMPILER})
-message( STATUS "CMAKE_CXX_FLAGS       : "      ${CMAKE_CXX_FLAGS})
-message( STATUS "CMAKE_Fortran_COMPILER: "      ${CMAKE_Fortran_COMPILER})
-message( STATUS "CMAKE_Fortran_FLAGS   : "      ${CMAKE_Fortran_FLAGS})
-
-message( STATUS "MPI support           : "      ${with_MPI})
-message( STATUS "OpenMP support        : "      ${enable_OPENMP})
-message( STATUS "Type of floating point: "      ${real_type})
-message( STATUS "PMlib support         : "      ${with_PM})
-message( STATUS "PAPI support          : "      ${with_PAPI})
-message( STATUS "CBrick support        : "      ${with_CBR})
-message( STATUS "Alignment             : "      ${Alignment})
-message( STATUS "SIMD AVX512           : "      ${SIMD_AVX512})
-message(" ")
 
 
 if(USE_F_TCS STREQUAL "YES")
@@ -215,13 +184,35 @@ ELSE()
 ENDIF()
 
 
+#######
+# Display options
+#######
+
+message(" ")
+message("${PROJECT_NAME} Version : ${PROJECT_VERSION}")
+message(" ")
+message( STATUS "Destination PATH      : "      ${CMAKE_INSTALL_PREFIX})
+message( STATUS "CMAKE_CXX_COMPILER    : "      ${CMAKE_CXX_COMPILER})
+message( STATUS "CMAKE_CXX_FLAGS       : "      ${CMAKE_CXX_FLAGS})
+message( STATUS "CMAKE_Fortran_COMPILER: "      ${CMAKE_Fortran_COMPILER})
+message( STATUS "CMAKE_Fortran_FLAGS   : "      ${CMAKE_Fortran_FLAGS})
+
+message( STATUS "MPI support           : "      ${with_MPI})
+message( STATUS "OpenMP support        : "      ${enable_OPENMP})
+message( STATUS "Type of floating point: "      ${real_type})
+message( STATUS "PMlib support         : "      ${with_PM})
+message( STATUS "PAPI support          : "      ${with_PAPI})
+message( STATUS "CBrick support        : "      ${with_CBR})
+message( STATUS "SIMD AVX512           : "      ${SIMD_AVX512})
+message(" ")
+
 
 #######
 # Sub Directories
 #######
 
 add_subdirectory(src)
-add_subdirectory(example)
+#add_subdirectory(example)
 
 
 
@@ -248,7 +239,7 @@ install(FILES  ChangeLog.md
 # Example
 #######
 
-add_subdirectory(example/tri)
+#add_subdirectory(example/tri)
 
 
 #######

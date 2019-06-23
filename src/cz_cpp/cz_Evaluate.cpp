@@ -215,6 +215,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_rb") ) {
       pc_type = LS_PCR_RB;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcr") ) {
+      pc_type = LS_PCR;
+    }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
     }
@@ -227,12 +230,19 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_rb_maf") ) {
       pc_type = LS_PCR_RB_MAF;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcr_maf") ) {
+      pc_type = LS_PCR_MAF;
+    }
     else printf("precon=%s\n", precon.c_str());
   }
 
   else if ( !strcasecmp(q, "pcr_rb") ) {
     ls_type = LS_PCR_RB;
     strcpy(fname, "pcr_rb.txt");
+  }
+  else if ( !strcasecmp(q, "pcr") ) {
+    ls_type = LS_PCR;
+    strcpy(fname, "pcr.txt");
   }
   
   // MAF
@@ -267,6 +277,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_rb") ) {
       pc_type = LS_PCR_RB;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcr") ) {
+      pc_type = LS_PCR;
+    }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
     }
@@ -279,12 +292,19 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_rb_maf") ) {
       pc_type = LS_PCR_RB_MAF;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcr_maf") ) {
+      pc_type = LS_PCR_MAF;
+    }
     else printf("precon=%s\n", precon.c_str());
   }
   
   else if ( !strcasecmp(q, "pcr_rb_maf") ) {
     ls_type = LS_PCR_RB_MAF;
     strcpy(fname, "pcr_rb_maf.txt");
+  }
+  else if ( !strcasecmp(q, "pcr_maf") ) {
+    ls_type = LS_PCR_MAF;
+    strcpy(fname, "pcr_maf.txt");
   }
     
   else{
@@ -312,6 +332,10 @@ int CZ::Evaluate(int argc, char **argv)
     {
       printf("Preconditioner = PCR_RB\n");
     }
+    else if (pc_type==LS_PCR)
+    {
+      printf("Preconditioner = PCR\n");
+    }
     else if (pc_type==LS_JACOBI_MAF)
     {
       printf("Preconditioner = Jacobi_MAF\n");
@@ -328,41 +352,17 @@ int CZ::Evaluate(int argc, char **argv)
     {
       printf("Preconditioner = PCR_RB_MAF\n");
     }
+    else if (pc_type==LS_PCR_MAF)
+    {
+      printf("Preconditioner = PCR_MAF\n");
+    }
   }
 
-  int tmp = (size[0] - 2*(SdW-GUIDE));
-  SdB = tmp/SdW;
-/*
-  printf("\nAlignment(byte) = %d\n", ALIGN_SIZE);
-  printf("SIMD width(bit) = %d\n", SIMD_WIDTH);
-  printf("REAL_TYPE(byte) = %d\n", sizeof(REAL_TYPE));
-  printf("SIMD word       = %d\n", SdW);
-  printf("SIMD body loop  = %d\n", SdB);
-*/
-  if ((tmp/SdW)*SdW != tmp || tmp<2) {
-    printf("NI is not appropriate N=%d > NI=%d\n",
-    SdB, SdW*SdB + 2*(SdW-GUIDE));
-    exit(1);
-  }
 
 
   /* 逐次のみ、k方向を内側にしているので通信面を変更
   else if ( !strcasecmp(q, "lsor_simd") ) {
 
-    //SdW = ALIGN / sizeof(REAL_TYPE);
-    int tmp = (size[2] - 2*(SdW-GUIDE));
-    SdB = tmp/SdW;
-
-    printf("\nALIGN          = %d\n", ALIGN);
-    printf("SIMD width     = %d\n", SdW);
-    printf("SIMD body loop = %d\n", SdB);
-
-
-    if ((tmp/SdW)*SdW != tmp || tmp<2) {
-      printf("NK is not appropriate N=%d > NK=%d\n",
-      SdB, SdW*SdB + 2*(SdW-GUIDE));
-      exit(1);
-    }
   }
   */
 
@@ -372,7 +372,7 @@ int CZ::Evaluate(int argc, char **argv)
     if ( !(fph=fopen(fname, "w")) )
     {
       printf("\tSorry, can't open file.\n");
-      assert(0);
+      exit(0);
     }
 
     fprintf(fph, "Itration      Residual\n");
@@ -398,6 +398,12 @@ int CZ::Evaluate(int argc, char **argv)
   if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (zc = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
 
+  if( (WA = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (WC = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (WD = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (WAA= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (WCC= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  if( (WDD= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
@@ -478,12 +484,14 @@ int CZ::Evaluate(int argc, char **argv)
 
 
 
+#ifndef DISABLE_PMLIB
   // タイミング測定の初期化
   PM.initialize( PM_NUM_MAX );
   PM.setRankInfo( myRank );
   setParallelism();
   PM.setParallelMode(Parallel_str, numThreads, numProc);
   set_timing_label();
+#endif
 
 
 
@@ -525,6 +533,13 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("PBiCGSTAB", flop);
       break;
 
+    case LS_PCR:
+    case LS_PCR_MAF:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_PCR(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
     case LS_PCR_RB:
     case LS_PCR_RB_MAF:
       TIMING_start("LSOR");
@@ -550,6 +565,7 @@ int CZ::Evaluate(int argc, char **argv)
     if (!fph) fclose(fph);
   }
 
+#ifndef DISABLE_PMLIB
 
   FILE *fp = NULL;
 
@@ -582,7 +598,12 @@ int CZ::Evaluate(int argc, char **argv)
   }
 
 	PM.printLegend(fp);
+  Hostonly_ {
+    fflush(fp);
+    fclose(fp);
+  }
 
+#endif
 
 
   char tmp_fname[30];
@@ -603,11 +624,6 @@ int CZ::Evaluate(int argc, char **argv)
 
   } // debug
 
-
-  Hostonly_ {
-    fflush(fp);
-    fclose(fp);
-  }
 
 
   return 1;
