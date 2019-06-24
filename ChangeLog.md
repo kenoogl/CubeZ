@@ -9,9 +9,14 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-6-24 Version 1.0.2
+  - remove ratain option
+
+
+---
 - 2019-6-23 Version 1.0.1
-- add  trace option
-- IVDEP
+  - add  trace option
+  - IVDEP
 
 ---
 - 2019-6-23 Version 1.0.0

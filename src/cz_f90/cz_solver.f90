@@ -341,6 +341,7 @@ do i=ist,ied
 
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
 do k=kst+mod(i+j+kp,2), ked, 2
   pp = p(k,i,j)
   bb = b(k,i,j)
