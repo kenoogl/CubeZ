@@ -289,7 +289,12 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      case LS_SOR2SMA_MAF:
        RBSOR(res, xx, bb, lc_max, flop, s_type, false);
        break;
-           
+     
+     case LS_PCR:
+     case LS_PCR_MAF:
+       LSOR_PCR(res, xx, bb, lc_max, flop, s_type, false);
+       break;
+       
      case LS_PCR_RB:
      case LS_PCR_RB_MAF:
        LSOR_PCR_RB(res, xx, bb, lc_max, flop, s_type, false);
@@ -537,7 +542,9 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_start("PCR_RB_MAF");
       for (int color=0; color<2; color++)
       {
-        pcr_rb_maf_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, xc, yc, zc, &ac1, &res, &flop_count);
+        pcr_rb_maf_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, xc, yc, zc,
+                    WA, WC, WD, WAA, WCC, WDD,
+                    &ac1, &res, &flop_count);
       }
       TIMING_stop("PCR_RB_MAF", flop_count);
     }
@@ -546,7 +553,9 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_start("PCR_RB");
       for (int color=0; color<2; color++)
       {
-        pcr_rb_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, &ac1, &res, &flop_count);
+        pcr_rb_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, 
+                WA, WC, WD, WAA, WCC, WDD,
+                &ac1, &res, &flop_count);
       }
       TIMING_stop("PCR_RB", flop_count);
     }
@@ -572,3 +581,81 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
   
   return itr;
 }
+
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
+ */
+int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                    const int itr_max, double& flop,
+                    int s_type,
+                    bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    
+    if (s_type==LS_PCR_MAF)
+    {
+      TIMING_start("PCR_MAF");
+      pcr_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
+                 WA, WC, WD, WAA, WCC, WDD,
+                 &ac1, &res, &flop_count);
+      TIMING_stop("PCR_MAF", flop_count);
+    }
+    else
+    {
+      TIMING_start("PCR");
+      pcr_(size, innerFidx, &gc, &pn, X, MSK, B,
+                WA, WC, WD, WAA, WCC, WDD,
+                &ac1, &res, &flop_count);
+      TIMING_stop("PCR", flop_count);
+    }
+    flop += flop_count;
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+

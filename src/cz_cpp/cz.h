@@ -30,39 +30,6 @@
 #include "czVersion.h"
 #include "DomainInfo.h"
 
-///// SIMD intrinsic
-// std::inner_product, accumulate
-#include <numeric>
-
-#include <xmmintrin.h>
-#include <immintrin.h>
-
-// c11のコンパイルオプションが必要
-#if defined(_MEM_ALIGN64)
-  static constexpr int ALIGN_SIZE = 64;
-#elif defined(_MEM_ALIGN32)
-  static constexpr int ALIGN_SIZE = 32;
-#else
-  static constexpr int ALIGN_SIZE = 32;
-#endif
-//////
-
-// SIMD幅 word数
-#if defined(_SIMD_512)
-  static constexpr int SIMD_WIDTH = 512;
-#elif defined(_SIMD_256)
-  static constexpr int SIMD_WIDTH = 256;
-#endif
-
-#ifdef _REAL_IS_DOUBLE_
-  static constexpr int SdW = (SIMD_WIDTH / 8) / 8;
-#else
-  static constexpr int SdW = (SIMD_WIDTH / 8) / 4;
-#endif
-
-// resD[]のキャッシュラインサイズベース
-static constexpr int CL_SZ = ALIGN_SIZE / sizeof(double);
-
 
 // FX10 profiler
 #if defined __K_FPCOLL
@@ -71,7 +38,9 @@ static constexpr int CL_SZ = ALIGN_SIZE / sizeof(double);
 #include <fj_tool/fjcoll.h>
 #endif
 
+#ifndef DISABLE_PMLIB
 #include <PerfMonitor.h>
+#endif
 
 
 using namespace std;
@@ -91,13 +60,15 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
-  int SdB;                 ///< SIMD body loopの回数
 
 
-  // PMlib
-  pm_lib::PerfMonitor PM;  ///< 性能モニタクラス
   int order_of_PM_key;     ///< PMlib用の登録番号カウンタ < PM_NUM_MAX
   string Parallel_str;     ///< 並列モードの文字列
+
+#ifndef DISABLE_PMLIB
+  // PMlib
+  pm_lib::PerfMonitor PM;  ///< 性能モニタクラス
+#endif
 
 #ifndef DISABLE_MPI
   SubDomain D;               ///< 領域分割情報保持クラス
@@ -132,6 +103,12 @@ public:
   REAL_TYPE* zc;
   REAL_TYPE* pvt; ///< 行の最大要素
 
+  REAL_TYPE* WA;
+  REAL_TYPE* WC;
+  REAL_TYPE* WD;
+  REAL_TYPE* WAA;
+  REAL_TYPE* WCC;
+  REAL_TYPE* WDD;
 
 public:
   // コンストラクタ
@@ -146,7 +123,6 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
-    SdB = 0;
 
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -174,11 +150,13 @@ public:
       debug_mode = m_mode;
   }
 
+/*
   void print_m256(__m256 x) {
     printf("%f %f %f %f %f %f ^%f %f\n",
     x[7], x[6], x[5], x[4],
     x[3], x[2], x[1], x[0]);
   }
+*/
 
   // #################################################################
   /**
@@ -198,12 +176,7 @@ public:
     dims[2] = (size_t)(sz[2] + 2*GUIDE);
     
     nx = dims[0] * dims[1] * dims[2];
-    
-#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-    T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
-#elif
     T* var = new T[nx];
-#endif
     
 #pragma omp parallel for schedule(static)
     for (int i=0; i<nx; i++) var[i]=0;
@@ -218,12 +191,7 @@ public:
     if ( !sz ) return NULL;
     
     size_t nx = sz;
-    
-#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-    T* var = (T*)_mm_malloc( nx * sizeof(T), ALIGN_SIZE);
-#elif
     T* var = new T[nx];
-#endif
     
 #pragma omp parallel for schedule(static)
     for (int i=0; i<nx; i++) var[i]=0;
@@ -236,11 +204,7 @@ public:
   void czDelete(T* ptr)
   {
     if (ptr) {
-#if defined(_MEM_ALIGN32) || defined(_MEM_ALIGN64)
-      _mm_free(ptr);
-#elif
       delete [] ptr;
-#endif
       ptr = NULL;
     }
   }
@@ -434,8 +398,10 @@ private:
 
 
 
+#ifndef DISABLE_PMLIB
   // タイミング測定区間にラベルを与えるラッパー
   void set_label(const string label, pm_lib::PerfMonitor::Type type, bool exclusive=true);
+#endif
 
 
   // タイミング測定区間にラベルを与える

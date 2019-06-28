@@ -58,8 +58,11 @@ $ sudo make install
 `-D with_PAPI=` *Installed_Directory*
 > Specify the directory path that PAPI is installed.
 
-`-D SIMD_AVX512=` {OFF | ON}
-> Specify SIMD length. The default is OFF, which means AVX2. If you want to use AVX512 specify ON.
+`-D with_SIMD=` {OFF | 256|512}
+> Specify SIMD length. The default is OFF. If you want to use AVX512 specify 512.
+
+`-D with_Ftrace=` (off | on)
+> In the case of Aurora, if you want to use Ftrace option, specify turn on this option.
 
 
 ### Default settng
@@ -68,8 +71,8 @@ with_MPI = ON
 enable_OPENMP = ON
 real_type = float
 with_PAPI = OFF
-Alignment = 64
-SIMD_AVX512 = OFF
+with_SIMD = OFF
+with_Ftrace = OFF
 ~~~
 
 
@@ -94,8 +97,23 @@ In case of some Intel compiler environment, please specify environment variables
 cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
 -Dwith_MPI=no \
 -Dwith_PM=${CZ_HOME}/CubeZ/PMlib \
+-Dwith_SIMD=256 \
 -Dwith_CBR=OFF ..
 ~~~
+
+#### Mac PGI
+~~~
+$ module load pgi/17.7
+$ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
+$ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+-Dwith_MPI=no \
+-Dreal_type=float \
+-Denable_OPENMP=yes \
+-Dwith_PM=${CZ_HOME}/CubeZ/PMlib_PGI \
+-Dwith_SIMD=256 \
+-Dwith_CBR=OFF ..
+~~~
+
 
 ### ITO A/B with PAPI
 
@@ -104,20 +122,43 @@ $ module load intel/2018
 export CC=icc CXX=icpc F90=ifort FC=ifort
 
 cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
--DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_intel_SKL.cmake \
 -Dwith_MPI=no \
 -Dwith_PM=${HOME}/CZ/PMlib \
 -Dwith_PAPI=${HOME}/CZ/PAPI \
+-Dwith_SIMD=256 \
 -Dwith_CBR=OFF ..
 ~~~
 
 
+### Aurora without PAPI
+
+~~~
+export CZ_HOME=${HOME}
+export CC=ncc CXX=nc++ F90=nfort FC=nfort
+cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
+-Dwith_MPI=no \
+-Dwith_PM=OFF \
+-Dwith_CBR=OFF \
+-Dwith_Ftrace=ON ..
+~~~
 
 
+#### PGI on ITO B
 
-
-
-
+~~~
+$ module load pgi/17.7
+$ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
+$ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+-Dwith_MPI=no \
+-Dreal_type=float \
+-Denable_OPENMP=yes \
+-Dwith_PM=${CZ_HOME}/CZ/PAPI-5.5.1_gcc4.8.5 \
+-Dwith_SIMD=256 \
+-Dwith_PAPI=${HOME}/opt/papi-5.5.1_gcc4.8.5 \
+-Dwith_ACC=Pascal \
+-Dwith_CBR=OFF ..
+~~~
 
 
 

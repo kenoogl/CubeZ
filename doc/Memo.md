@@ -1,8 +1,32 @@
 # Memo for CubeZ
 
+#### ver 1.0.3
+- OpenACCのオプションを追加 with_ACC={off|Pascal|Volta}
+- with_AVX512 >> with_SIMD={OFF|256|512}
+- INTEL_SKLを削除
+
+
+#### ver 1.0.1
+- ftraceオプションを追加（Auroraの場合のみ）`-fpp` を指定すると`_aurora_(=1)`が定義されることを利用
+- IVDEPディレクティブを追加し、効果あり
+- shortloop, -mretain-noneは効果なし
+
+
+#### ver 1.0.0
+- aurora でコンパイル
+- ファイル出力は マクロ`_aurora_` を使ってコンパイルしないように制御
+
+
+#### ver 0.9.9
+- aurora ブランチを作成、auroraのビルド対応
+- PMlibを外すときの処理　> `DISABLE_PMLIB`
+- pcr / pcr_rbの変数 `a,c,d,a1,c1,d1`を渡すように変更 >> `NEC2003f_Alloc_var`エラーがでるため
+- ALIGNMENT, SIMD_WIDTH削除
+
+
+
 #### ver 0.9.8
 - PCR, PCR_RBにフォーカスした構成
-
 
 #### 2019-06-16 ver 0.9.6
 - ピボット計算の !OMPreduction(max:ss) を追加

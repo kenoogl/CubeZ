@@ -1,3 +1,0 @@
-set(CMAKE_SYSTEM_NAME Linux)
-
-set(TARGET_ARCH "INTEL_SKL")

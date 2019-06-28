@@ -13,7 +13,18 @@
 
 
 macro (AddOptimizeOption)
-  if (TARGET_ARCH STREQUAL "INTEL_F_TCS")
+  # from https://github.com/SX-Aurora/CMake-toolchain-file
+  if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+    set(CMAKE_Fortran_COMPILER /opt/nec/ve/bin/nfort CACHE FILEPATH "Aurora Fortran compiler")
+    set(CMAKE_CXX_COMPILER /opt/nec/ve/bin/nc++ CACHE FILEPATH "Aurora C++ compiler")
+    set(CMAKE_C_COMPILER /opt/nec/ve/bin/ncc CACHE FILEPATH "Aurora C compiler")
+    set(CMAKE_LINKER /opt/nec/ve/bin/nld CACHE FILEPATH "Aurora linker")
+    set(CMAKE_AR /opt/nec/ve/bin/nar CACHE FILEPATH "Aurora archiver")
+    set(CMAKE_RANLIB /opt/nec/ve/bin/nranlib CACHE FILEPATH "Aurora ranlib")
+    set(CMAKE_CXX_FLAGS "-O3 -proginf")
+    set(CMAKE_Fortran_FLAGS "-fpp -Wall -O3 -proginf -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95")
+
+  elseif (TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,parallel,optmsg=2 -V -Xg")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast,parallel,optmsg=2 -Xg")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Kfast,parallel,optmsg=2 -V")
@@ -25,25 +36,47 @@ macro (AddOptimizeOption)
     # -Xg   : gcc compatible flag
     # -fPIC : PIC flag
 
-  elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -std=c++11 -restrict")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5")
-    set(CMAKE_Fortran_FLAGS "-O3 -no-prec-div -fp-model fast=2 -xhost -qopt-report=5 -inline-forceinline")
-
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall")
     set(CMAKE_Fortran_FLAGS "-O3 -Wall")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xHOST -O3 -qopt-report=5 -std=c++11 -restrict")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xHOST -O3 -qopt-report=5")
-    set(CMAKE_Fortran_FLAGS "-xHOST -O3 -qopt-report=5 -inline-forceinline")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -qopt-report=5 -std=c++11 -restrict  -DMPICH_IGNORE_CXX_SEEK")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -qopt-report=5")
+    set(CMAKE_Fortran_FLAGS "-O3 -qopt-report=5 -inline-forceinline")
+
+    # optimization for Intel AVX*
+    if (with_SIMD STREQUAL "256")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCORE-AVX2 -D_SIMD_256")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xCORE-AVX2")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -xCORE-AVX2 -align array32byte")
+    elseif (with_SIMD STREQUAL "512")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCORE-AVX512 -D_SIMD_512 -qopt-zmm-usage=high")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -xCORE-AVX512 -D_SIMD_512 -qopt-zmm-usage=high")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -xCORE-AVX512 -align array64byte -qopt-zmm-usage=high")
+    endif()
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -O4 -Minfo=intensity,vect -cpp=mm")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fast -O4 -Minfo=intensity,vect -cpp=mm")
-    set(CMAKE_Fortran_FLAGS "-fast -O4 -Minfo=intensity,vect -cpp=mm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,vect,mp,acc -cpp=mm -tp=skylake")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
+    set(CMAKE_Fortran_FLAGS "-fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
+
+    # optimization for Intel AVX*
+    if (with_SIMD STREQUAL "256")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mvect=simd:256 -D_SIMD_256")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Mvect=simd:256")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mvect=simd:256")
+    elseif (with_SIMD STREQUAL "512")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Mvect=simd:512 -D_SIMD_512")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Mvect=simd:512")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mvect=simd:512")
+    endif()
+
+    if (with_ACC)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC}")
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC}")
+    endif()
 
   else()
     message("using default option")
@@ -52,14 +85,14 @@ endmacro()
 
 
 macro (FreeForm)
-  if(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
+  if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-form")
+
+  elseif(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
     #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
 
   elseif(TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")
-
-  elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -free")
 
   elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-form")
@@ -93,15 +126,15 @@ endmacro()
 
 macro(checkOpenMP)
   if(enable_OPENMP)
-    if(USE_F_TCS STREQUAL "YES")
+    if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+     set(OpenMP_Fortran_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+     set(OpenMP_CXX_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+     set(OpenMP_C_FLAGS "-fopenmp" CACHE STRING "Flag to enable OpenMP")
+
+    elseif(USE_F_TCS STREQUAL "YES")
       set(OpenMP_C_FLAGS "-Kopenmp")
       set(OpenMP_CXX_FLAGS "-Kopenmp")
       set(OpenMP_Fortran_FLAGS "-Kopenmp")
-
-    elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-      set(OpenMP_C_FLAGS "-qopenmp")
-      set(OpenMP_CXX_FLAGS "-qopenmp")
-      set(OpenMP_Fortran_FLAGS "-qopenmp")
 
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       set(OpenMP_C_FLAGS "-fopenmp")
@@ -145,9 +178,6 @@ macro(precision)
 
     if(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -CcdRR8")
-
-    elseif (TARGET_ARCH STREQUAL "INTEL_SKL")
-      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8")
 
     elseif(CMAKE_Fortran_COMPILER MATCHES ".*frt$")
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -CcdRR8")

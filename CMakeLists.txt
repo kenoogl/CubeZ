@@ -29,9 +29,11 @@
 #
 # -D with_PAPI=installed_directory or OFF
 #
-# -D Alignment=(64|32)
+# -D with_SIMD=(OFF|256|512)
 #
-# -D SIMD_AVX512=(OFF|ON)
+# -D with_Ftrace=(off|on)
+#
+# -D with_ACC={off|Pascal|Volta}
 #
 
 cmake_minimum_required(VERSION 2.6)
@@ -45,8 +47,9 @@ option(with_MPI "Enable MPI" "ON")
 option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
-option(Alignment "Alignment" "64")
-option(SIMD_AVX512 "AVX512" "OFF")
+option(with_SIMD "SIMD Width" "OFF")
+option(trace "with_Ftrace Option" "OFF")
+option(with_ACC "OpenACC Option" "OFF")
 
 #######
 # Project setting
@@ -72,8 +75,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "0.9.8")
-set(LIB_REVISION "20190621_1900")
+set(PROJECT_VERSION "1.0.3")
+set(LIB_REVISION "20190627_2300")
 #######
 
 
@@ -92,10 +95,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/cz_package.cmake)
 # Options
 #######
 
+AddOptimizeOption()
+
 # Fortran free form
 FreeForm()
 
-AddOptimizeOption()
 
 # OpennMP
 checkOpenMP()
@@ -104,6 +108,13 @@ checkOpenMP()
 # Real type
 precision()
 
+# Trace iff Aurora
+if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
+  if(with_Ftrace)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrace")
+    SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ftrace")
+  endif()
+endif()
 
 
 # Serial flag
@@ -112,49 +123,9 @@ if(NOT with_MPI)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_MPI")
 endif()
 
-# Memory alignment
-#if(Alignment STREQUAL "32")
-#  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN32")
-#elseif(Alignment STREQUAL "64")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_MEM_ALIGN64")
-#endif()
-
-# SIMD
-if(SIMD_AVX512 STREQUAL "OFF")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SIMD_256")
-else()
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SIMD_512 -qopt-zmm-usage=high")
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -qopt-zmm-usage=high")
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-zmm-usage=high")
-endif()
-
-
-#######
-# Display options
-#######
-
-message(" ")
-message("${PROJECT_NAME} Version : ${PROJECT_VERSION}")
-message(" ")
-message( STATUS "Destination PATH      : "      ${CMAKE_INSTALL_PREFIX})
-message( STATUS "CMAKE_CXX_COMPILER    : "      ${CMAKE_CXX_COMPILER})
-message( STATUS "CMAKE_CXX_FLAGS       : "      ${CMAKE_CXX_FLAGS})
-message( STATUS "CMAKE_Fortran_COMPILER: "      ${CMAKE_Fortran_COMPILER})
-message( STATUS "CMAKE_Fortran_FLAGS   : "      ${CMAKE_Fortran_FLAGS})
-
-message( STATUS "MPI support           : "      ${with_MPI})
-message( STATUS "OpenMP support        : "      ${enable_OPENMP})
-message( STATUS "Type of floating point: "      ${real_type})
-message( STATUS "PMlib support         : "      ${with_PM})
-message( STATUS "PAPI support          : "      ${with_PAPI})
-message( STATUS "CBrick support        : "      ${with_CBR})
-message( STATUS "Alignment             : "      ${Alignment})
-message( STATUS "SIMD AVX512           : "      ${SIMD_AVX512})
-message(" ")
 
 
 if(USE_F_TCS STREQUAL "YES")
-elseif(TARGET_ARCH STREQUAL "INTEL_SKL")
 else()
   if(with_MPI)
     include(FindMPI)
@@ -215,13 +186,52 @@ ELSE()
 ENDIF()
 
 
+####
+# OpenACC
+####
+
+if(with_ACC)
+  if (with_ACC STREQUAL "Pascal")
+    SET(ACC "-ta=tesla,cc60")
+  elseif (with_ACC STREQUAL "Volta")
+    SET(ACC "-ta=tesla,cc70")
+  endif()
+endif()
+
+
+
+
+#######
+# Display options
+#######
+
+message(" ")
+message("${PROJECT_NAME} Version : ${PROJECT_VERSION}")
+message(" ")
+message( STATUS "Destination PATH      : "      ${CMAKE_INSTALL_PREFIX})
+message( STATUS "CMAKE_CXX_COMPILER    : "      ${CMAKE_CXX_COMPILER})
+message( STATUS "CMAKE_CXX_FLAGS       : "      ${CMAKE_CXX_FLAGS})
+message( STATUS "CMAKE_Fortran_COMPILER: "      ${CMAKE_Fortran_COMPILER})
+message( STATUS "CMAKE_Fortran_FLAGS   : "      ${CMAKE_Fortran_FLAGS})
+
+message( STATUS "MPI support           : "      ${with_MPI})
+message( STATUS "OpenMP support        : "      ${enable_OPENMP})
+message( STATUS "Type of floating point: "      ${real_type})
+message( STATUS "PMlib support         : "      ${with_PM})
+message( STATUS "PAPI support          : "      ${with_PAPI})
+message( STATUS "CBrick support        : "      ${with_CBR})
+message( STATUS "SIMD WIDTH            : "      ${with_SIMD})
+message( STATUS "OpenACC support       : "      ${with_ACC} " " ${ACC})
+message( STATUS "Aurora Ftrace         : "      ${with_Ftrace})
+message(" ")
+
 
 #######
 # Sub Directories
 #######
 
 add_subdirectory(src)
-add_subdirectory(example)
+#add_subdirectory(example)
 
 
 
@@ -248,7 +258,7 @@ install(FILES  ChangeLog.md
 # Example
 #######
 
-add_subdirectory(example/tri)
+#add_subdirectory(example/tri)
 
 
 #######
