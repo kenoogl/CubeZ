@@ -39,7 +39,7 @@ macro (AddOptimizeOption)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall")
-    set(CMAKE_Fortran_FLAGS "-O3 -Wall")
+    set(CMAKE_Fortran_FLAGS "-O3 -Wall -cpp")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -qopt-report=5 -std=c++11 -restrict  -DMPICH_IGNORE_CXX_SEEK")

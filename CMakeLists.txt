@@ -75,8 +75,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.0.5")
-set(LIB_REVISION "20190701_1800")
+set(PROJECT_VERSION "1.0.6")
+set(LIB_REVISION "20190701_1830")
 #######
 
 
@@ -197,8 +197,8 @@ if(with_ACC)
   elseif (with_ACC STREQUAL "Volta")
     SET(ACC "-ta=tesla:cc70")
   endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC}")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC} -D_ENABLE_OPANACC_")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC} -D_ENABLE_OPANACC_")
   SET(CMAKE_EXE_LINKER_FLAGS "-pgf90libs")
 endif()
 
