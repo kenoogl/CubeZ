@@ -1,5 +1,17 @@
 # Memo for CubeZ
 
+#### ver 1.0.4
+- AVXのオプション処理を変更 >> CompileOptionSelector.cmake
+- gcc error 対応 >> collapse(2)節をいれない
+
+~~~
+cz_solver.f90:414:28:
+
+do i=ist+mod(j+ip,2), ied, 2
+1
+Error: !$OMP DO collapsed loops don't form rectangular iteration space at (1)
+~~~
+
 #### ver 1.0.3
 - OpenACCのオプションを追加 with_ACC={off|Pascal|Volta}
 - with_AVX512 >> with_SIMD={OFF|256|512}

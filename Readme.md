@@ -58,7 +58,7 @@ $ sudo make install
 `-D with_PAPI=` *Installed_Directory*
 > Specify the directory path that PAPI is installed.
 
-`-D with_SIMD=` {OFF | 256|512}
+`-D with_SIMD=` {OFF |256|512}
 > Specify SIMD length. The default is OFF. If you want to use AVX512 specify 512.
 
 `-D with_Ftrace=` (off | on)
@@ -94,9 +94,9 @@ In case of some Intel compiler environment, please specify environment variables
 #### INTEL/GNU compiler serial without PAPI
 
 ~~~
-cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 -Dwith_MPI=no \
--Dwith_PM=${CZ_HOME}/CubeZ/PMlib \
+-Dwith_PM=${HOME}/CubeZ/PMlib \
 -Dwith_SIMD=256 \
 -Dwith_CBR=OFF ..
 ~~~
@@ -105,11 +105,12 @@ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
 ~~~
 $ module load pgi/17.7
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
-$ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 -Dwith_MPI=no \
 -Dreal_type=float \
 -Denable_OPENMP=yes \
--Dwith_PM=${CZ_HOME}/CubeZ/PMlib_PGI \
+-Dwith_PM=${HOME}/CubeZ/PMlib_PGI \
 -Dwith_SIMD=256 \
 -Dwith_CBR=OFF ..
 ~~~
@@ -119,9 +120,9 @@ $ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
 
 ~~~
 $ module load intel/2018
-export CC=icc CXX=icpc F90=ifort FC=ifort
+$ export CC=icc CXX=icpc F90=ifort FC=ifort
 
-cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
+$ cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
 -Dwith_MPI=no \
 -Dwith_PM=${HOME}/CZ/PMlib \
 -Dwith_PAPI=${HOME}/CZ/PAPI \
@@ -133,9 +134,9 @@ cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
 ### Aurora without PAPI
 
 ~~~
-export CZ_HOME=${HOME}
-export CC=ncc CXX=nc++ F90=nfort FC=nfort
-cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+$ export CC=ncc CXX=nc++ F90=nfort FC=nfort
+
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
 -Dwith_MPI=no \
 -Dwith_PM=OFF \

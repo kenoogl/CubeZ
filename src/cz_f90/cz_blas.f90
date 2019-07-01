@@ -845,7 +845,7 @@ s6 = abs(C3 - 0.5 * C9)
 s7 = abs(2.0 * (C1 + C2 + C3))
 ss = max(s1, s2, s3, s4, s5, s6, s7)
 
-pvt(k,i,j) = 1.0/ss
+pvt(k,i,j) = 1.0/ss 
 
 enddo
 enddo

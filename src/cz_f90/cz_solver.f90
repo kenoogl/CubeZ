@@ -409,7 +409,7 @@ ip = ofst + color
 !$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
 !$OMP private(a, c, d, a1, c1, d1)
 
-!$OMP DO SCHEDULE(static) collapse(2)
+!$OMP DO SCHEDULE(static)
 do j=jst, jed
 do i=ist+mod(j+ip,2), ied, 2
 

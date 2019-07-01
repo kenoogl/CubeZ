@@ -48,7 +48,7 @@ option(enable_OPENMP "Enable OpenMP" "ON")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
 option(with_SIMD "SIMD Width" "OFF")
-option(trace "with_Ftrace Option" "OFF")
+option(with_Ftrace "with_Ftrace Option" "OFF")
 option(with_ACC "OpenACC Option" "OFF")
 
 #######
@@ -75,8 +75,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.0.3")
-set(LIB_REVISION "20190627_2300")
+set(PROJECT_VERSION "1.0.4")
+set(LIB_REVISION "20190701_1700")
 #######
 
 
@@ -107,6 +107,7 @@ checkOpenMP()
 
 # Real type
 precision()
+
 
 # Trace iff Aurora
 if(TARGET_ARCH STREQUAL "NEC_Aurora_VE")
