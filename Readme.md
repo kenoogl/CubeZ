@@ -154,7 +154,7 @@ $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
 $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=no \
 -Dreal_type=float \
--Denable_OPENMP=yes \
+-Denable_OPENMP=no \
 -Dwith_PM=${HOME}/opt/PMlib/pgi-19.4_papi-gcc-4.8.5 \
 -Dwith_SIMD=256 \
 -Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \

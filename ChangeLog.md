@@ -9,6 +9,11 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-7-1 Version 1.0.7
+- add -ta=,,,managed
+
+
+---
 - 2019-7-1 Version 1.0.6
 - add _OPENACC macro
 - add "-cpp" option for gfortran

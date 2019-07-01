@@ -1,5 +1,32 @@
 # Memo for CubeZ
 
+
+
+#### ver 1.0.7
+- openACCでのビルド問題解決（とりあえず）
+- cz_f90とsrc直下のCMakeLists.txtで
+  ~~~
+  set_target_properties(${cz_target} PROPERTIES LINKER_LANGUAGE Fortran)
+  ~~~
+  
+- CMakeLists.txt
+  
+  ~~~
+  if(with_ACC)
+  if (with_ACC STREQUAL "Pascal")
+  SET(ACC "-ta=tesla,cc60,cuda10.1,nofma,managed")
+  elseif (with_ACC STREQUAL "Volta")
+  SET(ACC "-ta=tesla,cc70,cuda10.1,nofma,managed")
+  endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC}")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC}")
+  SET(CMAKE_EXE_LINKER_FLAGS "-Mnomain")
+  endif()
+  ~~~
+
+- `-tp=...managed`として，f90のソースはopenACC任せにする
+
+
 #### ver 1.0.4
 - AVXのオプション処理を変更 >> CompileOptionSelector.cmake
 - gcc error 対応 >> collapse(2)節をいれない

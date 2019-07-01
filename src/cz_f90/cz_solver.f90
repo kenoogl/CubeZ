@@ -240,9 +240,8 @@ flop = flop + 18.0  &
 !$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
 !$OMP REDUCTION(+:res)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
-#ifdef _OPANACC
-!$acc kernels present(p,b,wk2)
-!$acc loop collapse(3) reduction(+:res)
+#ifdef _OPENACC
+!$acc kernels
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -262,15 +261,14 @@ do k = kst, ked
 end do
 end do
 end do
-#ifdef _OPANACC
+#ifdef _OPENACC
 !$acc end kernels
 #endif
 !$OMP END DO
 
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
-#ifdef _OPANACC
+#ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(3)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -279,7 +277,7 @@ do k = kst, ked
 end do
 end do
 end do
-#ifdef _OPANACC
+#ifdef _OPENACC
 !$acc end kernels
 #endif
 !$OMP END DO
