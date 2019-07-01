@@ -240,11 +240,11 @@ flop = flop + 18.0  &
 !$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
 !$OMP REDUCTION(+:res)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+
+!$acc kernels present(p,b,wk2)
+!$acc loop collapse(3) reduction(+:res)
 do j = jst, jed
 do i = ist, ied
-
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   pp = p(k,i,j)
   bb = b(k,i,j)
@@ -261,19 +261,23 @@ do k = kst, ked
 end do
 end do
 end do
+!$acc end kernels
+
 !$OMP END DO
 
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+
+!$acc kernels
+!$acc loop collapse(3)
 do j = jst, jed
 do i = ist, ied
-
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   p(k,i,j)=wk2(k,i,j)
 end do
 end do
 end do
+!$acc end kernels
+
 !$OMP END DO
 
 !$OMP END PARALLEL

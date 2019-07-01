@@ -103,7 +103,7 @@ $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 
 #### Mac PGI
 ~~~
-$ module load pgi/17.7
+$ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
 
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
@@ -148,15 +148,16 @@ $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 #### PGI on ITO B
 
 ~~~
-$ module load pgi/17.7
+$ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
-$ cmake -DINSTALL_DIR=${CZ_HOME}/CubeZ/CZ \
+
+$ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=no \
 -Dreal_type=float \
 -Denable_OPENMP=yes \
--Dwith_PM=${CZ_HOME}/CZ/PAPI-5.5.1_gcc4.8.5 \
+-Dwith_PM=${HOME}/opt/PMlib/pgi-19.4_papi-gcc-4.8.5 \
 -Dwith_SIMD=256 \
--Dwith_PAPI=${HOME}/opt/papi-5.5.1_gcc4.8.5 \
+-Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
 -Dwith_ACC=Pascal \
 -Dwith_CBR=OFF ..
 ~~~

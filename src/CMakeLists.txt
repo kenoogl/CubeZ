@@ -50,7 +50,12 @@ endif()
 
 
 add_executable(${cz_target} ${cz_src})
+set_target_properties(${cz_target} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${cz_target} CZ FCORE)
+
+#if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+#  target_link_libraries(${cz_target} "-pgf90libs")
+#endif()
 
 install(TARGETS ${cz_target} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 

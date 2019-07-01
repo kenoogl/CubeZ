@@ -73,11 +73,6 @@ macro (AddOptimizeOption)
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mvect=simd:512")
     endif()
 
-    if (with_ACC)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC}")
-      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC}")
-    endif()
-
   else()
     message("using default option")
   endif()

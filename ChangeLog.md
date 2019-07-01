@@ -9,6 +9,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-7-1 Version 1.0.5
+- modify OpenACC directive and CMakefile.txt
+
+---
 - 2019-7-1 Version 1.0.4
   - OpenACC directive
   - modify AVX/AVX512 options
