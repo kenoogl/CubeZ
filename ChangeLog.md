@@ -9,6 +9,10 @@ BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入�
 ## REVISION HISTORY
 
 ---
+- 2019-7-4 Version 1.0.8
+- GPU works
+
+---
 - 2019-7-1 Version 1.0.7
 - add -ta=,,,managed
 

@@ -1,6 +1,19 @@
 # Memo for CubeZ
 
 
+#### ver 1.0.8
+- PGI compilerで最適化されない件（IntelはOKだが）
+  - Loop not vectorized: mixed data typesのメッセージ
+  - ループ内で単精度と倍精度を混在させている場合に最適化できないので、残差のreductionを単精度に変更
+
+- 係数を単精度に変更
+  - blas_triad, blas_dot1, blas_dot2, blas_bicg_1, blas_bicg_1, Fdot1, Fdot2
+  
+  - floatを追加: Comm_SUM_1, Comm_SUM_2, Comm_MIN_1, Comm_MAX_1
+  
+- メンテ中のサブルーチンは
+  - cz_solver.f90, cz_blas.f90, cz_maf.f90
+
 
 #### ver 1.0.7
 - openACCでのビルド問題解決（とりあえず）

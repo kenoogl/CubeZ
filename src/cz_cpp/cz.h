@@ -327,11 +327,17 @@ private:
 
   bool Comm_S(REAL_TYPE* sa, const int gc, const string label="");
   bool Comm_V(REAL_TYPE* va, const int gc, const string label="");
+  
   bool Comm_SUM_1(int* var, const string label="");
   bool Comm_SUM_1(double* var, const string label="");
+  bool Comm_SUM_1(float*  var, const string label="");
+  
   bool Comm_MIN_1(double* var, const string label="");
+  bool Comm_MIN_1(float*  var, const string label="");
   bool Comm_MAX_1(double* var, const string label="");
+  bool Comm_MAX_1(float*  var, const string label="");
   bool Comm_SUM_2(double* var1, double* var2, const string label="");
+  bool Comm_SUM_2(float*  var1, float*  var2, const string label="");
 
   bool displayMemoryInfo(FILE* fp, double& G_mem, double L_mem, const char* str);
 
@@ -387,9 +393,9 @@ private:
               bool converge_check=true);
 
   
-  double Fdot1(REAL_TYPE* x, double& flop);
+  REAL_TYPE Fdot1(REAL_TYPE* x, double& flop);
 
-  double Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
+  REAL_TYPE Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop);
 
   void Preconditioner(REAL_TYPE* xx,
                       REAL_TYPE* bb,

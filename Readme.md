@@ -24,7 +24,7 @@ CubeZ is a platform for testing iterative solvers.
 ### Build
 
 ~~~
-$ export CZ_HOME=/hogehoge
+$ export HOME=/hogehoge
 $ mkdir build
 $ cd build
 $ cmake [options] ..
@@ -105,7 +105,9 @@ $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 ~~~
 $ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
+~~~
 
+~~~
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 -Dwith_MPI=no \
 -Dreal_type=float \
@@ -116,41 +118,33 @@ $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 ~~~
 
 
-### ITO A/B with PAPI
+### ITO
+
+#### A/B Intel with PAPI
 
 ~~~
 $ module load intel/2018
 $ export CC=icc CXX=icpc F90=ifort FC=ifort
+~~~
 
-$ cmake -DINSTALL_DIR=${HOME}/CZ/CZ \
+~~~
+cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=no \
--Dwith_PM=${HOME}/CZ/PMlib \
--Dwith_PAPI=${HOME}/CZ/PAPI \
+-Dwith_PM=${HOME}/opt/PMlib/intel-2018_papi-gcc-4.8.5 \
+-Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
 -Dwith_SIMD=256 \
+-Dwith_ACC=OFF \
 -Dwith_CBR=OFF ..
 ~~~
 
-
-### Aurora without PAPI
-
-~~~
-$ export CC=ncc CXX=nc++ F90=nfort FC=nfort
-
-$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
--Dwith_MPI=no \
--Dwith_PM=OFF \
--Dwith_CBR=OFF \
--Dwith_Ftrace=ON ..
-~~~
-
-
-#### PGI on ITO B
+#### PGI OpenACC with PAPI
 
 ~~~
 $ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
+~~~
 
+~~~
 $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=no \
 -Dreal_type=float \
@@ -161,6 +155,37 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_ACC=Pascal \
 -Dwith_CBR=OFF ..
 ~~~
+
+#### PGI CPU OpenMP with PAPI
+
+~~~
+$ cmake -DINSTALL_DIR=${HOME}/CZ \
+-Dwith_MPI=no \
+-Dreal_type=float \
+-Denable_OPENMP=yes \
+-Dwith_PM=${HOME}/opt/PMlib/pgi-19.4_papi-gcc-4.8.5 \
+-Dwith_SIMD=256 \
+-Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
+-Dwith_ACC=OFF \
+-Dwith_CBR=OFF ..
+~~~
+
+
+### Aurora without PAPI
+
+~~~
+$ export CC=ncc CXX=nc++ F90=nfort FC=nfort
+~~~
+
+~~~
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
+-Dwith_MPI=no \
+-Dwith_PM=OFF \
+-Dwith_CBR=OFF \
+-Dwith_Ftrace=ON ..
+~~~
+
 
 
 
@@ -201,7 +226,41 @@ $ cmake -DINSTALL_DIR=${CZ_HOME}/RAinWATER \
 - Before building, execute following command to clean for sure. `$ make distclean`
 
 
+## Building PAPI by gcc
+  
+  ~~~
+  $ gcc --version
+  gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-11)
+  
+  $ export CC=gcc F77=gfortran
+  $ cd papi-5.7.0/src
+  $ ./configure --prefix=${HOME}/opt/PAPI/gcc-4.8.5
+  $ make
+  $ make install
+  ~~~
 
+
+## Building PMlib by PGI
+  gccでビルドしたPAPIオブジェクトをリンクする
+  
+  ~~~
+  $ cd PMlib-6.4.2
+  $ mkdir build
+  $ cd build
+  $ module load pgi/19.4
+  $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
+  
+  $ cmake -DINSTALL_DIR=${HOME}/opt/PMlib/OMP-pgi-19.4_papi-gcc-4.8.5 \
+	-Denable_OPENMP=yes \
+	-Dwith_MPI=no \
+	-Denable_Fortran=no \
+	-Dwith_example=no \
+	-Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
+	-Dwith_OTF=no \
+    -Denable_PreciseTimer=yes ..
+  $ make
+  $ make install
+  ~~~
 
 
 ## Contributors

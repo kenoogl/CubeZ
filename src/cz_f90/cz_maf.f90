@@ -32,13 +32,13 @@ double precision                                       ::  flop
 real                                                   ::  omg, dd, dp, pp, bb, pn, rp
 real                                                   ::  GX, EY, TZ, YJA, YJAI
 real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
-real                                                   ::  C1, C2, C3, C7, C8, C9
+real                                                   ::  C1, C2, C3, C7, C8, C9, res1
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 real, dimension(-1:sz(1)+2)                            ::  X
 real, dimension(-1:sz(2)+2)                            ::  Y
 real, dimension(-1:sz(3)+2)                            ::  Z
 
-res = 0.0
+res1 = 0.0
 
 ist = idx(0)
 ied = idx(1)
@@ -54,7 +54,7 @@ flop = flop + 66.0d0      &
 
 
 !$OMP PARALLEL DO Collapse(2) &
-!$OMP REDUCTION(+:res) &
+!$OMP REDUCTION(+:res1) &
 !$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
@@ -102,11 +102,13 @@ rp = (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
 dp = ( rp / dd - pp ) * omg
 pn = pp + dp
 P(k,i,j) = pn
-res = res + real(dp * dp, kind=8) ! 30
+res1 = res1 + dp * dp ! 30
 enddo
 enddo
 enddo
 !$OMP END PARALLEL DO
+
+res = res + real(res1, kind=8)
 
 return
 end subroutine psor_maf
@@ -137,7 +139,7 @@ double precision                                       ::  flop
 real                                                   ::  omg, dd, dp, pp, bb, pn, rp
 real                                                   ::  GX, EY, TZ, YJA, YJAI
 real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
-real                                                   ::  C1, C2, C3, C7, C8, C9
+real                                                   ::  C1, C2, C3, C7, C8, C9, res1
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b, wk2
 real, dimension(-1:sz(1)+2)                            ::  X
 real, dimension(-1:sz(2)+2)                            ::  Y
@@ -150,7 +152,7 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
-res = 0.0
+res1 = 0.0
 
 flop = flop + 66.0d0  &
 * dble(ied-ist+1) &
@@ -158,12 +160,15 @@ flop = flop + 66.0d0  &
 * dble(ked-kst+1)
 
 !$OMP PARALLEL &
-!$OMP REDUCTION(+:res) &
+!$OMP REDUCTION(+:res1) &
 !$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
 !$OMP DO SCHEDULE(static) Collapse(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
@@ -206,14 +211,20 @@ rp = (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
 dp = ( rp / dd - pp ) * omg
 pn = pp + dp
 wk2(k,i,j) = pn
-res = res + real(dp * dp, kind=8) ! 30
+res1 = res1 + dp * dp ! 30
 enddo
 enddo
 enddo
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END DO
 
 
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
 
@@ -224,9 +235,14 @@ p(k,i,j)=wk2(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END DO
 
 !$OMP END PARALLEL
+
+res = res + real(res1, kind=8)
 
 return
 end subroutine jacobi_maf
@@ -259,7 +275,7 @@ double precision                                       ::  res
 real                                                   ::  omg, dd, dp, pp, bb, pn, rp
 real                                                   ::  GX, EY, TZ, YJA, YJAI
 real                                                   ::  XG, YE, ZT, XGG, YEE, ZTT
-real                                                   ::  C1, C2, C3, C7, C8, C9
+real                                                   ::  C1, C2, C3, C7, C8, C9, res1
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b
 integer                                                ::  kp, color, ofst
 real, dimension(-1:sz(1)+2)                            ::  X
@@ -267,6 +283,7 @@ real, dimension(-1:sz(2)+2)                            ::  Y
 real, dimension(-1:sz(3)+2)                            ::  Z
 
 kp = ofst+color
+res1 = 0.0
 
 ist = idx(0)
 ied = idx(1)
@@ -282,17 +299,31 @@ flop = flop + 66.0d0*0.5d0  &
 
 
 !$OMP PARALLEL DO Collapse(2) &
-!$OMP REDUCTION(+:res) &
+!$OMP REDUCTION(+:res1) &
 !$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent gang reduction(+:res1)
 do j=jst,jed
+!$acc loop independent gang reduction(+:res1)
 do i=ist,ied
-
+!$acc loop independent vector(128) reduction(+:res1)
+do k=kst+mod(i+j+kp,2), ked, 2
+#else
+!pgi$ ivdep
+do j=jst,jed
+!pgi$ novector
+do i=ist,ied
 !dir$ vector aligned
 !dir$ simd
+!NEC$ IVDEP
+!pgi$ vector
 do k=kst+mod(i+j+kp,2), ked, 2
+#endif
+
 pp = p(k,i,j)
 bb = b(k,i,j)
 
@@ -333,11 +364,16 @@ rp = (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
 dp = ( rp / dd - pp ) * omg
 pn = pp + dp
 P(k,i,j) = pn
-res = res + real(dp * dp, kind=8) ! 30
+res1 = res1 + dp * dp ! 30
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
+
+res = res + real(res1, kind=8)
 
 return
 end subroutine psor2sma_core_maf
@@ -358,7 +394,7 @@ double precision                                       ::  res, flop
 integer                                  ::  i, j, k, kl, kr, s, p, color, ip, ofst
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(-1:sz(3)+2)              ::  a, c, d, aw, cw, dw
-real                                     ::  ap, cp, e, pp, dp
+real                                     ::  ap, cp, e, pp, dp, res1
 real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
 real                                                   ::  C1, C2, C7, C8, GX, EY, TZ, ZTT
 real, dimension(-1:sz(1)+2)                            ::  XX
@@ -390,15 +426,19 @@ flop = flop + dble(           &
 
 
 ip = ofst + color
+res1 = 0.0
 
 
-!$OMP PARALLEL reduction(+:res) &
+!$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
 !$OMP private(a, c, d, aw, cw, dw) &
 !$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 
 !$OMP DO SCHEDULE(static)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=jst, jed
 do i=ist+mod(j+ip,2), ied, 2
 
@@ -561,14 +601,19 @@ do k = kst, ked
   pp =   x(k, i, j)
   dp = ( dw(k) - pp ) * omg * msk(k, i, j)
   x(k, i, j) = pp + dp
-  res = res + real(dp*dp, kind=8)
+  res1 = res1 + dp*dp
 end do  !  >> 6 flops
 
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END DO
 
 !$OMP END PARALLEL
+
+res = res + real(res1, kind=8)
 
 return
 end subroutine pcr_rb_maf
@@ -589,7 +634,7 @@ double precision                                       ::  res, flop
 integer                                  ::  i, j, k, kl, kr, s, p
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(-1:sz(3)+2)              ::  a, c, d, aw, cw, dw
-real                                     ::  ap, cp, e, pp, dp
+real                                     ::  ap, cp, e, pp, dp, res1
 real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
 real                                                   ::  C1, C2, C7, C8, GX, EY, TZ, ZTT
 real, dimension(-1:sz(1)+2)                            ::  XX
@@ -602,6 +647,8 @@ jst = idx(2)
 jed = idx(3)
 kst = idx(4)
 ked = idx(5)
+
+res1 = 0.0
 
 s = 2**(pn-1)
 
@@ -620,13 +667,16 @@ flop = flop + dble(           &
 )
 
 
-!$OMP PARALLEL reduction(+:res) &
+!$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
 !$OMP private(a, c, d, aw, cw, dw) &
 !$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 
 !$OMP DO SCHEDULE(static)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=jst, jed
 do i=ist, ied
 
@@ -788,14 +838,19 @@ do k = kst, ked
 pp =   x(k, i, j)
 dp = ( dw(k) - pp ) * omg * msk(k, i, j)
 x(k, i, j) = pp + dp
-res = res + real(dp*dp, kind=8)
+res1 = res1 + dp*dp
 end do  !  >> 6 flops
 
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END DO
 
 !$OMP END PARALLEL
+
+res = res + real(res1, kind=8)
 
 return
 end subroutine pcr_maf

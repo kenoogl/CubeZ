@@ -143,6 +143,33 @@ bool CZ::Comm_SUM_1(double* var, const string label)
 
 // #################################################################
 /*
+ * @brief float型1変数のAllreduce
+ * @param [in,out] var     対象変数
+ * @param [in]     label   PMlibラベル
+ * @retval true/false
+ */
+bool CZ::Comm_SUM_1(float* var, const string label)
+{
+  if ( numProc == 1 ) return true;
+  
+#ifndef DISABLE_MPI
+  float tmp = *var;
+  bool flag = true;
+  
+  if (!label.empty()) TIMING_start(label);
+  if ( MPI_SUCCESS != MPI_Allreduce(&tmp,
+                                    var,
+                                    1,
+                                    MPI_FLOAT,
+                                    MPI_SUM,
+                                    MPI_COMM_WORLD) ) flag=false;
+  if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(float));
+  return (flag)?true:false;
+#endif
+}
+
+// #################################################################
+/*
  * @brief double型1変数のAllreduce
  * @param [in,out] var     対象変数
  * @param [in]     label   PMlibラベル
@@ -170,6 +197,34 @@ bool CZ::Comm_MIN_1(double* var, const string label)
 
 // #################################################################
 /*
+ * @brief float型1変数のAllreduce
+ * @param [in,out] var     対象変数
+ * @param [in]     label   PMlibラベル
+ * @retval true/false
+ */
+bool CZ::Comm_MIN_1(float* var, const string label)
+{
+  if ( numProc == 1 ) return true;
+  
+#ifndef DISABLE_MPI
+  float tmp = *var;
+  bool flag = true;
+  
+  if (!label.empty()) TIMING_start(label);
+  if ( MPI_SUCCESS != MPI_Allreduce(&tmp,
+                                    var,
+                                    1,
+                                    MPI_FLOAT,
+                                    MPI_MIN,
+                                    MPI_COMM_WORLD) ) flag=false;
+  if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(float));
+  return (flag)?true:false;
+#endif
+}
+
+
+// #################################################################
+/*
  * @brief double型1変数のAllreduce
  * @param [in,out] var     対象変数
  * @param [in]     label   PMlibラベル
@@ -194,6 +249,35 @@ bool CZ::Comm_MAX_1(double* var, const string label)
   return (flag)?true:false;
 #endif
 }
+
+
+// #################################################################
+/*
+ * @brief float型1変数のAllreduce
+ * @param [in,out] var     対象変数
+ * @param [in]     label   PMlibラベル
+ * @retval true/false
+ */
+bool CZ::Comm_MAX_1(float* var, const string label)
+{
+  if ( numProc == 1 ) return true;
+  
+#ifndef DISABLE_MPI
+  float tmp = *var;
+  bool flag = true;
+  
+  if (!label.empty()) TIMING_start(label);
+  if ( MPI_SUCCESS != MPI_Allreduce(&tmp,
+                                    var,
+                                    1,
+                                    MPI_FLOAT,
+                                    MPI_MAX,
+                                    MPI_COMM_WORLD) ) flag=false;
+  if (!label.empty()) TIMING_stop(label, 2.0*numProc*sizeof(float));
+  return (flag)?true:false;
+#endif
+}
+
 
 // #################################################################
 /*
@@ -227,3 +311,38 @@ bool CZ::Comm_SUM_2(double* var1, double* var2, const string label)
   return (flag)?true:false;
 #endif
 }
+
+
+// #################################################################
+/*
+ * @brief float型2変数のAllreduce
+ * @param [in,out] var1    対象変数
+ * @param [in,out] var2    対象変数
+ * @param [in]     label   PMlibラベル
+ * @retval true/false
+ */
+bool CZ::Comm_SUM_2(float* var1, float* var2, const string label)
+{
+  if ( numProc == 1 ) return true;
+  
+#ifndef DISABLE_MPI
+  float buf[2], tmp[2];
+  tmp[0] = buf[0] = *var1;
+  tmp[1] = buf[1] = *var2;
+  bool flag = true;
+  
+  if (!label.empty()) TIMING_start(label);
+  if ( MPI_SUCCESS != MPI_Allreduce(tmp,
+                                    buf,
+                                    2,
+                                    MPI_FLOAT,
+                                    MPI_SUM,
+                                    MPI_COMM_WORLD) ) flag=false;
+  if (!label.empty()) TIMING_stop(label, 4.0*numProc*sizeof(float));
+  *var1 = buf[0];
+  *var2 = buf[1];
+  
+  return (flag)?true:false;
+#endif
+}
+

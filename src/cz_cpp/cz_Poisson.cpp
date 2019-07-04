@@ -230,10 +230,10 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
 
 
  // #################################################################
- double CZ::Fdot1(REAL_TYPE* x, double& flop)
+ REAL_TYPE CZ::Fdot1(REAL_TYPE* x, double& flop)
  {
    double flop_count=0.0;          /// 浮動小数点演算数
-   double xy = 0.0;
+   REAL_TYPE xy = 0.0;
    int gc = GUIDE;
 
    TIMING_start("Dot1");
@@ -247,10 +247,10 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  }
 
  // #################################################################
- double CZ::Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop)
+ REAL_TYPE CZ::Fdot2(REAL_TYPE* x, REAL_TYPE* y, double& flop)
  {
    double flop_count=0.0;          /// 浮動小数点演算数
-   double xy = 0.0;
+   REAL_TYPE xy = 0.0;
    int gc = GUIDE;
 
    TIMING_start("Dot2");
@@ -349,15 +349,15 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    blas_copy_(pcg_r0, pcg_r, size, &gc);
    TIMING_stop("Blas_Copy");
 
-   double rho_old = 1.0;
-   double alpha = 0.0;
-   double omega  = 1.0;
-   double r_omega = -omega;
+   REAL_TYPE rho_old = 1.0;
+   REAL_TYPE alpha = 0.0;
+   REAL_TYPE omega  = 1.0;
+   REAL_TYPE r_omega = -omega;
 
    for (itr=1; itr<ItrMax; itr++)
    {
      flop_count = 0.0;
-     double rho = Fdot2(pcg_r, pcg_r0, flop_count);
+     REAL_TYPE rho = Fdot2(pcg_r, pcg_r0, flop_count);
      flop += flop_count;
 
      if( fabs(rho) < FLT_MIN )
@@ -374,7 +374,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      }
      else
      {
-       double beta = rho / rho_old * alpha / omega;
+       REAL_TYPE beta = rho / rho_old * alpha / omega;
 
        TIMING_start("Blas_BiCG_1");
        flop_count = 0.0;
@@ -412,7 +412,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      flop += flop_count;
 
      
-     double r_alpha = -alpha;
+     REAL_TYPE r_alpha = -alpha;
      TIMING_start("Blas_TRIAD");
      flop_count = 0.0;
      blas_triad_(pcg_s, pcg_q, pcg_r, &r_alpha, size, innerFidx, &gc, &flop_count);

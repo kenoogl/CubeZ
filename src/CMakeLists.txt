@@ -51,8 +51,10 @@ endif()
 
 add_executable(${cz_target} ${cz_src})
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
-  set_target_properties(${cz_target} PROPERTIES LINKER_LANGUAGE Fortran)
+if(with_ACC)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+    set_target_properties(${cz_target} PROPERTIES LINKER_LANGUAGE Fortran)
+  endif()
 else()
   set_target_properties(${cz_target} PROPERTIES LINKER_LANGUAGE CXX)
 endif()

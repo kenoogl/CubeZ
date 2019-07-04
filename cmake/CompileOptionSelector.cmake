@@ -44,7 +44,7 @@ macro (AddOptimizeOption)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -qopt-report=5 -std=c++11 -restrict  -DMPICH_IGNORE_CXX_SEEK")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -qopt-report=5")
-    set(CMAKE_Fortran_FLAGS "-O3 -qopt-report=5 -inline-forceinline")
+    set(CMAKE_Fortran_FLAGS "-O3 -qopt-report=5 -inline-forceinline -fpp")
 
     # optimization for Intel AVX*
     if (with_SIMD STREQUAL "256")
@@ -58,9 +58,9 @@ macro (AddOptimizeOption)
     endif()
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,vect,mp,acc -cpp=mm -tp=skylake")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
-    set(CMAKE_Fortran_FLAGS "-fastsse -Mipa=fast,inline -O0 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fast -Mipa=fast,inline -O3 -g -Minfo=intensity,vect,mp,acc -cpp=mm -tp=skylake")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fast -Mipa=fast,inline -O3 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
+    set(CMAKE_Fortran_FLAGS "-fast -Mipa=fast,inline -O3 -g -Minfo=intensity,mp,vect,acc -cpp=mm -tp=skylake")
 
     # optimization for Intel AVX*
     if (with_SIMD STREQUAL "256")

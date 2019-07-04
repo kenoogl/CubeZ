@@ -43,27 +43,35 @@ kst = idx(4)
 ked = idx(5)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=1-g,jx+g
 do i=1-g,ix+g
-!dir$ vector aligned
-!dir$ simd
 do k=1-g,kx+g
   x(k, i, j) = 0.0
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   x(k, i, j) = 1.0
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -88,15 +96,19 @@ jx = sz(2)
 kx = sz(3)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=1-g,jx+g
 do i=1-g,ix+g
-  !dir$ vector aligned
-  !dir$ simd
 do k=1-g,kx+g
   x(k,i,j) = 0.0
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -121,15 +133,19 @@ jx = sz(2)
 kx = sz(3)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=1-g,jx+g
 do i=1-g,ix+g
-!dir$ vector aligned
-!dir$ simd
 do k=1-g,kx+g
   y(k,i,j) = x(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -155,15 +171,19 @@ jx = sz(2)
 kx = sz(3)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j=1,jx
 do i=1,ix
-!dir$ vector aligned
-!dir$ simd
 do k=1,kx
 y(k,i,j) = x(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 
@@ -189,7 +209,8 @@ integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, y, z
-double precision                                       ::  flop, a
+double precision                                       ::  flop
+real                                                   ::  a
 !dir$ assume_aligned x:64, y:64, z:64
 
 ix = sz(1)
@@ -209,15 +230,19 @@ flop = flop + 2.0d0    &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   z(k,i,j) = a * x(k,i,j) + y(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -241,7 +266,8 @@ integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p
-double precision                                       ::  flop, q, r
+double precision                                       ::  flop
+real                                                   ::  q, r
 !dir$ assume_aligned p:64
 
 ix = sz(1)
@@ -263,18 +289,21 @@ flop = flop + 2.0d0    &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(+:r) &
-!$OMP PRIVATE(q)
+!$OMP REDUCTION(+:r) PRIVATE(q)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
-  q = dble(p(k,i,j))
+  q = p(k,i,j)
   r = r + q*q
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -299,7 +328,8 @@ integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, q
-double precision                                       ::  flop, r
+double precision                                       ::  flop
+real                                                   ::  r
 !dir$ assume_aligned p:64, q:64
 
 ix = sz(1)
@@ -322,15 +352,19 @@ flop = flop + 2.0d0    &
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
 !$OMP REDUCTION(+:r)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-  !dir$ vector aligned
-  !dir$ simd
 do k = kst, ked
-  r = r + dble(p(k,i,j)) * dble(q(k,i,j))
+  r = r + p(k,i,j) * q(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -357,7 +391,8 @@ integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, r, q
-double precision                                       ::  flop, beta, omg
+double precision                                       ::  flop
+real                                                   ::  beta, omg
 !dir$ assume_aligned p:64, q:64, r:64
 
 ix = sz(1)
@@ -377,15 +412,19 @@ flop = flop + 4.0d0    &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   p(k,i,j) = r(k,i,j) + beta * ( p(k,i,j) - omg * q(k,i,j) )
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -412,7 +451,8 @@ integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(0:5)                                ::  idx
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, y, z
-double precision                                       ::  flop, a, b
+double precision                                       ::  flop
+real                                                   ::  a, b
 !dir$ assume_aligned x:64, y:64, z:64
 
 ix = sz(1)
@@ -432,15 +472,19 @@ flop = flop + 4.0d0    &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   z(k,i,j) = a * x(k,i,j) + b * y(k,i,j) + z(k,i,j)
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -495,10 +539,11 @@ flop = flop + 13.0d0   &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   ss = c1 * p(k  , i+1,j  ) &
      + c2 * p(k  , i-1,j  ) &
@@ -510,6 +555,9 @@ do k = kst, ked
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -565,10 +613,11 @@ flop = flop + 14.0d0   &
      * dble(ked-kst+1)
 
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
   ss = c1 * p(k  , i+1,j  ) &
      + c2 * p(k  , i-1,j  ) &
@@ -580,6 +629,9 @@ do k = kst, ked
 end do
 end do
 end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -631,6 +683,9 @@ flop = flop + 63.0d0   &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
@@ -672,6 +727,9 @@ r(k,i,j) = ( b(k,i,j)                           &
 enddo
 enddo
 enddo
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 
@@ -722,6 +780,9 @@ flop = flop + 63.0d0   &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
@@ -763,6 +824,9 @@ ap(k,i,j) = (                                  &
 enddo
 enddo
 enddo
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
@@ -807,6 +871,9 @@ ked = idx(5)
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
 !$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7) &
 !$OMP reduction(max:ss)
+#ifdef _OPENACC
+!$acc kernels
+#endif
 do j = jst, jed
 do i = ist, ied
 do k = kst, ked
@@ -850,6 +917,9 @@ pvt(k,i,j) = 1.0/ss
 enddo
 enddo
 enddo
+#ifdef _OPENACC
+!$acc end kernels
+#endif
 !$OMP END PARALLEL DO
 
 return
