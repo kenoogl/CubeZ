@@ -9,6 +9,11 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-7-16 Version 1.1.0
+- @prague
+- pcrv_maf_()
+
+---
 - 2019-7-16 Version 1.0.9 
 - @prague
 - modify CMakeLists.txt for Aurora

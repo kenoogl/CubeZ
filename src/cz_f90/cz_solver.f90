@@ -445,7 +445,7 @@ integer                                  ::  i, j, k, kl, kr, s, p, color, ip, o
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(-1:sz(3)+2)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp, res1
-real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
+real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
 
 ist = idx(0)
 ied = idx(1)
@@ -462,8 +462,7 @@ flop = flop + dble(          &
   (jed-jst+1)*(ied-ist+1)* ( &
      (ked-kst+1)* 6.0        &  ! Source
    + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-   + 2*s*9.0                 &
-   + (ked-kst-2*s+1)*25.0    &
+   + s*9.0                 &
    + (ked-kst+1)*6.0         &  ! Relaxation
      + 6.0 )                 &  ! BC
   ) * 0.5
@@ -473,7 +472,7 @@ ip = ofst + color
 
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
 
 !$OMP DO SCHEDULE(static)
@@ -568,47 +567,6 @@ d1(kr) = dd2
 end do
 
 
-!dir$ vector aligned
-!dir$ simd
-!NEC$ IVDEP
-do k = kst+s, ked-s
-kl  = max(k-s, kst-1)
-kr  = min(k+s, ked+1)
-cc1 = c(kr)
-aa2 = a(k)
-cc2 = c(k)
-aa3 = a(kl)
-f1  = d(kr)
-f2  = d(k)
-f3  = d(kl)
-jj = 1.0 / (1.0 - cc2 * aa3 - cc1 * aa2)
-dd1 = ( f1 * (3.0-cc2*aa3) - cc1*f2 ) * jj
-dd2 = (1.0 - f1*aa2 + 2.0*f2 - cc2*f3) * jj
-dd3 = (1.0 + 2.0*f3 - aa3*f2 - aa2*cc1) * jj
-d1(kr) = dd1
-d1(k ) = dd2
-d1(kl) = dd3
-end do
-
-
-!dir$ vector aligned
-!dir$ simd
-!NEC$ IVDEP
-do k = ked-s+1, ked
-kl = max(k-s, kst-1)
-kr = min(k+s, ked+1)
-cc1 = c(kl)
-aa2 = a(k)
-f1  = d(kl)
-f2  = d(k)
-jj  = 1.0 / (1.0 - aa2 * cc1)
-dd1 = (f1 - cc1 * f2) * jj
-dd2 = (f2 - aa2 * f1) * jj
-d1(kl) = dd1
-d1(k ) = dd2
-end do
-
-
 ! a_{i-1} x_{i-2} + x_{i-1} + c_{i-1} x_i     = d_{i-1}
 ! a_{i}   x_{i-1} + x_{i}   + c_{i}   x_{i+1} = d_{i}
 ! a_{i+1} x_{i}   + x_{i+1} + c_{i+1} x_{i+2} = d_{i+1}
@@ -654,7 +612,7 @@ integer                                  ::  i, j, k, kl, kr, s, p
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp, res1
-real                                     ::  jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3
+real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
 
 ist = idx(0)
 ied = idx(1)
@@ -671,8 +629,7 @@ flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
 + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ 2*s*9.0                 &
-+ (ked-kst-2*s+1)*25.0    &
++ s*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )
@@ -683,7 +640,7 @@ flop = flop + dble(          &
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, dd3, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
@@ -771,48 +728,6 @@ d1(k ) = dd1
 d1(kr) = dd2
 end do
 
-! 3x3とあとの2ｘ2は不要
-!dir$ vector aligned
-!dir$ simd
-!NEC$ IVDEP
-!pgi$ ivdep
-!do k = kst+s, ked-s
-!kl  = max(k-s, kst-1)
-!kr  = min(k+s, ked+1)
-!cc1 = c(kr)
-!aa2 = a(k)
-!cc2 = c(k)
-!aa3 = a(kl)
-!f1  = d(kr)
-!f2  = d(k)
-!f3  = d(kl)
-!jj = 1.0 / (1.0 - cc2 * aa3 - cc1 * aa2)
-!dd1 = ( f1 * (3.0-cc2*aa3) - cc1*f2 ) * jj
-!dd2 = (1.0 - f1*aa2 + 2.0*f2 - cc2*f3) * jj
-!dd3 = (1.0 + 2.0*f3 - aa3*f2 - aa2*cc1) * jj
-!d1(kr) = dd1
-!d1(k ) = dd2
-!d1(kl) = dd3
-!end do
-
-
-!dir$ vector aligned
-!dir$ simd
-!NEC$ IVDEP
-!pgi$ ivdep
-!do k = ked-s+1, ked
-!kl = max(k-s, kst-1)
-!kr = min(k+s, ked+1)
-!cc1 = c(kl)
-!aa2 = a(k)
-!f1  = d(kl)
-!f2  = d(k)
-!jj  = 1.0 / (1.0 - aa2 * cc1)
-!dd1 = (f1 - cc1 * f2) * jj
-!dd2 = (f2 - aa2 * f1) * jj
-!d1(kl) = dd1
-!d1(k ) = dd2
-!end do
 
 
 ! a_{i-1} x_{i-2} + x_{i-1} + c_{i-1} x_i     = d_{i-1}
@@ -881,8 +796,7 @@ flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
 + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ 2*s*9.0                 &
-+ (ked-kst-2*s+1)*25.0    &
++ s*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )

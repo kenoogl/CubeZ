@@ -3,6 +3,11 @@
 - pcrの配列a,c, dはprivateにすると、フォーク時にアロケーションする？　スレッド分アロケートしておいて、アドレスを渡し、noaliasにするとどうか？
 
 
+####  Version 1.1.0
+- pcr系のflop count 修正
+- pcrv_maf
+
+
 ####  Version 1.0.9
 - Aurora用のmake >> Fortranでリンク
 - cz_solver.f90のpcr()でインデクスのmin, maxを外すように配列領域を拡大 >> pcrv()

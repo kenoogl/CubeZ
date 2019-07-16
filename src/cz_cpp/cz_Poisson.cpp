@@ -705,9 +705,9 @@ int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
     if (s_type==LS_PCRV_MAF)
     {
       TIMING_start("PCR_MAF");
-      //pcrv_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
-      //         WA, WC, WD, WAA, WCC, WDD,
-      //         &ac1, &res, &flop_count);
+      pcrv_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
+               WA, WC, WD,
+               &ac1, &res, &flop_count);
       TIMING_stop("PCR_MAF", flop_count);
     }
     else
