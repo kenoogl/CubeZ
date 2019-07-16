@@ -4,9 +4,15 @@
 BiCGSTABの境界条件は係数に織り込むFFVC方式でないと、導入できない
 現状はディリクレ条件でのテストのみ
 
-
+bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 
 ## REVISION HISTORY
+
+---
+- 2019-7-16 Version 1.0.9 
+- @prague
+- modify CMakeLists.txt for Aurora
+- improvement for Aurora
 
 ---
 - 2019-7-4 Version 1.0.8

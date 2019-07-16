@@ -178,7 +178,9 @@ public:
     nx = dims[0] * dims[1] * dims[2];
     T* var = new T[nx];
     
+#ifndef __NEC__
 #pragma omp parallel for schedule(static)
+#endif
     for (int i=0; i<nx; i++) var[i]=0;
     
     return var;
@@ -193,7 +195,9 @@ public:
     size_t nx = sz;
     T* var = new T[nx];
     
+#ifndef __NEC__
 #pragma omp parallel for schedule(static)
+#endif
     for (int i=0; i<nx; i++) var[i]=0;
     
     return var;
@@ -383,6 +387,14 @@ private:
                double& flop,
                int s_type,
                bool converge_check=true);
+  
+  int LSOR_PCRV(double& res,
+                REAL_TYPE* X,
+                REAL_TYPE* B,
+                const int itr_max,
+                double& flop,
+                int s_type,
+                bool converge_check=true);
   
   int LSOR_PCR_RB(double& res,
               REAL_TYPE* X,

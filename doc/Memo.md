@@ -1,5 +1,15 @@
 # Memo for CubeZ
 
+- pcrの配列a,c, dはprivateにすると、フォーク時にアロケーションする？　スレッド分アロケートしておいて、アドレスを渡し、noaliasにするとどうか？
+
+
+####  Version 1.0.9
+- Aurora用のmake >> Fortranでリンク
+- cz_solver.f90のpcr()でインデクスのmin, maxを外すように配列領域を拡大 >> pcrv()
+- pcrの最終段の計算は簡単になる. 最初の2x2だけでよい
+- NECのFBからpcrvを実装 a,c,dはallocateを使う実装
+- 反復回数、履歴ともpcrと同じになる。mac gccでの時間は 163.3  >> 54.3 secとなり 1/3
+
 
 #### ver 1.0.8
 - PGI compilerで最適化されない件（IntelはOKだが）

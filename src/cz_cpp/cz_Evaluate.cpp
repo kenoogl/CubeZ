@@ -218,6 +218,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr") ) {
       pc_type = LS_PCR;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcrv") ) {
+      pc_type = LS_PCRV;
+    }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
     }
@@ -233,6 +236,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_maf") ) {
       pc_type = LS_PCR_MAF;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcrv_maf") ) {
+      pc_type = LS_PCRV_MAF;
+    }
     else printf("precon=%s\n", precon.c_str());
   }
 
@@ -243,6 +249,10 @@ int CZ::Evaluate(int argc, char **argv)
   else if ( !strcasecmp(q, "pcr") ) {
     ls_type = LS_PCR;
     strcpy(fname, "pcr.txt");
+  }
+  else if ( !strcasecmp(q, "pcrv") ) {
+    ls_type = LS_PCRV;
+    strcpy(fname, "pcrv.txt");
   }
   
   // MAF
@@ -280,6 +290,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr") ) {
       pc_type = LS_PCR;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcrv") ) {
+      pc_type = LS_PCRV;
+    }
     else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
       pc_type = LS_JACOBI_MAF;
     }
@@ -295,6 +308,9 @@ int CZ::Evaluate(int argc, char **argv)
     else if ( !strcasecmp(precon.c_str(), "pcr_maf") ) {
       pc_type = LS_PCR_MAF;
     }
+    else if ( !strcasecmp(precon.c_str(), "pcrv_maf") ) {
+      pc_type = LS_PCRV_MAF;
+    }
     else printf("precon=%s\n", precon.c_str());
   }
   
@@ -305,6 +321,10 @@ int CZ::Evaluate(int argc, char **argv)
   else if ( !strcasecmp(q, "pcr_maf") ) {
     ls_type = LS_PCR_MAF;
     strcpy(fname, "pcr_maf.txt");
+  }
+  else if ( !strcasecmp(q, "pcrv_maf") ) {
+    ls_type = LS_PCRV_MAF;
+    strcpy(fname, "pcrv_maf.txt");
   }
     
   else{
@@ -336,6 +356,10 @@ int CZ::Evaluate(int argc, char **argv)
     {
       printf("Preconditioner = PCR\n");
     }
+    else if (pc_type==LS_PCRV)
+    {
+      printf("Preconditioner = PCRV\n");
+    }
     else if (pc_type==LS_JACOBI_MAF)
     {
       printf("Preconditioner = Jacobi_MAF\n");
@@ -355,6 +379,10 @@ int CZ::Evaluate(int argc, char **argv)
     else if (pc_type==LS_PCR_MAF)
     {
       printf("Preconditioner = PCR_MAF\n");
+    }
+    else if (pc_type==LS_PCRV_MAF)
+    {
+      printf("Preconditioner = PCRV_MAF\n");
     }
   }
 
@@ -539,6 +567,13 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_PCR(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
+    
+    case LS_PCRV:
+    case LS_PCRV_MAF:
+    TIMING_start("LSOR");
+    if ( 0 == (itr=LSOR_PCRV(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+    TIMING_stop("LSOR", flop);
+    break;
       
     case LS_PCR_RB:
     case LS_PCR_RB_MAF:
