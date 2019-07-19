@@ -446,10 +446,10 @@ int CZ::Evaluate(int argc, char **argv)
   
   if (ls_type == LS_PCRV_SA || ls_type == LS_PCRV_SA_MAF)
   {
-    int tmp = (size[2]+2*GUIDE) * thread_max;
-    if( (WA = czAllocR(tmp, var_type)) == NULL ) return 0;
-    if( (WC = czAllocR(tmp, var_type)) == NULL ) return 0;
-    if( (WD = czAllocR(tmp, var_type)) == NULL ) return 0;
+    int tmp = (size[2]+2*GUIDE);
+    if( (WA = czAllocR2(tmp, var_type)) == NULL ) return 0;
+    if( (WC = czAllocR2(tmp, var_type)) == NULL ) return 0;
+    if( (WD = czAllocR2(tmp, var_type)) == NULL ) return 0;
   }
   else
   {
@@ -503,9 +503,9 @@ int CZ::Evaluate(int argc, char **argv)
     printf("s = %d  kk= %d\n", s, kk);
     
     
-    if( (SA = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
-    if( (SC = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
-    if( (SD = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
+    if( (SA = czAllocR2(kk, var_type)) == NULL ) return 0;
+    if( (SC = czAllocR2(kk, var_type)) == NULL ) return 0;
+    if( (SD = czAllocR2(kk, var_type)) == NULL ) return 0;
     L_Memory += ( kk * thread_max * 3 ) * (double)sizeof(REAL_TYPE);
   }
   

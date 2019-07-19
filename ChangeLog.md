@@ -9,6 +9,14 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-7-19 Version 1.1.2
+- pcrv_sa_maf
+
+---
+- 2019-7-19 Version 1.1.1
+- pcrv_sa
+
+---
 - 2019-7-16 Version 1.1.0
 - @prague
 - pcrv_maf_()

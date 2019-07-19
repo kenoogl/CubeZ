@@ -947,7 +947,7 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, s, p, id, thx
+integer                                  ::  i, j, k, s, p, id, thx, ss
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g, thx)        ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
@@ -979,7 +979,7 @@ id = 1
 !$acc kernels
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(ap, cp, e, s, p, k, pp, dp) &
+!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP firstprivate(id)
 !$OMP DO SCHEDULE(static) Collapse(2)
@@ -1020,7 +1020,7 @@ d(ked,id) = ( d(ked,id) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 ! PCR  最終段の一つ手前で停止
 do p=1, pn-1
-s = 2**(p-1)
+ss = 2**(p-1)
 
 !dir$ vector aligned
 !dir$ simd
@@ -1028,10 +1028,10 @@ s = 2**(p-1)
 do k = kst, ked
 ap = a(k,id)
 cp = c(k,id)
-e = 1.0 / ( 1.0 - ap * c(k-s,id) - cp * a(k+s,id) )
-a1(k,id) =  -e * ap * a(k-s,id)
-c1(k,id) =  -e * cp * c(k+s,id)
-d1(k,id) =   e * ( d(k,id) - ap * d(k-s,id) - cp * d(k+s,id) )
+e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
+a1(k,id) =  -e * ap * a(k-ss,id)
+c1(k,id) =  -e * cp * c(k+ss,id)
+d1(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
 end do
 
 !dir$ vector aligned
@@ -1045,23 +1045,23 @@ end do
 end do ! p反復
 
 
-! 最終段の反転 512のとき pn=9, s=256
-s = 2**(pn-1)
+! 最終段の反転 512のとき pn=9, ss=256
+ss = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
-do k = kst, kst+s-1 ! 2, 2+256-1=257
+do k = kst, kst+ss-1 ! 2, 2+256-1=257
 cc1 = c(k,id)
-aa2 = a(k+s,id)
+aa2 = a(k+ss,id)
 f1  = d(k,id)
-f2  = d(k+s,id)
+f2  = d(k+ss,id)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
-d1(k  ,id) = dd1
-d1(k+s,id) = dd2
+d1(k   ,id) = dd1
+d1(k+ss,id) = dd2
 end do
 
 

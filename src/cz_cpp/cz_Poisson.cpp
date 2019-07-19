@@ -776,15 +776,28 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
   
   ss = pow(2, pn-2);
   int kk = ked - kst+ 2*ss + 1;
+  int id = 0;
   
-  
-#pragma omp parallel for
+#ifdef __NEC__
   for (int i=0; i<kk*thread_max; i++)
   {
     SA[i] = 0.0;
     SC[i] = 0.0;
     SD[i] = 0.0;
   }
+#else
+#pragma omp parallel for firstprivate(id)
+  for (int i=0; i<kk; i++)
+  {
+#ifdef _OPENMP
+    id = omp_get_thread_num();
+#endif
+    SA[i+thread_max*id] = 0.0;
+    SC[i+thread_max*id] = 0.0;
+    SD[i+thread_max*id] = 0.0;
+  }
+#endif
+
   
   
   for (itr=1; itr<=itr_max; itr++)
@@ -795,9 +808,10 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     if (s_type==LS_PCRV_SA_MAF)
     {
       TIMING_start("PCR_MAF");
-      //pcrv_sa_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
-      //          WA, WC, WD,
-      //          &ac1, &res, &flop_count);
+      pcrv_sa_maf_(size, innerFidx, &gc, &pn, &ss, &thread_max,
+                X, MSK, B, xc, yc, zc,
+                SA, SC, SD, WA, WC, WD,
+                &ac1, &res, &flop_count);
       TIMING_stop("PCR_MAF", flop_count);
     }
     else

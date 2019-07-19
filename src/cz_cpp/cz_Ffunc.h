@@ -224,6 +224,29 @@ void pcrv_maf_(int* sz,
                REAL_TYPE* omg,
                double* res,
                double* flop);
+
+void pcrv_sa_maf_(int* sz,
+                  int* idx,
+                  int* g,
+                  int* pn,
+                  int* ss,
+                  int* thx,
+                  REAL_TYPE* x,
+                  REAL_TYPE* msk,
+                  REAL_TYPE* rhs,
+                  REAL_TYPE* XX,
+                  REAL_TYPE* YY,
+                  REAL_TYPE* ZZ,
+                  REAL_TYPE* A,
+                  REAL_TYPE* C,
+                  REAL_TYPE* D,
+                  REAL_TYPE* WA,
+                  REAL_TYPE* WC,
+                  REAL_TYPE* WD,
+                  REAL_TYPE* omg,
+                  double* res,
+                  double* flop);
+  
   
 // obsolete.f90
 void tdma_0_ (int* nx,

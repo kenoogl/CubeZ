@@ -1,7 +1,8 @@
 # Memo for CubeZ
 
-- pcrの配列a,c, dはprivateにすると、フォーク時にアロケーションする？　スレッド分アロケートしておいて、アドレスを渡し、noaliasにするとどうか？
 
+####  Version 1.1.1
+- pcrの配列a,c, dはprivateにすると、フォーク時にアロケーションする？　スレッド分アロケートしておいて、アドレスを渡す
 
 ####  Version 1.1.0
 - pcr系のflop count 修正

@@ -216,6 +216,33 @@ public:
   
   // #################################################################
   template <typename T>
+  T* czAllocR2(const int sz, T type)
+  {
+    if ( !sz ) return NULL;
+    
+    size_t nx = sz;
+    T* var = new T[nx*thread_max];
+    
+    int id=0;
+    
+#ifdef __NEC__
+    for (int i=0; i<nx*thread_max; i++) {
+      var[i]=0;
+    }
+#else
+#pragma omp parallel for schedule(static) firstprivate(id)
+    for (int i=0; i<nx; i++) {
+  #ifdef _OPENMP
+      id = omp_get_thread_num();
+  #endif
+      var[i+thread_max*id]=0;
+    }
+#endif
+    return var;
+  }
+  
+  // #################################################################
+  template <typename T>
   void czDelete(T* ptr)
   {
     if (ptr) {

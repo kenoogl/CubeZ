@@ -982,3 +982,204 @@ res = res + real(res1, kind=8)
 
 return
 end subroutine pcrv_maf
+
+
+!********************************************************************************
+subroutine pcrv_sa_maf (sz, idx, g, pn, s, thx, x, msk, rhs, XX, YY, ZZ, &
+a, c, d, aw, cw, dw, omg, res, flop)
+#ifdef _OPENMP
+!$ use omp_lib
+#endif
+implicit none
+!args
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+integer                                                ::  g, pn
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
+real                                                   ::  omg
+double precision                                       ::  res, flop
+! work
+integer                                  ::  i, j, k, s, p, id, thx, ss
+integer                                  ::  ist, ied, jst, jed, kst, ked
+real, dimension(-1:sz(3)+2, thx)         ::  aw, cw, dw
+real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
+real                                     ::  ap, cp, e, pp, dp, res1
+real                                     ::  jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3
+real                                                   ::  C1, C2, C7, C8, GX, EY, TZ, ZTT
+real, dimension(-1:sz(1)+2)                            ::  XX
+real, dimension(-1:sz(2)+2)                            ::  YY
+real, dimension(-1:sz(3)+2)                            ::  ZZ
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+res1 = 0.0
+
+flop = flop + dble(           &
+(jed-jst+1)*(ied-ist+1)* (  &
+( 24.0d0 +                & ! metrics
++ 3.0 * 2.0 + 12.0       & ! coef BC
+)                         &
++ (ked-kst+1)* (11.0+10.0) & ! coef + Source
++ (ked-kst-1)* 6.0d0       & ! coef
++ (ked-kst+1)*(pn-1)*16.0  & ! PCR
++ 2**(pn-1) * 9.0           & ! 2x2
++ (ked-kst+1)*6.0          & ! Relaxation
+)                          &
+)
+
+id = 1
+
+#ifdef _OPENACC
+!$acc kernels
+#else
+!$OMP PARALLEL reduction(+:res1) &
+!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$OMP firstprivate(id) &
+!$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
+!$OMP DO SCHEDULE(static) Collapse(2)
+#endif
+do j=jst, jed
+do i=ist, ied
+
+#ifdef _OPENMP
+id = omp_get_thread_num()+1 ! id= 1 ~
+#endif
+
+GX =  2.0 / (XX(i+1) - XX(i-1))
+EY =  2.0 / (YY(j+1) - YY(j-1))
+C1 =  GX * GX
+C2 =  EY * EY
+C7 = -(XX(i+1) - 2.0*XX(i) + XX(i-1)) * C1 * GX
+C8 = -(YY(j+1) - 2.0*YY(j) + YY(j-1)) * C2 * EY
+dd1= C1 + 0.5 * C7 ! R1
+dd2= C1 - 0.5 * C7 ! R2
+cc1= C2 + 0.5 * C8 ! R3
+cc2= C2 - 0.5 * C8 ! R4      >>  24 flops
+
+! Reflesh coef. due to override
+do k=kst, ked
+f1 = ZZ(k+1)
+f2 = ZZ(k-1)
+TZ = 2.0 / (f1 - f2)
+ZTT= f1 - 2.0*ZZ(k) + f2
+f3 = TZ * TZ
+aw(k,id) = f3              ! C3
+cw(k,id) = -ZTT * f3 * TZ  ! C9
+dw(k,id) = 0.5 / (C1 + C2 + f3) ! 1/R7
+end do   ! >>  11 flops
+
+
+a(kst,id) = 0.0
+c(kst,id) = -(aw(kst,id) + 0.5 * cw(kst,id)) * dw(kst,id) ! -R5/R7 = -(C3+0.5*C9) / R7      >> 3 flops
+
+do k=kst+1, ked-1
+f1 = aw(k,id)  ! C3
+f2 = cw(k,id)  ! C9
+aa3 = dw(k,id)
+a(k,id) = -(f1 - 0.5 * f2) * aa3
+c(k,id) = -(f1 + 0.5 * f2) * aa3
+end do    !  >> 6 flops
+
+a(ked,id) = -(aw(ked,id) - 0.5 * cw(ked,id)) * dw(ked,id) ! -R6/R7 = -(C3-0.5*C9) / R7     >> 3 flops
+c(ked,id) = 0.0
+
+! Source
+do k = kst, ked
+d(k,id) = (                         &
+  dd1 * x(k, i+1, j  )   &
++ dd2 * x(k, i-1, j  )   &
++ cc1 * x(k, i  , j+1)   &
++ cc2 * x(k, i  , j-1)   &
+- rhs(k, i, j)           &
+) * dw(k,id) * msk(k, i, j)
+end do   !  >>  10 flops
+! ここまで、dd1, dd2, cc1, cc2は再利用しない
+! a, c, dを計算したので、aw, cw, dwは再利用可能
+
+! BC   >>  12 flops
+d(kst,id) = ( d(kst,id) + (aw(kst,id) - 0.5 * cw(kst,id)) * dw(kst,id) * x(kst-1, i, j) ) * msk(kst, i, j)
+d(ked,id) = ( d(ked,id) + (aw(ked,id) + 0.5 * cw(ked,id)) * dw(ked,id) * x(ked+1, i, j) ) * msk(ked, i, j)
+
+
+! PCR  最終段の一つ手前で停止
+do p=1, pn-1
+ss = 2**(p-1)
+
+!dir$ vector aligned
+!dir$ simd
+!pgi$ ivdep
+do k = kst, ked
+ap = a(k,id)
+cp = c(k,id)
+e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
+aw(k,id) =  -e * ap * a(k-ss,id)
+cw(k,id) =  -e * cp * c(k+ss,id)
+dw(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
+end do   !  >> 16 flops
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+a(k,id) = aw(k,id)
+c(k,id) = cw(k,id)
+d(k,id) = dw(k,id)
+end do
+
+end do ! p反復
+
+
+! 最終段の反転
+ss = 2**(pn-1)
+
+!dir$ vector aligned
+!dir$ simd
+!NEC$ IVDEP
+!pgi$ ivdep
+do k = kst, kst+ss-1
+cc1 = c(k,id)
+aa2 = a(k+ss,id)
+f1  = d(k,id)
+f2  = d(k+ss,id)
+jj  = 1.0 / (1.0 - aa2 * cc1)
+dd1 = (f1 - cc1 * f2) * jj
+dd2 = (f2 - aa2 * f1) * jj
+dw(k   ,id) = dd1
+dw(k+ss,id) = dd2
+end do  ! >>  9 flops
+
+
+! a_{i-1} x_{i-2} + x_{i-1} + c_{i-1} x_i     = d_{i-1}
+! a_{i}   x_{i-1} + x_{i}   + c_{i}   x_{i+1} = d_{i}
+! a_{i+1} x_{i}   + x_{i+1} + c_{i+1} x_{i+2} = d_{i+1}
+
+
+! Relaxation
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+pp =   x(k, i, j)
+dp = ( dw(k,id) - pp ) * omg * msk(k, i, j)
+x(k, i, j) = pp + dp
+res1 = res1 + dp*dp
+end do  !  >> 6 flops
+
+end do
+end do
+#ifdef _OPENACC
+!$acc end kernels
+#else
+!$OMP END DO
+!$OMP END PARALLEL
+#endif
+
+
+res = res + real(res1, kind=8)
+
+return
+end subroutine pcrv_sa_maf
