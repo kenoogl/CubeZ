@@ -77,6 +77,7 @@ enum LinearSolver
   LS_JACOBI,
   LS_PCR,
   LS_PCRV,
+  LS_PCRV_SA,
   LS_PCR_RB,
   LS_PSOR_MAF,
   LS_SOR2SMA_MAF,
@@ -84,6 +85,7 @@ enum LinearSolver
   LS_JACOBI_MAF,
   LS_PCR_MAF,
   LS_PCRV_MAF,
+  LS_PCRV_SA_MAF,
   LS_PCR_RB_MAF
 };
 

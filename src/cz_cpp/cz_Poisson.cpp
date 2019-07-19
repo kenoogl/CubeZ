@@ -713,9 +713,99 @@ int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
     else
     {
       TIMING_start("PCR");
-      pcrv_(size, innerFidx, &gc, &pn, X, MSK, B,
-           WA, WC, WD,
+      pcrv_(size, innerFidx, &gc, &pn, X, MSK, B, WA, WC, WD,
            &ac1, &res, &flop_count);
+      TIMING_stop("PCR", flop_count);
+    }
+    flop += flop_count;
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+
+
+/* #################################################################
+ * @brief Line SOR PCR vector static array
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
+ */
+int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                  const int itr_max, double& flop,
+                  int s_type,
+                  bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  int ss;
+  
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  ss = pow(2, pn-2);
+  int kk = ked - kst+ 2*ss + 1;
+  
+  
+#pragma omp parallel for
+  for (int i=0; i<kk*thread_max; i++)
+  {
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
+  }
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    
+    if (s_type==LS_PCRV_SA_MAF)
+    {
+      TIMING_start("PCR_MAF");
+      //pcrv_sa_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
+      //          WA, WC, WD,
+      //          &ac1, &res, &flop_count);
+      TIMING_stop("PCR_MAF", flop_count);
+    }
+    else
+    {
+      TIMING_start("PCR");
+      pcrv_sa_(size, innerFidx, &gc, &pn, &ss, &thread_max,
+               X, MSK, B, SA, SC, SD, WA, WC, WD,
+               &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);
     }
     flop += flop_count;

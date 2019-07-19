@@ -254,6 +254,10 @@ int CZ::Evaluate(int argc, char **argv)
     ls_type = LS_PCRV;
     strcpy(fname, "pcrv.txt");
   }
+  else if ( !strcasecmp(q, "pcrv_sa") ) {
+    ls_type = LS_PCRV_SA;
+    strcpy(fname, "pcrv_sa.txt");
+  }
   
   // MAF
   else if ( !strcasecmp(q, "jacobi_maf") ) {
@@ -325,6 +329,10 @@ int CZ::Evaluate(int argc, char **argv)
   else if ( !strcasecmp(q, "pcrv_maf") ) {
     ls_type = LS_PCRV_MAF;
     strcpy(fname, "pcrv_maf.txt");
+  }
+  else if ( !strcasecmp(q, "pcrv_sa_maf") ) {
+    ls_type = LS_PCRV_SA_MAF;
+    strcpy(fname, "pcrv_sa_maf.txt");
   }
     
   else{
@@ -407,6 +415,12 @@ int CZ::Evaluate(int argc, char **argv)
   }
 
 
+  // 計算するインデクス範囲の決定
+  double sum_r = range_inner_index();
+  if ( !Comm_SUM_1(&sum_r) ) return 0;
+  res_normal = 1.0/(double)sum_r;
+  //Hostonly_ printf("Sum of inner = %e\n", sum_r);
+  
 
   // 配列のアロケート
   double array_size = (size[0]+2*GUIDE) * (size[1]+2*GUIDE) * (size[2]+2*GUIDE);
@@ -426,12 +440,24 @@ int CZ::Evaluate(int argc, char **argv)
   if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (zc = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
 
-  if( (WA = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
-  if( (WC = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
-  if( (WD = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (WAA= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (WCC= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (WDD= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  
+  if (ls_type == LS_PCRV_SA || ls_type == LS_PCRV_SA_MAF)
+  {
+    int tmp = (size[2]+2*GUIDE) * thread_max;
+    if( (WA = czAllocR(tmp, var_type)) == NULL ) return 0;
+    if( (WC = czAllocR(tmp, var_type)) == NULL ) return 0;
+    if( (WD = czAllocR(tmp, var_type)) == NULL ) return 0;
+  }
+  else
+  {
+    int tmp = (size[2]+2*GUIDE);
+    if( (WA = czAllocR(tmp, var_type)) == NULL ) return 0;
+    if( (WC = czAllocR(tmp, var_type)) == NULL ) return 0;
+    if( (WD = czAllocR(tmp, var_type)) == NULL ) return 0;
+  }
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
@@ -457,6 +483,32 @@ int CZ::Evaluate(int argc, char **argv)
     if( (pcg_t  = czAllocR_S3D(size,var_type)) == NULL ) return 0;
     if( (pcg_t_ = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   }
+  
+  // PCR用の配列確保
+  if (ls_type == LS_PCRV_SA || ls_type == LS_PCRV_SA_MAF)
+  {
+    int kst = innerFidx[K_minus];
+    int ked = innerFidx[K_plus];
+    int n = ked - kst + 1;
+    int pn;
+    
+    // Nを超える最小の2べき数の乗数 pn
+    if ( -1 == (pn=getNumStage(n))) {
+      printf("error : number of stage\n");
+      exit(0);
+    }
+    
+    int s = pow(2, pn-2);
+    int kk = ked - kst+ 2*s + 1;
+    printf("s = %d  kk= %d\n", s, kk);
+    
+    
+    if( (SA = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
+    if( (SC = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
+    if( (SD = czAllocR(kk*thread_max, var_type)) == NULL ) return 0;
+    L_Memory += ( kk * thread_max * 3 ) * (double)sizeof(REAL_TYPE);
+  }
+  
 
 
   // メモリ消費量の情報を表示
@@ -469,12 +521,6 @@ int CZ::Evaluate(int argc, char **argv)
   if ( !displayMemoryInfo(stdout, G_Memory, L_Memory, "Solver") ) return 0;
 
 
-
-  // 計算するインデクス範囲の決定
-  double sum_r = range_inner_index();
-  if ( !Comm_SUM_1(&sum_r) ) return 0;
-  res_normal = 1.0/(double)sum_r;
-  //Hostonly_ printf("Sum of inner = %e\n", sum_r);
 
   // 最大反復回数
   ItrMax = atoi(argv[5]);
@@ -572,6 +618,13 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_PCRV_MAF:
     TIMING_start("LSOR");
     if ( 0 == (itr=LSOR_PCRV(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+    TIMING_stop("LSOR", flop);
+    break;
+    
+    case LS_PCRV_SA:
+    case LS_PCRV_SA_MAF:
+    TIMING_start("LSOR");
+    if ( 0 == (itr=LSOR_PCRV_SA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
     TIMING_stop("LSOR", flop);
     break;
       

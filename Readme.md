@@ -178,7 +178,7 @@ $ export CC=ncc CXX=nc++ F90=nfort FC=nfort
 ~~~
 
 ~~~
-$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
+$ cmake -DINSTALL_DIR=${HOME}/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_NEC_Aurora.cmake \
 -Dwith_MPI=no \
 -Dwith_PM=OFF \

@@ -60,6 +60,7 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
+  int thread_max;          ///< 最大スレッド数
 
 
   int order_of_PM_key;     ///< PMlib用の登録番号カウンタ < PM_NUM_MAX
@@ -109,6 +110,10 @@ public:
   REAL_TYPE* WAA;
   REAL_TYPE* WCC;
   REAL_TYPE* WDD;
+  
+  REAL_TYPE* SA;
+  REAL_TYPE* SC;
+  REAL_TYPE* SD;
 
 public:
   // コンストラクタ
@@ -123,7 +128,13 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
-
+    
+    thread_max = 1;
+#ifdef _OPENMP
+    thread_max = omp_get_max_threads();
+#endif
+    printf("Max threads = %d\n", thread_max);
+    
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
     }
@@ -395,6 +406,14 @@ private:
                 double& flop,
                 int s_type,
                 bool converge_check=true);
+  
+  int LSOR_PCRV_SA(double& res,
+                   REAL_TYPE* X,
+                   REAL_TYPE* B,
+                   const int itr_max,
+                   double& flop,
+                   int s_type,
+                   bool converge_check=true);
   
   int LSOR_PCR_RB(double& res,
               REAL_TYPE* X,
