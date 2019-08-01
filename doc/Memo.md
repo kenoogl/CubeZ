@@ -1,5 +1,14 @@
 # Memo for CubeZ
 
+####  Version 1.1.3
+- NECからのフィードバック
+- search_pivotでssはreduction対象ではないのでprivate(ss)に変更
+- Auroraのコンパイルオプションに"-mretain-none"を追加
+- src/CMakeLists.txtでAurora用のFortranコンパイラでリンクする指定
+- bc_k()でスレッド間同期のオーバーヘッドを削減するため、各境界に関する処理を単一のparallel region内で行い、
+更にスレッド間同期が不要な箇所にNOWAITを挿入．
+- Auroraではjacobi_maf_()などにあるベクトル総和処理 "res1 = res1 + dp * dp" が非常に高コストとなっているので，k方向のサイズの配列tmpを定義し、主要ループ内ではこの配列への足しこみを行う実装にする
+
 
 ####  Version 1.1.1
 - pcrの配列a,c, dはprivateにすると、フォーク時にアロケーションする？　スレッド分アロケートしておいて、アドレスを渡す

@@ -271,7 +271,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  {
    int gc = GUIDE;
    double res = 0.0;
-   int lc_max = 4;
+   int lc_max = 8;
 
    switch (s_type)
    {

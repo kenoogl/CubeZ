@@ -35,9 +35,12 @@ kx = sz(3)
 
 pi = 2.0*asin(1.0)
 
+! スレッド同期のオーバーヘッド抑制のため，単一のparallel regionとする
+!$OMP PARALLEL
+
 ! ZMINUS Dirichlet
 if( nID(K_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -51,13 +54,13 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO NOWAIT
 endif
 
 
 ! ZPLUS Dirichlet
 if( nID(K_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -71,13 +74,13 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO
 endif
 
 
 ! XMINUS
 if( nID(I_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -89,13 +92,13 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO NOWAIT
 endif
 
 
 ! XPLUS
 if( nID(I_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -107,13 +110,13 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO
 endif
 
 
 ! YMINUS
 if( nID(J_MINUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -125,13 +128,13 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO NOWAIT
 endif
 
 
 ! YPLUS
 if( nID(J_PLUS) < 0 ) then
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
 #endif
@@ -143,8 +146,10 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #endif
-!$OMP END PARALLEL DO
+!$OMP END DO
 endif
+
+!$OMP END PARALLEL
 
 return
 end subroutine bc_k
@@ -925,6 +930,10 @@ end do
 !$OMP END DO
 !$OMP END PARALLEL
 #endif
+
+deallocate(a)
+deallocate(c)
+deallocate(d)
 
 res = res + real(res1, kind=8)
 

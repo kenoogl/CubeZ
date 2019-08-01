@@ -869,8 +869,7 @@ ked = idx(5)
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
-!$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7) &
-!$OMP reduction(max:ss)
+!$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7, ss)
 #ifdef _OPENACC
 !$acc kernels
 #endif

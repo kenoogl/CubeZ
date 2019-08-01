@@ -145,6 +145,11 @@ real, dimension(-1:sz(1)+2)                            ::  X
 real, dimension(-1:sz(2)+2)                            ::  Y
 real, dimension(-1:sz(3)+2)                            ::  Z
 
+#ifdef __NEC__
+real, dimension(-1:sz(3)+2) :: tmp
+tmp = 0.0
+#endif
+
 ist = idx(0)
 ied = idx(1)
 jst = idx(2)
@@ -160,7 +165,11 @@ flop = flop + 66.0d0  &
 * dble(ked-kst+1)
 
 !$OMP PARALLEL &
+#ifdef __NEC__
+!$OMP REDUCTION(+:tmp) &
+#else
 !$OMP REDUCTION(+:res1) &
+#endif
 !$OMP PRIVATE(rp, pp, bb, dd, dp, pn) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
@@ -211,7 +220,11 @@ rp = (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
 dp = ( rp / dd - pp ) * omg
 pn = pp + dp
 wk2(k,i,j) = pn
+#ifdef __NEC__
+tmp(k) = tmp(k) + dp * dp ! 30
+#else
 res1 = res1 + dp * dp ! 30
+#endif
 enddo
 enddo
 enddo
@@ -241,6 +254,12 @@ end do
 !$OMP END DO
 
 !$OMP END PARALLEL
+
+#ifdef __NEC__
+do k = kst, ked
+  res1 = res1 + tmp(k)
+end do
+#endif
 
 res = res + real(res1, kind=8)
 

@@ -9,6 +9,10 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-7-19 Version 1.1.3
+- suppress reduction(res1) at jacobi_maf_()
+
+---
 - 2019-7-19 Version 1.1.2
 - pcrv_sa_maf
 
