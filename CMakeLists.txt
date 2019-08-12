@@ -78,8 +78,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.1.4")
-set(LIB_REVISION "20190808_0930")
+set(PROJECT_VERSION "1.1.5")
+set(LIB_REVISION "20190808_1130")
 #######
 
 
@@ -104,8 +104,12 @@ AddOptimizeOption()
 FreeForm()
 
 
-# OpennMP
-checkOpenMP()
+# OpennMP OpenACC と排他 OpenACC優先
+if(with_ACC)
+  SET(enable_OPENMP "OFF")
+else()
+  checkOpenMP()
+endif()
 
 
 # Real type

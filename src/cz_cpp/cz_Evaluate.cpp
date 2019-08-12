@@ -188,146 +188,13 @@ int CZ::Evaluate(int argc, char **argv)
   char fname[20];
   memset(fname, 0, sizeof(char)*20);
 
-  if ( !strcasecmp(q, "jacobi") ) {
-    ls_type = LS_JACOBI;
-    strcpy(fname, "jacobi.txt");
-  }
+  setLS(q, fname);
+  
 
-  else if ( !strcasecmp(q, "psor") ) {
-    ls_type = LS_PSOR;
-    strcpy(fname, "psor.txt");
-  }
-
-  else if ( !strcasecmp(q, "sor2sma") ) {
-    ls_type = LS_SOR2SMA;
-    strcpy(fname, "sor2sma.txt");
-  }
-
-  else if ( !strcasecmp(q, "pbicgstab") ) {
-    ls_type = LS_BICGSTAB;
-    strcpy(fname, "pbicgstab.txt");
-    setStrPre();
-  }
-
-  else if ( !strcasecmp(q, "pcr_rb") ) {
-    ls_type = LS_PCR_RB;
-    strcpy(fname, "pcr_rb.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcr") ) {
-    ls_type = LS_PCR;
-    strcpy(fname, "pcr.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcrv") ) {
-    ls_type = LS_PCRV;
-    strcpy(fname, "pcrv.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcrv_sa") ) {
-    ls_type = LS_PCRV_SA;
-    strcpy(fname, "pcrv_sa.txt");
-  }
-  
-  // MAF
-  else if ( !strcasecmp(q, "jacobi_maf") ) {
-    ls_type = LS_JACOBI_MAF;
-    strcpy(fname, "jacobi_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "psor_maf") ) {
-    ls_type = LS_PSOR_MAF;
-    strcpy(fname, "psor_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "sor2sma_maf") ) {
-    ls_type = LS_SOR2SMA_MAF;
-    strcpy(fname, "sor2sma_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pbicgstab_maf") ) {
-    ls_type = LS_BICGSTAB_MAF;
-    strcpy(fname, "pbicgstab_maf.txt");
-    setStrPre();
-  }
-  
-  else if ( !strcasecmp(q, "pcr_rb_maf") ) {
-    ls_type = LS_PCR_RB_MAF;
-    strcpy(fname, "pcr_rb_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcr_maf") ) {
-    ls_type = LS_PCR_MAF;
-    strcpy(fname, "pcr_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcrv_maf") ) {
-    ls_type = LS_PCRV_MAF;
-    strcpy(fname, "pcrv_maf.txt");
-  }
-  
-  else if ( !strcasecmp(q, "pcrv_sa_maf") ) {
-    ls_type = LS_PCRV_SA_MAF;
-    strcpy(fname, "pcrv_sa_maf.txt");
-  }
-    
-  else{
-    printf("Invalid solver\n");
-    exit(0);
-  }
-
-
-  printf("Iteratie Mehtod = %d\n", ls_type);
+  printf("Iterative Mehtod = %s\n", printMethod(ls_type).c_str() );
   if (ls_type==LS_BICGSTAB || ls_type==LS_BICGSTAB_MAF)
   {
-    if (pc_type==LS_JACOBI)
-    {
-      printf("Preconditioner = Jacobi\n");
-    }
-    else if (pc_type==LS_PSOR)
-    {
-      printf("Preconditioner = PSOR\n");
-    }
-    else if (pc_type==LS_SOR2SMA)
-    {
-      printf("Preconditioner = SOR2SMA\n");
-    }
-    else if (pc_type==LS_PCR_RB)
-    {
-      printf("Preconditioner = PCR_RB\n");
-    }
-    else if (pc_type==LS_PCR)
-    {
-      printf("Preconditioner = PCR\n");
-    }
-    else if (pc_type==LS_PCRV)
-    {
-      printf("Preconditioner = PCRV\n");
-    }
-    else if (pc_type==LS_JACOBI_MAF)
-    {
-      printf("Preconditioner = Jacobi_MAF\n");
-    }
-    else if (pc_type==LS_PSOR_MAF)
-    {
-      printf("Preconditioner = PSOR_MAF\n");
-    }
-    else if (pc_type==LS_SOR2SMA_MAF)
-    {
-      printf("Preconditioner = SOR2SMA_MAF\n");
-    }
-    else if (pc_type==LS_PCR_RB_MAF)
-    {
-      printf("Preconditioner = PCR_RB_MAF\n");
-    }
-    else if (pc_type==LS_PCR_MAF)
-    {
-      printf("Preconditioner = PCR_MAF\n");
-    }
-    else if (pc_type==LS_PCRV_MAF)
-    {
-      printf("Preconditioner = PCRV_MAF\n");
-    }
+    printf("Preconditioner = %s\n", printMethod(pc_type).c_str() );
   }
 
 
@@ -376,14 +243,21 @@ int CZ::Evaluate(int argc, char **argv)
   if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (zc = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
   
-  if( (vrtmp = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
   
-  if( (WAA= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
-  if( (WCC= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
-  if( (WDD= czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
-  
-  if (ls_type == LS_PCRV_SA || ls_type == LS_PCRV_SA_MAF)
+  if (SW_maf == 1 )
   {
+    if( (vrtmp = czAllocR(size[2]+2*GUIDE, var_type)) == NULL ) return 0;
+  }
+  
+  int tmpz = (size[2]+2*GUIDE);
+  
+  if( (WAA= czAllocR(tmpz, var_type)) == NULL ) return 0;
+  if( (WCC= czAllocR(tmpz, var_type)) == NULL ) return 0;
+  if( (WDD= czAllocR(tmpz, var_type)) == NULL ) return 0;
+  
+  if ( SW_esa == 1 )
+  {
+    // スレッド用
     int tmp = (size[2]+2*GUIDE);
     if( (WA = czAllocR2(tmp, var_type)) == NULL ) return 0;
     if( (WC = czAllocR2(tmp, var_type)) == NULL ) return 0;
@@ -423,7 +297,7 @@ int CZ::Evaluate(int argc, char **argv)
   }
   
   // PCR用の配列確保
-  if (ls_type == LS_PCRV_SA || ls_type == LS_PCRV_SA_MAF)
+  if ( SW_esa == 1 )
   {
     int kst = innerFidx[K_minus];
     int ked = innerFidx[K_plus];
@@ -440,7 +314,7 @@ int CZ::Evaluate(int argc, char **argv)
     int kk = ked - kst+ 2*s + 1;
     printf("s = %d  kk= %d\n", s, kk);
     
-    
+    // スレッド用
     if( (SA = czAllocR2(kk, var_type)) == NULL ) return 0;
     if( (SC = czAllocR2(kk, var_type)) == NULL ) return 0;
     if( (SD = czAllocR2(kk, var_type)) == NULL ) return 0;
@@ -552,17 +426,17 @@ int CZ::Evaluate(int argc, char **argv)
       TIMING_stop("LSOR", flop);
       break;
     
-    case LS_PCRV:
-    case LS_PCRV_MAF:
+    case LS_PCR_EDA:
+    case LS_PCR_EDA_MAF:
     TIMING_start("LSOR");
-    if ( 0 == (itr=LSOR_PCRV(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+    if ( 0 == (itr=LSOR_PCR_EDA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
     TIMING_stop("LSOR", flop);
     break;
     
-    case LS_PCRV_SA:
-    case LS_PCRV_SA_MAF:
+    case LS_PCR_ESA:
+    case LS_PCR_ESA_MAF:
     TIMING_start("LSOR");
-    if ( 0 == (itr=LSOR_PCRV_SA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+    if ( 0 == (itr=LSOR_PCR_ESA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
     TIMING_stop("LSOR", flop);
     break;
       
@@ -570,6 +444,13 @@ int CZ::Evaluate(int argc, char **argv)
     case LS_PCR_RB_MAF:
       TIMING_start("LSOR");
       if ( 0 == (itr=LSOR_PCR_RB(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+      TIMING_stop("LSOR", flop);
+      break;
+      
+    case LS_PCR_RB_ESA:
+    case LS_PCR_RB_ESA_MAF:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_PCR_RB_ESA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
       
@@ -670,11 +551,14 @@ void CZ::setStrPre()
   else if ( !strcasecmp(precon.c_str(), "pcr_rb") ) {
     pc_type = LS_PCR_RB;
   }
+  else if ( !strcasecmp(precon.c_str(), "pcr_rb_esa") ) {
+    pc_type = LS_PCR_RB_ESA;
+  }
   else if ( !strcasecmp(precon.c_str(), "pcr") ) {
     pc_type = LS_PCR;
   }
-  else if ( !strcasecmp(precon.c_str(), "pcrv") ) {
-    pc_type = LS_PCRV;
+  else if ( !strcasecmp(precon.c_str(), "pcr_eda") ) {
+    pc_type = LS_PCR_EDA;
   }
   else if ( !strcasecmp(precon.c_str(), "jacobi_maf") ) {
     pc_type = LS_JACOBI_MAF;
@@ -688,20 +572,25 @@ void CZ::setStrPre()
   else if ( !strcasecmp(precon.c_str(), "pcr_rb_maf") ) {
     pc_type = LS_PCR_RB_MAF;
   }
+  else if ( !strcasecmp(precon.c_str(), "pcr_rb_esa_maf") ) {
+    pc_type = LS_PCR_RB_ESA_MAF;
+  }
   else if ( !strcasecmp(precon.c_str(), "pcr_maf") ) {
     pc_type = LS_PCR_MAF;
   }
-  else if ( !strcasecmp(precon.c_str(), "pcrv_maf") ) {
-    pc_type = LS_PCRV_MAF;
+  else if ( !strcasecmp(precon.c_str(), "pcr_eda_maf") ) {
+    pc_type = LS_PCR_EDA_MAF;
   }
   else printf("precon=%s\n", precon.c_str());
 }
 
 
+
 std::string CZ::printMethod(int type)
 {
   std::string str;
-  if ( type == LS_JACOBI ) ) {
+  
+  if ( type == LS_JACOBI ) {
     str = "jacobi";
   }
   else if ( type == LS_PSOR ) {
@@ -710,14 +599,20 @@ std::string CZ::printMethod(int type)
   else if ( type == LS_SOR2SMA ) {
     str = "sor2sma";
   }
-  else if ( type == LS_PCR_RB ) {
-    str = "pcr_rb";
-  }
   else if ( type == LS_PCR ) {
     str = "pcr";
   }
-  else if ( type == LS_PCRV ) {
-    str = "pcrv";
+  else if ( type == LS_PCR_EDA ) {
+    str = "pcr_eda";
+  }
+  else if ( type == LS_PCR_ESA ) {
+    str = "pcr_esa";
+  }
+  else if ( type == LS_PCR_RB ) {
+    str = "pcr_rb";
+  }
+  else if ( type == LS_PCR_RB_ESA ) {
+    str = "pcr_rb_esa";
   }
   else if ( type == LS_JACOBI_MAF ) {
     str = "jacobi_maf";
@@ -731,11 +626,135 @@ std::string CZ::printMethod(int type)
   else if ( type == LS_PCR_RB_MAF ) {
     str = "pcr_rb_maf";
   }
+  else if ( type == LS_PCR_RB_ESA_MAF ) {
+    str = "pcr_rb_esa_maf";
+  }
   else if ( type == LS_PCR_MAF ) {
     str = "pcr_maf";
   }
-  else if ( type == LS_PCRV_MAF ) {
-    str = "pcrv_maf";
+  else if ( type == LS_PCR_EDA_MAF ) {
+    str = "pcr_eda_maf";
   }
+  else if ( type == LS_PCR_ESA_MAF ) {
+    str = "pcr_esa_maf";
+  }
+  
   return str;
+}
+
+
+
+void CZ::setLS(char* q, char* fname)
+{
+  if ( !strcasecmp(q, "jacobi") ) {
+    ls_type = LS_JACOBI;
+    strcpy(fname, "jacobi.txt");
+  }
+  
+  else if ( !strcasecmp(q, "psor") ) {
+    ls_type = LS_PSOR;
+    strcpy(fname, "psor.txt");
+  }
+  
+  else if ( !strcasecmp(q, "sor2sma") ) {
+    ls_type = LS_SOR2SMA;
+    strcpy(fname, "sor2sma.txt");
+  }
+  
+  else if ( !strcasecmp(q, "pbicgstab") ) {
+    ls_type = LS_BICGSTAB;
+    strcpy(fname, "pbicgstab.txt");
+    setStrPre();
+  }
+  
+  else if ( !strcasecmp(q, "pcr_rb") ) {
+    ls_type = LS_PCR_RB;
+    strcpy(fname, "pcr_rb.txt");
+  }
+  
+  else if ( !strcasecmp(q, "pcr_rb_esa") ) {
+    ls_type = LS_PCR_RB_ESA;
+    strcpy(fname, "pcr_rb_esa.txt");
+    SW_esa = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr") ) {
+    ls_type = LS_PCR;
+    strcpy(fname, "pcr.txt");
+  }
+  
+  else if ( !strcasecmp(q, "pcr_eda") ) {
+    ls_type = LS_PCR_EDA;
+    strcpy(fname, "pcr_eda.txt");
+  }
+  
+  else if ( !strcasecmp(q, "pcr_esa") ) {
+    ls_type = LS_PCR_ESA;
+    strcpy(fname, "pcr_esa.txt");
+    SW_esa = 1;
+  }
+  
+  
+  // MAF
+  else if ( !strcasecmp(q, "jacobi_maf") ) {
+    ls_type = LS_JACOBI_MAF;
+    strcpy(fname, "jacobi_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "psor_maf") ) {
+    ls_type = LS_PSOR_MAF;
+    strcpy(fname, "psor_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "sor2sma_maf") ) {
+    ls_type = LS_SOR2SMA_MAF;
+    strcpy(fname, "sor2sma_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pbicgstab_maf") ) {
+    ls_type = LS_BICGSTAB_MAF;
+    strcpy(fname, "pbicgstab_maf.txt");
+    setStrPre();
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_rb_maf") ) {
+    ls_type = LS_PCR_RB_MAF;
+    strcpy(fname, "pcr_rb_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_rb_esa_maf") ) {
+    ls_type = LS_PCR_RB_ESA_MAF;
+    strcpy(fname, "pcr_rb_esa_maf.txt");
+    SW_maf = 1;
+    SW_esa = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_maf") ) {
+    ls_type = LS_PCR_MAF;
+    strcpy(fname, "pcr_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_eda_maf") ) {
+    ls_type = LS_PCR_EDA_MAF;
+    strcpy(fname, "pcr_eda_maf.txt");
+    SW_maf = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_esa_maf") ) {
+    ls_type = LS_PCR_ESA_MAF;
+    strcpy(fname, "pcr_esa_maf.txt");
+    SW_maf = 1;
+    SW_esa = 1;
+  }
+  
+  else{
+    printf("Invalid solver\n");
+    exit(0);
+  }
 }

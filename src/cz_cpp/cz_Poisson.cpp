@@ -177,6 +177,18 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
    {
      flop_count = 0.0;
      res = 0.0;
+     
+#ifdef _SVR
+     
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+     for (int i=0; i<size[2]+2*GUIDE; i++)
+     {
+       vrtmp[i] = 0.0;
+     }
+#endif
 
      // 2色のマルチカラー(Red&Black)のセットアップ
      // ip = 0 基点(2,2,2)が Rからスタート
@@ -200,7 +212,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        for (int color=0; color<2; color++)
        {
          // res_p >> 反復残差の二乗和
-         psor2sma_core_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ip, &color, &ac1, B, &res, &flop_count);
+         psor2sma_core_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ip, &color, &ac1, B, &res, vrtmp, &flop_count);
        }
        TIMING_stop("SOR2SMA_MAF_kernel", flop_count);
      }
@@ -227,7 +239,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        res *= res_normal;
        res = sqrt(res);
        Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
-
+       
        TIMING_start("BoundaryCondition");
        bc_k_(size, &gc, X, pitch, origin, nID);
        TIMING_stop("BoundaryCondition");
@@ -307,14 +319,19 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
        LSOR_PCR(res, xx, bb, lc_max, flop, s_type, false);
        break;
      
-     case LS_PCRV:
-     case LS_PCRV_MAF:
-     LSOR_PCRV(res, xx, bb, lc_max, flop, s_type, false);
+     case LS_PCR_EDA:
+     case LS_PCR_EDA_MAF:
+     LSOR_PCR_EDA(res, xx, bb, lc_max, flop, s_type, false);
      break;
        
      case LS_PCR_RB:
      case LS_PCR_RB_MAF:
        LSOR_PCR_RB(res, xx, bb, lc_max, flop, s_type, false);
+       break;
+       
+      case LS_PCR_RB_ESA:
+      case LS_PCR_RB_ESA_MAF:
+       LSOR_PCR_RB_ESA(res, xx, bb, lc_max, flop, s_type, false);
        break;
 
      default:
@@ -481,6 +498,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      flop_count = 0.0;
      res = Fdot1(pcg_r, flop_count);
      flop += flop_count;
+     
 
 
      if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
@@ -490,15 +508,15 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      res *= res_normal;
      res = sqrt(res);
      Hostonly_ fprintf(fph, "%6d, %13.6e\n", itr, res);
+     
+     TIMING_start("BoundaryCondition");
+     bc_k_(size, &gc, X, pitch, origin, nID);
+     TIMING_stop("BoundaryCondition");
 
      if ( res < eps ) break;
 
      rho_old = rho;
    } // itr
-
-   TIMING_start("BoundaryCondition");
-   bc_k_(size, &gc, X, pitch, origin, nID);
-   TIMING_stop("BoundaryCondition");
 
    return itr;
  }
@@ -543,6 +561,18 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
+#ifdef _SVR
+    
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+    for (int i=0; i<size[2]+2*GUIDE; i++)
+    {
+      vrtmp[i] = 0.0;
+    }
+#endif
+    
     // 2色のマルチカラー(Red&Black)のセットアップ
     int ip=0;
     if ( numProc > 1 )
@@ -561,7 +591,7 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
       {
         pcr_rb_maf_(size, innerFidx, &gc, &pn, &ip, &color, X, MSK, B, xc, yc, zc,
                     WA, WC, WD, WAA, WCC, WDD,
-                    &ac1, &res, &flop_count);
+                    &ac1, &res, vrtmp, &flop_count);
       }
       TIMING_stop("PCR_RB_MAF", flop_count);
     }
@@ -590,6 +620,149 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
         fprintf(fph, "%6d, %13.6e\n", itr, res);
         fflush(fph);
       }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+
+
+/* #################################################################
+ * @brief Line SOR PCR
+ * @param [in,out] res    残差
+ * @param [in,out] X      解ベクトル
+ * @param [in]     B      RHSベクトル
+ * @param [in]     itr_max 最大反復数
+ * @param [in]     flop   浮動小数点演算数
+ * @param [in]     s_type ソルバーの指定
+ * @note LSOR_P6から、マルチカラー化
+ */
+int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                    const int itr_max, double& flop,
+                    int s_type,
+                    bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  int ss;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  ss = pow(2, pn-2);
+  int kk = ked - kst+ 2*ss + 1;
+  int id = 0;
+  
+#ifdef __NEC__
+  for (int i=0; i<kk*numThreads; i++)
+  {
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
+  }
+#else
+#pragma omp parallel for firstprivate(id)
+  for (int i=0; i<kk; i++)
+  {
+#ifdef _OPENMP
+    id = omp_get_thread_num();
+#endif
+    SA[i+numThreads*id] = 0.0;
+    SC[i+numThreads*id] = 0.0;
+    SD[i+numThreads*id] = 0.0;
+  }
+#endif
+  
+  
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    
+#ifdef _SVR
+    
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+    for (int i=0; i<size[2]+2*GUIDE; i++)
+    {
+      vrtmp[i] = 0.0;
+    }
+#endif
+    
+    // 2色のマルチカラー(Red&Black)のセットアップ
+    int ip=0;
+    if ( numProc > 1 )
+    {
+      ip = (head[0] + head[1] + head[2]+1) % 2;
+    }
+    else
+    {
+      ip = 0;
+    }
+    
+    if (s_type==LS_PCR_RB_ESA_MAF)
+    {
+      TIMING_start("PCR_RB_MAF");
+      for (int color=0; color<2; color++)
+      {
+        pcr_rb_esa_maf_(size, innerFidx, &gc, &pn, &ip, &color, &ss, &numThreads,
+                        X, MSK, B, xc, yc, zc,
+                    WA, WC, WD, WAA, WCC, WDD,
+                    &ac1, &res, vrtmp, &flop_count);
+      }
+      TIMING_stop("PCR_RB_MAF", flop_count);
+    }
+    else
+    {
+      TIMING_start("PCR_RB");
+      for (int color=0; color<2; color++)
+      {
+        pcr_rb_esa_(size, innerFidx, &gc, &pn, &ip, &color, &ss, &numThreads,
+                    X, MSK, B,
+                WA, WC, WD, WAA, WCC, WDD,
+                &ac1, &res, &flop_count);
+      }
+      TIMING_stop("PCR_RB", flop_count);
+    }
+    flop += flop_count;
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
       
       if ( res < eps ) break;
     }
@@ -637,12 +810,24 @@ int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
+#ifdef _SVR
+    
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+    for (int i=0; i<size[2]+2*GUIDE; i++)
+    {
+      vrtmp[i] = 0.0;
+    }
+#endif
+    
     if (s_type==LS_PCR_MAF)
     {
       TIMING_start("PCR_MAF");
       pcr_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
                  WA, WC, WD, WAA, WCC, WDD,
-                 &ac1, &res, &flop_count);
+                 &ac1, &res, vrtmp, &flop_count);
       TIMING_stop("PCR_MAF", flop_count);
     }
     else
@@ -654,7 +839,7 @@ int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_stop("PCR", flop_count);
     }
     flop += flop_count;
-    
+
     
     if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
     
@@ -667,6 +852,10 @@ int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
         fprintf(fph, "%6d, %13.6e\n", itr, res);
         fflush(fph);
       }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
       
       if ( res < eps ) break;
     }
@@ -686,7 +875,7 @@ int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
  * @param [in]     flop   浮動小数点演算数
  * @param [in]     s_type ソルバーの指定
  */
-int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
+int CZ::LSOR_PCR_EDA(double& res, REAL_TYPE* X, REAL_TYPE* B,
                  const int itr_max, double& flop,
                  int s_type,
                  bool converge_check)
@@ -714,24 +903,36 @@ int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-    if (s_type==LS_PCRV_MAF)
+#ifdef _SVR
+    
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+    for (int i=0; i<size[2]+2*GUIDE; i++)
+    {
+      vrtmp[i] = 0.0;
+    }
+#endif
+    
+    if (s_type==LS_PCR_EDA_MAF)
     {
       TIMING_start("PCR_MAF");
-      pcrv_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
+      pcr_eda_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
                WA, WC, WD,
-               &ac1, &res, &flop_count);
+               &ac1, &res, vrtmp, &flop_count);
       TIMING_stop("PCR_MAF", flop_count);
     }
     else
     {
       TIMING_start("PCR");
-      pcrv_(size, innerFidx, &gc, &pn, X, MSK, B, WA, WC, WD,
+      pcr_eda_(size, innerFidx, &gc, &pn, X, MSK, B, WA, WC, WD,
            &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);
     }
     flop += flop_count;
     
-    
+
     if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
     
     if ( converge_check ) {
@@ -743,6 +944,10 @@ int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
         fprintf(fph, "%6d, %13.6e\n", itr, res);
         fflush(fph);
       }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
       
       if ( res < eps ) break;
     }
@@ -762,7 +967,7 @@ int CZ::LSOR_PCRV(double& res, REAL_TYPE* X, REAL_TYPE* B,
  * @param [in]     flop   浮動小数点演算数
  * @param [in]     s_type ソルバーの指定
  */
-int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
+int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
                   const int itr_max, double& flop,
                   int s_type,
                   bool converge_check)
@@ -817,19 +1022,31 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-    if (s_type==LS_PCRV_SA_MAF)
+#ifdef _SVR
+    
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+    for (int i=0; i<size[2]+2*GUIDE; i++)
+    {
+      vrtmp[i] = 0.0;
+    }
+#endif
+    
+    if (s_type==LS_PCR_ESA_MAF)
     {
       TIMING_start("PCR_MAF");
-      pcrv_sa_maf_(size, innerFidx, &gc, &pn, &ss, &numThreads,
+      pcr_esa_maf_(size, innerFidx, &gc, &pn, &ss, &numThreads,
                 X, MSK, B, xc, yc, zc,
                 SA, SC, SD, WA, WC, WD,
-                &ac1, &res, &flop_count);
+                &ac1, &res, vrtmp, &flop_count);
       TIMING_stop("PCR_MAF", flop_count);
     }
     else
     {
       TIMING_start("PCR");
-      pcrv_sa_(size, innerFidx, &gc, &pn, &ss, &numThreads,
+      pcr_esa_(size, innerFidx, &gc, &pn, &ss, &numThreads,
                X, MSK, B, SA, SC, SD, WA, WC, WD,
                &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);
@@ -848,6 +1065,10 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
         fprintf(fph, "%6d, %13.6e\n", itr, res);
         fflush(fph);
       }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
       
       if ( res < eps ) break;
     }

@@ -9,7 +9,12 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
-- 2019-8-7 Version 1.1.4
+- 2019-8-8 Version 1.1.5
+- vector reduction for all maf
+- exclusive control between OpanMP and OpenACC
+
+---
+- 2019-8-8 Version 1.1.4
 - add enable_VectorReduction option
 - add printMethod(), setStrPre()
 

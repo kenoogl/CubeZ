@@ -1,16 +1,33 @@
 # Memo for CubeZ
 
+####  Version 1.1.5
+- 全てのmaf サブルーチンにvector reductionを実装
+- OpenMPとOpenACCの排他制御、OpenACCが優先
+- サブルーチンの整理
+  - pcr + rb + [eda, esa]
+  - pcrv > pcr_eda (extended dynamic array)
+  - pcrv_sa > pcr_esa (extended static array)
+- LS_PCR_RB_ESA, LS_PCR_RB_ESA_MAF追加
+- pcr_rb_esa, pce_rb_esa_maf
+- esa
+  - firstprivate(id) > private(id)
+  - private(a, c, d) ?
+  - 変数sを削除 >> ss
+  - pcr_rbでres　を　res1でreductionするとエラーになる件、原因不明
+
 ####  Version 1.1.4
 - Auroraのコンパイルオプションの"-mretain-none"は不要
 - printMethod(), setStrPre() 追加
-- enable_VectorReduction >> jacobi_maf()のベクトルリダクションの制御
+- enable_VectorReduction >> jacobi_maf()のベクトルリダクションの制御 >> 　Aurorade
+maf系のみ問題になっている
 - czAllocR_S3D(), czAllocR(), czAllocR2()へのOpenACCディレクティブ追加
 - thread_max >> numThreadsへ
+- 1.1.3のjacobi_mafのaurora用の実装では、ベクトルリダクションを抑制するためにtmp配列をFortran側でアロケートしていたが、これを予め確保し、ゼロ初期化して使う実装に変更  553 > 742 GFLOPS @8 threads
 
 
 ####  Version 1.1.3
 - NECからのフィードバック
-- search_pivotでssはreduction対象ではないのでprivate(ss)に変更
+- search_pivotでssはreduction対象ではないのでprivate(ss)に変更｀
 - Auroraのコンパイルオプションに"-mretain-none"を追加
 - src/CMakeLists.txtでAurora用のFortranコンパイラでリンクする指定
 - bc_k()でスレッド間同期のオーバーヘッドを削減するため、各境界に関する処理を単一のparallel region内で行い、

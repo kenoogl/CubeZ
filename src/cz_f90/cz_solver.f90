@@ -436,7 +436,7 @@ end subroutine psor2sma_core
 
 
 !********************************************************************************
-subroutine PCR_RB (sz, idx, g, pn, ofst, color, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
+subroutine pcr_rb (sz, idx, g, pn, ofst, color, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -448,7 +448,7 @@ double precision                                       ::  res, flop
 ! work
 integer                                  ::  i, j, k, kl, kr, s, p, color, ip, ofst
 integer                                  ::  ist, ied, jst, jed, kst, ked
-real, dimension(-1:sz(3)+2)             ::  a, c, d, a1, c1, d1
+real, dimension(-1:sz(3)+2)              ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp, res1
 real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
 
@@ -461,13 +461,12 @@ ked = idx(5)
 
 res1 = 0.0
 r = 1.0/6.0
-s = 2**(pn-1)
 
 flop = flop + dble(          &
   (jed-jst+1)*(ied-ist+1)* ( &
      (ked-kst+1)* 6.0        &  ! Source
    + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-   + s*9.0                 &
+   + 2**(pn-1)*9.0                 &
    + (ked-kst+1)*6.0         &  ! Relaxation
      + 6.0 )                 &  ! BC
   ) * 0.5
@@ -475,23 +474,36 @@ flop = flop + dble(          &
 
 ip = ofst + color
 
-!$OMP PARALLEL reduction(+:res1) &
+
+! #ifdef _OPENACC
+! !$acc kernels
+! !$acc loop independent gang reduction(+:res1)
+! do j=jst, jed
+! !$acc loop independent vector(128) reduction(+:res1)
+! do i=ist+mod(j+ip,2), ied, 2
+! #else
+! !$OMP PARALLEL reduction(+:res1) &
+! !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+! !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+! !$OMP private(a, c, d, a1, c1, d1)
+! !$OMP DO SCHEDULE(static)
+! !pgi$ ivdep
+! do j=jst, jed
+! do i=ist+mod(j+ip,2), ied, 2
+! #endif
+
+#ifdef _OPENACC
+!$acc kernels
+#else
+!$OMP PARALLEL &
+!$OMP reduction(+:res) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
-
 !$OMP DO SCHEDULE(static)
-!pgi$ ivdep
-#ifdef _OPENACC
-!$acc kernels
-!$acc loop independent gang reduction(+:res1)
-do j=jst, jed
-!$acc loop independent vector(128) reduction(+:res1)
-do i=ist+mod(j+ip,2), ied, 2
-#else
-do j=jst, jed
-do i=ist+mod(j+ip,2), ied, 2
 #endif
+do j=jst, jed
+do i=ist+mod(j+ip,2), ied, 2
 
 ! Reflesh coef. due to override
 a(kst) = 0.0
@@ -518,9 +530,6 @@ end do ! 6 flops
 ! BC  6 flops
 d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
 d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
-
-!d(kst) = ( d(kst) + rhs(kst-1, i, j) * r ) * msk(kst, i, j)
-!d(ked) = ( d(ked) + rhs(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
@@ -584,7 +593,8 @@ do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
 x(k, i, j) = pp + dp
-res1 = res1 + dp*dp
+!res1 = res1 + dp*dp
+res = res + dp*dp
 end do
 
 end do
@@ -593,13 +603,12 @@ end do
 !$acc end kernels
 #endif
 !$OMP END DO
-
 !$OMP END PARALLEL
 
-res = res + real(res1, kind=8)
+!res = res + real(res1, kind=8)
 
 return
-end subroutine PCR_RB
+end subroutine pcr_rb
 
 
 !********************************************************************************
@@ -628,13 +637,12 @@ ked = idx(5)
 
 res1 = 0.0
 r = 1.0/6.0
-s = 2**(pn-1)
 
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
 + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ s*9.0                 &
++ 2**(pn-1)*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )
@@ -769,7 +777,7 @@ end subroutine pcr
 
 !********************************************************************************
 ! pcr for vector (Aurora and GPU)
-subroutine pcrv (sz, idx, g, pn, x, msk, rhs, a1, c1, d1, omg, res, flop)
+subroutine pcr_eda (sz, idx, g, pn, x, msk, rhs, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -938,12 +946,12 @@ deallocate(d)
 res = res + real(res1, kind=8)
 
 return
-end subroutine pcrv
+end subroutine pcr_eda
 
 
 !********************************************************************************
 ! pcr for vector (Aurora and GPU)
-subroutine pcrv_sa (sz, idx, g, pn, s, thx, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
+subroutine pcr_esa (sz, idx, g, pn, s, thx, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 #ifdef _OPENMP
 !$ use omp_lib
 #endif
@@ -956,7 +964,7 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, s, p, id, thx, ss
+integer                                  ::  i, j, k, p, id, thx, ss, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g, thx)        ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
@@ -989,8 +997,7 @@ id = 1
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
-!$OMP firstprivate(id)
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2, id)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
 do j=jst, jed
@@ -1038,8 +1045,8 @@ do k = kst, ked
 ap = a(k,id)
 cp = c(k,id)
 e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
-a1(k,id) =  -e * ap * a(k-ss,id)
-c1(k,id) =  -e * cp * c(k+ss,id)
+a1(k,id) =   -e * ap * a(k-ss,id)
+c1(k,id) =   -e * cp * c(k+ss,id)
 d1(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
 end do
 
@@ -1102,4 +1109,170 @@ end do
 res = res + real(res1, kind=8)
 
 return
-end subroutine pcrv_sa
+end subroutine pcr_esa
+
+
+!********************************************************************************
+subroutine pcr_rb_esa (sz, idx, g, pn, ofst, color, s, thx, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
+#ifdef _OPENMP
+!$ use omp_lib
+#endif
+implicit none
+!args
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+integer                                                ::  g, pn
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
+real                                                   ::  omg
+double precision                                       ::  res, flop
+! work
+integer                                  ::  i, j, k, p, color, ip, ofst, ss, s
+integer                                  ::  ist, ied, jst, jed, kst, ked, id, thx
+real, dimension(-1:sz(3)+2, thx)         ::  a1, c1, d1
+real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
+real                                     ::  r, ap, cp, e, pp, dp, res1
+real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+res1 = 0.0
+r = 1.0/6.0
+
+flop = flop + dble(          &
+(jed-jst+1)*(ied-ist+1)* ( &
+(ked-kst+1)* 6.0        &  ! Source
++ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
++ 2**(pn-1)*9.0                 &
++ (ked-kst+1)*6.0         &  ! Relaxation
++ 6.0 )                 &  ! BC
+) * 0.5
+
+id = 1
+ip = ofst + color
+
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent gang reduction(+:res1)
+do j=jst, jed
+!$acc loop independent vector(128) reduction(+:res1)
+do i=ist+mod(j+ip,2), ied, 2
+#else
+!$OMP PARALLEL reduction(+:res1) &
+!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2, id) 
+!$OMP DO SCHEDULE(static)
+!pgi$ ivdep
+do j=jst, jed
+do i=ist+mod(j+ip,2), ied, 2
+#endif
+
+#ifdef _OPENMP
+id = omp_get_thread_num()+1 ! id= 1 ~
+#endif
+
+! Reflesh coef. due to override
+!a(kst) = 0.0
+do k=kst+1, ked
+a(k,id) = -r
+end do
+
+do k=kst, ked-1
+c(k,id) = -r
+end do
+!c(ked) = 0.0
+
+! Source
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+d(k,id) = (   ( x(k, i  , j-1)        &
++     x(k, i  , j+1)        &
++     x(k, i-1, j  )        &
++     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
+*   msk(k, i, j)
+end do ! 6 flops
+
+! BC  6 flops
+d(kst,id) = ( d(kst,id) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked,id) = ( d(ked,id) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+
+
+! PCR  最終段の一つ手前で停止
+do p=1, pn-1
+ss = 2**(p-1)
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+ap = a(k,id)
+cp = c(k,id)
+e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
+a1(k,id) =   -e * ap * a(k-ss,id)
+c1(k,id) =   -e * cp * c(k+ss,id)
+d1(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
+end do
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+a(k,id) = a1(k,id)
+c(k,id) = c1(k,id)
+d(k,id) = d1(k,id)
+end do
+
+end do ! p反復
+
+
+! 最終段の反転
+ss = 2**(pn-1)
+
+!dir$ vector aligned
+!dir$ simd
+!NEC$ IVDEP
+do k = kst, kst+s-1
+cc1 = c(k,id)
+aa2 = a(k+ss,id)
+f1  = d(k,id)
+f2  = d(k+ss,id)
+jj  = 1.0 / (1.0 - aa2 * cc1)
+dd1 = (f1 - cc1 * f2) * jj
+dd2 = (f2 - aa2 * f1) * jj
+d1(k   ,id) = dd1
+d1(k+ss,id) = dd2
+end do
+
+
+! a_{i-1} x_{i-2} + x_{i-1} + c_{i-1} x_i     = d_{i-1}
+! a_{i}   x_{i-1} + x_{i}   + c_{i}   x_{i+1} = d_{i}
+! a_{i+1} x_{i}   + x_{i+1} + c_{i+1} x_{i+2} = d_{i+1}
+
+
+! Relaxation
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+pp =   x(k, i, j)
+dp = ( d1(k,id) - pp ) * omg * msk(k, i, j)
+x(k, i, j) = pp + dp
+res1 = res1 + dp*dp
+end do
+
+end do
+end do
+#ifdef _OPENACC
+!$acc end kernels
+#endif
+!$OMP END DO
+
+!$OMP END PARALLEL
+
+res = res + real(res1, kind=8)
+
+return
+end subroutine pcr_rb_esa

@@ -60,6 +60,8 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
+  int SW_maf;
+  int SW_esa;
 
 
   int order_of_PM_key;     ///< PMlib用の登録番号カウンタ < PM_NUM_MAX
@@ -128,6 +130,8 @@ public:
     eps = 1.0e-5;
     ac1 = 0.0;
     res_normal = 0.0;
+    SW_maf = 0;
+    SW_esa = 0;
     
     
     for (int i=0; i<6; i++) {
@@ -426,7 +430,7 @@ private:
                int s_type,
                bool converge_check=true);
   
-  int LSOR_PCRV(double& res,
+  int LSOR_PCR_EDA(double& res,
                 REAL_TYPE* X,
                 REAL_TYPE* B,
                 const int itr_max,
@@ -434,7 +438,7 @@ private:
                 int s_type,
                 bool converge_check=true);
   
-  int LSOR_PCRV_SA(double& res,
+  int LSOR_PCR_ESA(double& res,
                    REAL_TYPE* X,
                    REAL_TYPE* B,
                    const int itr_max,
@@ -450,6 +454,13 @@ private:
               int s_type,
               bool converge_check=true);
 
+  int LSOR_PCR_RB_ESA(double& res,
+                  REAL_TYPE* X,
+                  REAL_TYPE* B,
+                  const int itr_max,
+                  double& flop,
+                  int s_type,
+                  bool converge_check=true);
   
   REAL_TYPE Fdot1(REAL_TYPE* x, double& flop);
 
@@ -461,6 +472,7 @@ private:
                       int s_type);
 
   void setStrPre();
+  void setLS(char* q, char* fname);
 
 
 #ifndef DISABLE_PMLIB
