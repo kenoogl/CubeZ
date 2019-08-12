@@ -249,6 +249,7 @@ using namespace pm_lib;
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
 
   set_label("BoundaryCondition",PerfMonitor::CALC);
+  set_label("VRtmp_Init",    PerfMonitor::CALC, true);
 
 
   // 非排他, 計算

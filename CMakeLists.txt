@@ -17,11 +17,11 @@
 #
 # -D INSTALL_DIR=install_directory
 #
-# -D with_MPI=(yes|no)
+# -D with_MPI=(OFF|ON)
 #
 # -D real_type=(float|double)
 #
-# -D enable_OPENMP=(yes|no)
+# -D enable_OPENMP=(OFF|ON)
 #
 # -D with_PM=installed_directory or OFF
 #
@@ -78,8 +78,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.1.6")
-set(LIB_REVISION "20190811_1800")
+set(PROJECT_VERSION "1.1.7")
+set(LIB_REVISION "20190812_1400")
 #######
 
 

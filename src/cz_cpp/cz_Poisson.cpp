@@ -40,20 +40,23 @@
     {
       res = 0.0;
    
+
+
+      if (s_type==LS_JACOBI_MAF)
+      {
 #ifdef _SVR
-      
+        TIMING_start("VRtmp_Init");
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
 #pragma acc kernels
-      for (int i=0; i<size[2]+2*GUIDE; i++)
-      {
-        vrtmp[i] = 0.0;
-      }
+        for (int i=0; i<size[2]+2*GUIDE; i++)
+        {
+          vrtmp[i] = 0.0;
+        }
+        TIMING_stop("VRtmp_Init", 0.0);
 #endif
-
-      if (s_type==LS_JACOBI_MAF)
-      {
+        
         TIMING_start("JACOBI_MAF_kernel");
         flop_count = 0.0;
         jacobi_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, WRK, vrtmp, &flop_count);
@@ -178,17 +181,7 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      flop_count = 0.0;
      res = 0.0;
      
-#ifdef _SVR
-     
-#ifndef __NEC__
-#pragma omp parallel for schedule(static)
-#endif
-#pragma acc kernels
-     for (int i=0; i<size[2]+2*GUIDE; i++)
-     {
-       vrtmp[i] = 0.0;
-     }
-#endif
+
 
      // 2色のマルチカラー(Red&Black)のセットアップ
      // ip = 0 基点(2,2,2)が Rからスタート
@@ -207,6 +200,19 @@ int CZ::RBSOR(double& res, REAL_TYPE* X, REAL_TYPE* B,
      // R - color=0 / B - color=1
      if (s_type==LS_SOR2SMA_MAF)
      {
+#ifdef _SVR
+       TIMING_start("VRtmp_Init");
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+       for (int i=0; i<size[2]+2*GUIDE; i++)
+       {
+         vrtmp[i] = 0.0;
+       }
+       TIMING_stop("VRtmp_Init", 0.0);
+#endif
+       
        TIMING_start("SOR2SMA_MAF_kernel");
        flop_count = 0.0;
        for (int color=0; color<2; color++)
@@ -561,17 +567,7 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-#ifdef _SVR
-    
-#ifndef __NEC__
-#pragma omp parallel for schedule(static)
-#endif
-#pragma acc kernels
-    for (int i=0; i<size[2]+2*GUIDE; i++)
-    {
-      vrtmp[i] = 0.0;
-    }
-#endif
+
     
     // 2色のマルチカラー(Red&Black)のセットアップ
     int ip=0;
@@ -586,6 +582,19 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
     
     if (s_type==LS_PCR_RB_MAF)
     {
+#ifdef _SVR
+      TIMING_start("VRtmp_Init");
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+      TIMING_stop("VRtmp_Init", 0.0);
+#endif
+      
       TIMING_start("PCR_RB_MAF");
       for (int color=0; color<2; color++)
       {
@@ -694,17 +703,7 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-#ifdef _SVR
-    
-#ifndef __NEC__
-#pragma omp parallel for schedule(static)
-#endif
-#pragma acc kernels
-    for (int i=0; i<size[2]+2*GUIDE; i++)
-    {
-      vrtmp[i] = 0.0;
-    }
-#endif
+
     
     // 2色のマルチカラー(Red&Black)のセットアップ
     int ip=0;
@@ -719,6 +718,19 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     
     if (s_type==LS_PCR_RB_ESA_MAF)
     {
+#ifdef _SVR
+      TIMING_start("VRtmp_Init");
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+      TIMING_stop("VRtmp_Init", 0.0);
+#endif
+      
       TIMING_start("PCR_RB_MAF");
       for (int color=0; color<2; color++)
       {
@@ -806,20 +818,23 @@ int CZ::LSOR_PCR(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-#ifdef _SVR
+
     
+    if (s_type==LS_PCR_MAF)
+    {
+#ifdef _SVR
+      TIMING_start("VRtmp_Init");
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
 #pragma acc kernels
-    for (int i=0; i<size[2]+2*GUIDE; i++)
-    {
-      vrtmp[i] = 0.0;
-    }
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+      TIMING_stop("VRtmp_Init", 0.0);
 #endif
-    
-    if (s_type==LS_PCR_MAF)
-    {
+      
       TIMING_start("PCR_MAF");
       pcr_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
                  WA, WC, WD, WAA, WCC, WDD,
@@ -899,20 +914,23 @@ int CZ::LSOR_PCR_EDA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-#ifdef _SVR
+
     
+    if (s_type==LS_PCR_EDA_MAF)
+    {
+#ifdef _SVR
+      TIMING_start("VRtmp_Init");
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
 #pragma acc kernels
-    for (int i=0; i<size[2]+2*GUIDE; i++)
-    {
-      vrtmp[i] = 0.0;
-    }
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+      TIMING_stop("VRtmp_Init", 0.0);
 #endif
-    
-    if (s_type==LS_PCR_EDA_MAF)
-    {
+      
       TIMING_start("PCR_MAF");
       pcr_eda_maf_(size, innerFidx, &gc, &pn, X, MSK, B, xc, yc, zc,
                WA, WC, WD,
@@ -1014,20 +1032,23 @@ int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     flop_count = 0.0;
     res = 0.0;
     
-#ifdef _SVR
+
     
+    if (s_type==LS_PCR_ESA_MAF)
+    {
+#ifdef _SVR
+      TIMING_start("VRtmp_Init");
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
 #pragma acc kernels
-    for (int i=0; i<size[2]+2*GUIDE; i++)
-    {
-      vrtmp[i] = 0.0;
-    }
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+      TIMING_stop("VRtmp_Init", 0.0);
 #endif
-    
-    if (s_type==LS_PCR_ESA_MAF)
-    {
+      
       TIMING_start("PCR_MAF");
       pcr_esa_maf_(size, innerFidx, &gc, &pn, &ss,
                 X, MSK, B, xc, yc, zc,

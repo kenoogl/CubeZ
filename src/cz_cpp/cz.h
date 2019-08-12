@@ -191,7 +191,9 @@ public:
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
+#ifdef _OPENACC
 #pragma acc kernels
+#endif
     for (int i=0; i<nx; i++) var[i]=0;
     
     return var;

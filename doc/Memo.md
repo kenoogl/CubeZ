@@ -1,5 +1,10 @@
 # Memo for CubeZ
 
+####  Version 1.1.7
+- Autrora maf用のVectorReductionの配列の初期化コスト >> "VRtmp_Init"
+- 対象コードをmafのみに修正（バグ）
+
+
 ####  Version 1.1.6
 - pcr_eda, pcr_eda_maf のprivate(kl, kr) を外す
 - pcr_esa / pcr_esa_maf, pcr_rb_esa/pcr_rb_esa_mafの確保する配列の大きさは1スレッド分として、サブルーチン内でprivate
