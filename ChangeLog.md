@@ -9,6 +9,10 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-8-12 Version 1.1.8
+- Aurora compiler option : static-nec
+
+---
 - 2019-8-12 Version 1.1.7
 - VRtmp_Init
 

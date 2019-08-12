@@ -1,5 +1,8 @@
 # Memo for CubeZ
 
+####  Version 1.1.8
+- Autrora maf用のコンパイラオプション -static-nec
+
 ####  Version 1.1.7
 - Autrora maf用のVectorReductionの配列の初期化コスト >> "VRtmp_Init"
 - 対象コードをmafのみに修正（バグ）
