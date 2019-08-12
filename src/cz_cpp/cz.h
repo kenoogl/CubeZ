@@ -60,7 +60,6 @@ private:
   double res_normal;       ///< 全計算点数
   REAL_TYPE cf[7];         ///< 係数
   std::string precon;      ///< 前処理文字列
-  int thread_max;          ///< 最大スレッド数
 
 
   int order_of_PM_key;     ///< PMlib用の登録番号カウンタ < PM_NUM_MAX
@@ -102,6 +101,7 @@ public:
   REAL_TYPE* xc; ///< 格子
   REAL_TYPE* yc;
   REAL_TYPE* zc;
+  REAL_TYPE* vrtmp; ///< temporary for supressing vector reduction
   REAL_TYPE* pvt; ///< 行の最大要素
 
   REAL_TYPE* WA;
@@ -129,11 +129,6 @@ public:
     ac1 = 0.0;
     res_normal = 0.0;
     
-    thread_max = 1;
-#ifdef _OPENMP
-    thread_max = omp_get_max_threads();
-#endif
-    printf("Max threads = %d\n", thread_max);
     
     for (int i=0; i<6; i++) {
       cf[i] = 1.0;
@@ -192,6 +187,7 @@ public:
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
+#pragma acc kernels
     for (int i=0; i<nx; i++) var[i]=0;
     
     return var;
@@ -209,6 +205,7 @@ public:
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
+#pragma acc kernels
     for (int i=0; i<nx; i++) var[i]=0;
     
     return var;
@@ -221,21 +218,24 @@ public:
     if ( !sz ) return NULL;
     
     size_t nx = sz;
-    T* var = new T[nx*thread_max];
+    T* var = new T[nx*numThreads];
     
     int id=0;
     
 #ifdef __NEC__
-    for (int i=0; i<nx*thread_max; i++) {
+    for (int i=0; i<nx*numThreads; i++) {
       var[i]=0;
     }
-#else
+#elif defined(_OPENMP)
 #pragma omp parallel for schedule(static) firstprivate(id)
     for (int i=0; i<nx; i++) {
-  #ifdef _OPENMP
       id = omp_get_thread_num();
-  #endif
-      var[i+thread_max*id]=0;
+      var[i+numThreads*id]=0;
+    }
+#else
+#pragma acc kernels
+    for (int i=0; i<nx*numThreads; i++) {
+      var[i]=0;
     }
 #endif
     return var;
@@ -460,6 +460,7 @@ private:
                       double& flop,
                       int s_type);
 
+  void setStrPre();
 
 
 #ifndef DISABLE_PMLIB
@@ -563,7 +564,7 @@ std::string GetHostName()
   return std::string(name);
 }
 
-
+  std::string printMethod(int type);
 
 };
 

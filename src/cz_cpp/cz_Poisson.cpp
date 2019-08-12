@@ -39,12 +39,24 @@
     for (itr=1; itr<=itr_max; itr++)
     {
       res = 0.0;
+   
+#ifdef _SVR
+      
+#ifndef __NEC__
+#pragma omp parallel for schedule(static)
+#endif
+#pragma acc kernels
+      for (int i=0; i<size[2]+2*GUIDE; i++)
+      {
+        vrtmp[i] = 0.0;
+      }
+#endif
 
       if (s_type==LS_JACOBI_MAF)
       {
         TIMING_start("JACOBI_MAF_kernel");
         flop_count = 0.0;
-        jacobi_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, WRK, &flop_count);
+        jacobi_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, WRK, vrtmp, &flop_count);
         TIMING_stop("JACOBI_MAF_kernel", flop_count);
       }
       else
@@ -779,7 +791,7 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
   int id = 0;
   
 #ifdef __NEC__
-  for (int i=0; i<kk*thread_max; i++)
+  for (int i=0; i<kk*numThreads; i++)
   {
     SA[i] = 0.0;
     SC[i] = 0.0;
@@ -792,9 +804,9 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
 #ifdef _OPENMP
     id = omp_get_thread_num();
 #endif
-    SA[i+thread_max*id] = 0.0;
-    SC[i+thread_max*id] = 0.0;
-    SD[i+thread_max*id] = 0.0;
+    SA[i+numThreads*id] = 0.0;
+    SC[i+numThreads*id] = 0.0;
+    SD[i+numThreads*id] = 0.0;
   }
 #endif
 
@@ -808,7 +820,7 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     if (s_type==LS_PCRV_SA_MAF)
     {
       TIMING_start("PCR_MAF");
-      pcrv_sa_maf_(size, innerFidx, &gc, &pn, &ss, &thread_max,
+      pcrv_sa_maf_(size, innerFidx, &gc, &pn, &ss, &numThreads,
                 X, MSK, B, xc, yc, zc,
                 SA, SC, SD, WA, WC, WD,
                 &ac1, &res, &flop_count);
@@ -817,7 +829,7 @@ int CZ::LSOR_PCRV_SA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     else
     {
       TIMING_start("PCR");
-      pcrv_sa_(size, innerFidx, &gc, &pn, &ss, &thread_max,
+      pcrv_sa_(size, innerFidx, &gc, &pn, &ss, &numThreads,
                X, MSK, B, SA, SC, SD, WA, WC, WD,
                &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);

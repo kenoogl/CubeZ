@@ -35,6 +35,8 @@
 #
 # -D with_ACC={off|Pascal|Volta}
 #
+# -D enable_VectorReduction=(on|off)
+#
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -50,6 +52,7 @@ option(with_PAPI "Enable PAPI" "OFF")
 option(with_SIMD "SIMD Width" "OFF")
 option(with_Ftrace "with_Ftrace Option" "OFF")
 option(with_ACC "OpenACC Option" "OFF")
+option(enable_VectorReduction "Enable VectorReduction" "ON")
 
 #######
 # Project setting
@@ -75,8 +78,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.1.3")
-set(LIB_REVISION "20190802_0000")
+set(PROJECT_VERSION "1.1.4")
+set(LIB_REVISION "20190808_0930")
 #######
 
 
@@ -203,6 +206,16 @@ if(with_ACC)
 endif()
 
 
+####
+# VectorReduction
+####
+
+if(enable_VectorReduction STREQUAL "ON")
+else()
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SVR")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -D_SVR")
+endif()
+
 
 
 #######
@@ -228,6 +241,7 @@ message( STATUS "CBrick support        : "      ${with_CBR})
 message( STATUS "SIMD WIDTH            : "      ${with_SIMD})
 message( STATUS "OpenACC support       : "      ${with_ACC} " " ${ACC})
 message( STATUS "Aurora Ftrace         : "      ${with_Ftrace})
+message( STATUS "Vector Reduction      : "      ${enable_VectorReduction})
 message(" ")
 
 

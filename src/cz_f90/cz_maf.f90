@@ -125,9 +125,10 @@ end subroutine psor_maf
 !! @param [in]     b    RHS vector
 !! @param [in,out] res  residual
 !! @param [out]    wk2  ワーク用配列
+!! @param [in]     tmp  ワーク
 !! @param [in,out] flop flop count
 !<
-subroutine jacobi_maf (p, sz, idx, g, X, Y, Z, omg, b, res, wk2, flop)
+subroutine jacobi_maf (p, sz, idx, g, X, Y, Z, omg, b, res, wk2, tmp, flop)
 implicit none
 integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
@@ -143,12 +144,7 @@ real                                                   ::  C1, C2, C3, C7, C8, C
 real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, b, wk2
 real, dimension(-1:sz(1)+2)                            ::  X
 real, dimension(-1:sz(2)+2)                            ::  Y
-real, dimension(-1:sz(3)+2)                            ::  Z
-
-#ifdef __NEC__
-real, dimension(-1:sz(3)+2) :: tmp
-tmp = 0.0
-#endif
+real, dimension(-1:sz(3)+2)                            ::  Z, tmp
 
 ist = idx(0)
 ied = idx(1)
@@ -165,7 +161,7 @@ flop = flop + 66.0d0  &
 * dble(ked-kst+1)
 
 !$OMP PARALLEL &
-#ifdef __NEC__
+#ifdef _SVR
 !$OMP REDUCTION(+:tmp) &
 #else
 !$OMP REDUCTION(+:res1) &
@@ -220,11 +216,13 @@ rp = (C1 + 0.5 * C7) * P(k  , i+1, j  ) &
 dp = ( rp / dd - pp ) * omg
 pn = pp + dp
 wk2(k,i,j) = pn
-#ifdef __NEC__
+
+#ifdef _SVR
 tmp(k) = tmp(k) + dp * dp ! 30
 #else
 res1 = res1 + dp * dp ! 30
 #endif
+
 enddo
 enddo
 enddo
@@ -240,9 +238,6 @@ enddo
 #endif
 do j = jst, jed
 do i = ist, ied
-
-!dir$ vector aligned
-!dir$ simd
 do k = kst, ked
 p(k,i,j)=wk2(k,i,j)
 end do
@@ -255,7 +250,7 @@ end do
 
 !$OMP END PARALLEL
 
-#ifdef __NEC__
+#ifdef _SVR
 do k = kst, ked
   res1 = res1 + tmp(k)
 end do

@@ -1,5 +1,13 @@
 # Memo for CubeZ
 
+####  Version 1.1.4
+- Auroraのコンパイルオプションの"-mretain-none"は不要
+- printMethod(), setStrPre() 追加
+- enable_VectorReduction >> jacobi_maf()のベクトルリダクションの制御
+- czAllocR_S3D(), czAllocR(), czAllocR2()へのOpenACCディレクティブ追加
+- thread_max >> numThreadsへ
+
+
 ####  Version 1.1.3
 - NECからのフィードバック
 - search_pivotでssはreduction対象ではないのでprivate(ss)に変更

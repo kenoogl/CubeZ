@@ -22,9 +22,8 @@ macro (AddOptimizeOption)
     set(CMAKE_AR /opt/nec/ve/bin/nar CACHE FILEPATH "Aurora archiver")
     set(CMAKE_RANLIB /opt/nec/ve/bin/nranlib CACHE FILEPATH "Aurora ranlib")
     set(CMAKE_CXX_FLAGS "-O3 -proginf")
-    set(CMAKE_Fortran_FLAGS "-fpp -Wall -O3 -proginf -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95 -cxxlib -mretain-none")
-    # リンクをFortranドライバで行うため、-cxxlibを指定
-    # mretainは優先的にLLCに保持する配列を指定するオプション，ここではnone=優先度の指定をしない
+    set(CMAKE_Fortran_FLAGS "-fpp -Wall -O3 -proginf -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95 -cxxlib")
+    # In order to link objects by Fortran driver, add '-cxxlib' to CMAKE_Fortran_FLAGS
 
   elseif (TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,parallel,optmsg=2 -V -Xg")

@@ -138,6 +138,7 @@ void jacobi_maf_   (REAL_TYPE* p,
                     REAL_TYPE* b,
                     double* res,
                     REAL_TYPE* wk2,
+                    REAL_TYPE* tmp,
                     double* flop);
     
 void psor_maf_     (REAL_TYPE* p,

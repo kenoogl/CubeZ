@@ -64,6 +64,9 @@ $ sudo make install
 `-D with_Ftrace=` (off | on)
 > In the case of Aurora, if you want to use Ftrace option, specify turn on this option.
 
+`-D enable_VectorReduction=` (on | off)
+> Vectorizable reduction expression. Default is yes. This is effective for Aurora.
+
 
 ### Default settng
 ~~~
@@ -73,6 +76,7 @@ real_type = float
 with_PAPI = OFF
 with_SIMD = OFF
 with_Ftrace = OFF
+enable_VectorReduction = ON
 ~~~
 
 
