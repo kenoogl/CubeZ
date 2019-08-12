@@ -9,7 +9,12 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
-- 2019-8-8 Version 1.1.5
+- 2019-8-11 Version 1.1.6
+- modify pcr_eda / pcr_eda_maf
+- modify implementation : pcr_esa/ pcr_esa_maf, pcr_rb_esa / pcr_rb_esa_maf
+
+---
+- 2019-8-11 Version 1.1.5
 - vector reduction for all maf
 - exclusive control between OpanMP and OpenACC
 

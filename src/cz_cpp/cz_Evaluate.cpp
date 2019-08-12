@@ -254,22 +254,9 @@ int CZ::Evaluate(int argc, char **argv)
   if( (WAA= czAllocR(tmpz, var_type)) == NULL ) return 0;
   if( (WCC= czAllocR(tmpz, var_type)) == NULL ) return 0;
   if( (WDD= czAllocR(tmpz, var_type)) == NULL ) return 0;
-  
-  if ( SW_esa == 1 )
-  {
-    // スレッド用
-    int tmp = (size[2]+2*GUIDE);
-    if( (WA = czAllocR2(tmp, var_type)) == NULL ) return 0;
-    if( (WC = czAllocR2(tmp, var_type)) == NULL ) return 0;
-    if( (WD = czAllocR2(tmp, var_type)) == NULL ) return 0;
-  }
-  else
-  {
-    int tmp = (size[2]+2*GUIDE);
-    if( (WA = czAllocR(tmp, var_type)) == NULL ) return 0;
-    if( (WC = czAllocR(tmp, var_type)) == NULL ) return 0;
-    if( (WD = czAllocR(tmp, var_type)) == NULL ) return 0;
-  }
+  if( (WA = czAllocR(tmpz, var_type)) == NULL ) return 0;
+  if( (WC = czAllocR(tmpz, var_type)) == NULL ) return 0;
+  if( (WD = czAllocR(tmpz, var_type)) == NULL ) return 0;
 
   if (debug_mode == 1) {
     L_Memory += ( array_size * 1 ) * (double)sizeof(REAL_TYPE);
@@ -315,10 +302,10 @@ int CZ::Evaluate(int argc, char **argv)
     printf("s = %d  kk= %d\n", s, kk);
     
     // スレッド用
-    if( (SA = czAllocR2(kk, var_type)) == NULL ) return 0;
-    if( (SC = czAllocR2(kk, var_type)) == NULL ) return 0;
-    if( (SD = czAllocR2(kk, var_type)) == NULL ) return 0;
-    L_Memory += ( kk * numThreads * 3 ) * (double)sizeof(REAL_TYPE);
+    if( (SA = czAllocR(kk, var_type)) == NULL ) return 0;
+    if( (SC = czAllocR(kk, var_type)) == NULL ) return 0;
+    if( (SD = czAllocR(kk, var_type)) == NULL ) return 0;
+    L_Memory += ( kk * 3 ) * (double)sizeof(REAL_TYPE);
   }
   
 
@@ -753,7 +740,7 @@ void CZ::setLS(char* q, char* fname)
     SW_esa = 1;
   }
   
-  else{
+  else {
     printf("Invalid solver\n");
     exit(0);
   }

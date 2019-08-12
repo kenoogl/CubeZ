@@ -831,7 +831,7 @@ end do
 !$acc kernels
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$OMP private(ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
@@ -951,10 +951,7 @@ end subroutine pcr_eda
 
 !********************************************************************************
 ! pcr for vector (Aurora and GPU)
-subroutine pcr_esa (sz, idx, g, pn, s, thx, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
-#ifdef _OPENMP
-!$ use omp_lib
-#endif
+subroutine pcr_esa (sz, idx, g, pn, s, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -964,10 +961,10 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, p, id, thx, ss, s
+integer                                  ::  i, j, k, p, ss, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
-real, dimension(1-g:sz(3)+g, thx)        ::  a1, c1, d1
-real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
+real, dimension(1-g:sz(3)+g)             ::  a1, c1, d1
+real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
 real                                     ::  r, ap, cp, e, pp, dp, res1
 real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
 
@@ -990,31 +987,27 @@ flop = flop + dble(          &
 + 6.0 )                 &  ! BC
 )
 
-id = 1
-
 #ifdef _OPENACC
 !$acc kernels
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2, id)
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+!$OMP private(a1, c1, d1) &
+!$OMP firstprivate(a, c, d)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
 do j=jst, jed
 do i=ist, ied
 
-#ifdef _OPENMP
-id = omp_get_thread_num()+1 ! id= 1 ~
-#endif
-
 ! Reflesh coef. due to override
 !a(kst) = 0.0
 do k=kst+1, ked
-a(k,id) = -r
+a(k) = -r
 end do
 
 do k=kst, ked-1
-c(k,id) = -r
+c(k) = -r
 end do
 !c(ked) = 0.0
 
@@ -1022,7 +1015,7 @@ end do
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-d(k,id) = (   ( x(k, i  , j-1)        &
+d(k) = (   ( x(k, i  , j-1)        &
 +     x(k, i  , j+1)        &
 +     x(k, i-1, j  )        &
 +     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
@@ -1030,8 +1023,8 @@ d(k,id) = (   ( x(k, i  , j-1)        &
 end do ! 6 flops
 
 ! BC  6 flops
-d(kst,id) = ( d(kst,id) + x(kst-1, i, j) * r ) * msk(kst, i, j)
-d(ked,id) = ( d(ked,id) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
@@ -1042,20 +1035,20 @@ ss = 2**(p-1)
 !dir$ simd
 !pgi$ ivdep
 do k = kst, ked
-ap = a(k,id)
-cp = c(k,id)
-e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
-a1(k,id) =   -e * ap * a(k-ss,id)
-c1(k,id) =   -e * cp * c(k+ss,id)
-d1(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
+ap = a(k)
+cp = c(k)
+e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
+a1(k) =   -e * ap * a(k-ss)
+c1(k) =   -e * cp * c(k+ss)
+d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
 end do
 
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-a(k,id) = a1(k,id)
-c(k,id) = c1(k,id)
-d(k,id) = d1(k,id)
+a(k) = a1(k)
+c(k) = c1(k)
+d(k) = d1(k)
 end do
 
 end do ! p反復
@@ -1069,15 +1062,15 @@ ss = 2**(pn-1)
 !NEC$ IVDEP
 !pgi$ ivdep
 do k = kst, kst+ss-1 ! 2, 2+256-1=257
-cc1 = c(k,id)
-aa2 = a(k+ss,id)
-f1  = d(k,id)
-f2  = d(k+ss,id)
+cc1 = c(k)
+aa2 = a(k+ss)
+f1  = d(k)
+f2  = d(k+ss)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
-d1(k   ,id) = dd1
-d1(k+ss,id) = dd2
+d1(k   ) = dd1
+d1(k+ss) = dd2
 end do
 
 
@@ -1092,7 +1085,7 @@ end do
 !pgi$ ivdep
 do k = kst, ked
 pp =   x(k, i, j)
-dp = ( d1(k,id) - pp ) * omg * msk(k, i, j)
+dp = ( d1(k) - pp ) * omg * msk(k, i, j)
 x(k, i, j) = pp + dp
 res1 = res1 + dp*dp
 end do
@@ -1113,10 +1106,7 @@ end subroutine pcr_esa
 
 
 !********************************************************************************
-subroutine pcr_rb_esa (sz, idx, g, pn, ofst, color, s, thx, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
-#ifdef _OPENMP
-!$ use omp_lib
-#endif
+subroutine pcr_rb_esa (sz, idx, g, pn, ofst, color, s, x, msk, rhs, a, c, d, a1, c1, d1, omg, res, flop)
 implicit none
 !args
 integer, dimension(3)                                  ::  sz
@@ -1127,9 +1117,9 @@ real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
 integer                                  ::  i, j, k, p, color, ip, ofst, ss, s
-integer                                  ::  ist, ied, jst, jed, kst, ked, id, thx
-real, dimension(-1:sz(3)+2, thx)         ::  a1, c1, d1
-real, dimension(idx(4)-s:idx(5)+s, thx)  ::  a, c, d
+integer                                  ::  ist, ied, jst, jed, kst, ked
+real, dimension(-1:sz(3)+2)              ::  a1, c1, d1
+real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
 real                                     ::  r, ap, cp, e, pp, dp, res1
 real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
 
@@ -1152,7 +1142,6 @@ flop = flop + dble(          &
 + 6.0 )                 &  ! BC
 ) * 0.5
 
-id = 1
 ip = ofst + color
 
 
@@ -1165,25 +1154,23 @@ do i=ist+mod(j+ip,2), ied, 2
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2, id) 
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+!$OMP private(a1, c1, d1) &
+!$OMP firstprivate(a, c, d)
 !$OMP DO SCHEDULE(static)
 !pgi$ ivdep
 do j=jst, jed
 do i=ist+mod(j+ip,2), ied, 2
 #endif
 
-#ifdef _OPENMP
-id = omp_get_thread_num()+1 ! id= 1 ~
-#endif
-
 ! Reflesh coef. due to override
 !a(kst) = 0.0
 do k=kst+1, ked
-a(k,id) = -r
+a(k) = -r
 end do
 
 do k=kst, ked-1
-c(k,id) = -r
+c(k) = -r
 end do
 !c(ked) = 0.0
 
@@ -1191,7 +1178,7 @@ end do
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-d(k,id) = (   ( x(k, i  , j-1)        &
+d(k) = (   ( x(k, i  , j-1)        &
 +     x(k, i  , j+1)        &
 +     x(k, i-1, j  )        &
 +     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
@@ -1199,8 +1186,8 @@ d(k,id) = (   ( x(k, i  , j-1)        &
 end do ! 6 flops
 
 ! BC  6 flops
-d(kst,id) = ( d(kst,id) + x(kst-1, i, j) * r ) * msk(kst, i, j)
-d(ked,id) = ( d(ked,id) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
@@ -1210,20 +1197,20 @@ ss = 2**(p-1)
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-ap = a(k,id)
-cp = c(k,id)
-e = 1.0 / ( 1.0 - ap * c(k-ss,id) - cp * a(k+ss,id) )
-a1(k,id) =   -e * ap * a(k-ss,id)
-c1(k,id) =   -e * cp * c(k+ss,id)
-d1(k,id) =   e * ( d(k,id) - ap * d(k-ss,id) - cp * d(k+ss,id) )
+ap = a(k)
+cp = c(k)
+e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
+a1(k) =   -e * ap * a(k-ss)
+c1(k) =   -e * cp * c(k+ss)
+d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
 end do
 
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
-a(k,id) = a1(k,id)
-c(k,id) = c1(k,id)
-d(k,id) = d1(k,id)
+a(k) = a1(k)
+c(k) = c1(k)
+d(k) = d1(k)
 end do
 
 end do ! p反復
@@ -1236,15 +1223,15 @@ ss = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 do k = kst, kst+s-1
-cc1 = c(k,id)
-aa2 = a(k+ss,id)
-f1  = d(k,id)
-f2  = d(k+ss,id)
+cc1 = c(k)
+aa2 = a(k+ss)
+f1  = d(k)
+f2  = d(k+ss)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
-d1(k   ,id) = dd1
-d1(k+ss,id) = dd2
+d1(k   ) = dd1
+d1(k+ss) = dd2
 end do
 
 
@@ -1258,7 +1245,7 @@ end do
 !dir$ simd
 do k = kst, ked
 pp =   x(k, i, j)
-dp = ( d1(k,id) - pp ) * omg * msk(k, i, j)
+dp = ( d1(k) - pp ) * omg * msk(k, i, j)
 x(k, i, j) = pp + dp
 res1 = res1 + dp*dp
 end do

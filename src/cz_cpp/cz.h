@@ -209,39 +209,11 @@ public:
 #ifndef __NEC__
 #pragma omp parallel for schedule(static)
 #endif
+#ifdef _OPENACC
 #pragma acc kernels
+#endif
     for (int i=0; i<nx; i++) var[i]=0;
     
-    return var;
-  }
-  
-  // #################################################################
-  template <typename T>
-  T* czAllocR2(const int sz, T type)
-  {
-    if ( !sz ) return NULL;
-    
-    size_t nx = sz;
-    T* var = new T[nx*numThreads];
-    
-    int id=0;
-    
-#ifdef __NEC__
-    for (int i=0; i<nx*numThreads; i++) {
-      var[i]=0;
-    }
-#elif defined(_OPENMP)
-#pragma omp parallel for schedule(static) firstprivate(id)
-    for (int i=0; i<nx; i++) {
-      id = omp_get_thread_num();
-      var[i+numThreads*id]=0;
-    }
-#else
-#pragma acc kernels
-    for (int i=0; i<nx*numThreads; i++) {
-      var[i]=0;
-    }
-#endif
     return var;
   }
   
@@ -254,6 +226,7 @@ public:
       ptr = NULL;
     }
   }
+  
 
   // #################################################################
   template <typename T>

@@ -669,25 +669,21 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
   
   ss = pow(2, pn-2);
   int kk = ked - kst+ 2*ss + 1;
-  int id = 0;
   
 #ifdef __NEC__
-  for (int i=0; i<kk*numThreads; i++)
+  for (int i=0; i<kk; i++)
   {
     SA[i] = 0.0;
     SC[i] = 0.0;
     SD[i] = 0.0;
   }
 #else
-#pragma omp parallel for firstprivate(id)
+#pragma omp parallel for
   for (int i=0; i<kk; i++)
   {
-#ifdef _OPENMP
-    id = omp_get_thread_num();
-#endif
-    SA[i+numThreads*id] = 0.0;
-    SC[i+numThreads*id] = 0.0;
-    SD[i+numThreads*id] = 0.0;
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
   }
 #endif
   
@@ -726,7 +722,7 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_start("PCR_RB_MAF");
       for (int color=0; color<2; color++)
       {
-        pcr_rb_esa_maf_(size, innerFidx, &gc, &pn, &ip, &color, &ss, &numThreads,
+        pcr_rb_esa_maf_(size, innerFidx, &gc, &pn, &ip, &color, &ss,
                         X, MSK, B, xc, yc, zc,
                     WA, WC, WD, WAA, WCC, WDD,
                     &ac1, &res, vrtmp, &flop_count);
@@ -738,7 +734,7 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_start("PCR_RB");
       for (int color=0; color<2; color++)
       {
-        pcr_rb_esa_(size, innerFidx, &gc, &pn, &ip, &color, &ss, &numThreads,
+        pcr_rb_esa_(size, innerFidx, &gc, &pn, &ip, &color, &ss,
                     X, MSK, B,
                 WA, WC, WD, WAA, WCC, WDD,
                 &ac1, &res, &flop_count);
@@ -993,25 +989,21 @@ int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
   
   ss = pow(2, pn-2);
   int kk = ked - kst+ 2*ss + 1;
-  int id = 0;
   
 #ifdef __NEC__
-  for (int i=0; i<kk*numThreads; i++)
+  for (int i=0; i<kk; i++)
   {
     SA[i] = 0.0;
     SC[i] = 0.0;
     SD[i] = 0.0;
   }
 #else
-#pragma omp parallel for firstprivate(id)
+#pragma omp parallel for
   for (int i=0; i<kk; i++)
   {
-#ifdef _OPENMP
-    id = omp_get_thread_num();
-#endif
-    SA[i+numThreads*id] = 0.0;
-    SC[i+numThreads*id] = 0.0;
-    SD[i+numThreads*id] = 0.0;
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
   }
 #endif
 
@@ -1037,7 +1029,7 @@ int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     if (s_type==LS_PCR_ESA_MAF)
     {
       TIMING_start("PCR_MAF");
-      pcr_esa_maf_(size, innerFidx, &gc, &pn, &ss, &numThreads,
+      pcr_esa_maf_(size, innerFidx, &gc, &pn, &ss,
                 X, MSK, B, xc, yc, zc,
                 SA, SC, SD, WA, WC, WD,
                 &ac1, &res, vrtmp, &flop_count);
@@ -1046,7 +1038,7 @@ int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
     else
     {
       TIMING_start("PCR");
-      pcr_esa_(size, innerFidx, &gc, &pn, &ss, &numThreads,
+      pcr_esa_(size, innerFidx, &gc, &pn, &ss,
                X, MSK, B, SA, SC, SD, WA, WC, WD,
                &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);

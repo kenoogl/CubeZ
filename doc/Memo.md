@@ -1,5 +1,9 @@
 # Memo for CubeZ
 
+####  Version 1.1.6
+- pcr_eda, pcr_eda_maf のprivate(kl, kr) を外す
+- pcr_esa / pcr_esa_maf, pcr_rb_esa/pcr_rb_esa_mafの確保する配列の大きさは1スレッド分として、サブルーチン内でprivate
+
 ####  Version 1.1.5
 - 全てのmaf サブルーチンにvector reductionを実装
 - OpenMPとOpenACCの排他制御、OpenACCが優先
