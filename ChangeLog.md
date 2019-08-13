@@ -9,6 +9,14 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-8-13 Version 1.2.0
+- Yet Another Implemantation : SVR init
+
+---
+- 2019-8-12 Version 1.1.9
+- nVidiaTools
+
+---
 - 2019-8-12 Version 1.1.8
 - Aurora compiler option : static-nec
 

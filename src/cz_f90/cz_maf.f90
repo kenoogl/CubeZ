@@ -155,6 +155,10 @@ ked = idx(5)
 
 res1 = 0.0
 
+#ifdef _SVR
+tmp = 0.0
+#endif
+
 flop = flop + 66.0d0  &
 * dble(ied-ist+1) &
 * dble(jed-jst+1) &
@@ -307,6 +311,10 @@ real, dimension(-1:sz(3)+2)                            ::  Z, tmp
 
 kp = ofst+color
 res1 = 0.0
+
+#ifdef _SVR
+tmp = 0.0
+#endif
 
 ist = idx(0)
 ied = idx(1)
@@ -464,6 +472,10 @@ flop = flop + dble(           &
 
 ip = ofst + color
 res1 = 0.0
+
+#ifdef _SVR
+tmp = 0.0
+#endif
 
 
 #ifdef _OPENACC
@@ -686,6 +698,10 @@ flop = flop + dble(           &
 )                          &
 )
 
+#ifdef _SVR
+tmp = 0.0
+#endif
+
 
 #ifdef _OPENACC
 !$acc kernels
@@ -887,6 +903,10 @@ kst = idx(4)
 ked = idx(5)
 
 res1 = 0.0
+
+#ifdef _SVR
+tmp = 0.0
+#endif
 
 s = 2**(pn-1)
 
@@ -1118,6 +1138,10 @@ ked = idx(5)
 
 res1 = 0.0
 
+#ifdef _SVR
+tmp = 0.0
+#endif
+
 flop = flop + dble(           &
 (jed-jst+1)*(ied-ist+1)* (  &
 ( 24.0d0 +                & ! metrics
@@ -1347,6 +1371,10 @@ flop = flop + dble(           &
 
 ip = ofst + color
 res1 = 0.0
+
+#ifdef _SVR
+tmp = 0.0
+#endif
 
 #ifdef _OPENACC
 !$acc kernels

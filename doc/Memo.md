@@ -1,5 +1,9 @@
 # Memo for CubeZ
 
+#### Version 1.2.0
+- mretain-none復活
+- SVRの初期化はFortran内で
+
 ####  Version 1.1.9
 - CMakeLists.txt のACCからnofmaを削除
 - nVidiaTools用のマクロ挿入 PUSH_RANGE, POP_RANGE

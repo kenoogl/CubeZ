@@ -187,7 +187,7 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=OFF \
 -Dwith_PM=OFF \
 -Dwith_CBR=OFF \
--Dwith_Ftrace=ON ..
+-Dwith_Ftrace=ON -Denable_VectorReduction=OFF ..
 ~~~
 
 
