@@ -42,9 +42,17 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+! スレッド同期のオーバーヘッド抑制のため，単一のparallel regionとする
+#ifndef _OPENACC
+!$OMP PARALLEL
+#endif
+
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -55,12 +63,16 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
+#else
+!$OMP END DO NOWAIT
 #endif
-!$OMP END PARALLEL DO
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -71,8 +83,13 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
+#else
+!$OMP END DO
 #endif
-!$OMP END PARALLEL DO
+
+#ifndef _OPENACC
+!$OMP END PARALLEL
+#endif
 
 return
 end subroutine imask_k
@@ -95,9 +112,12 @@ ix = sz(1)
 jx = sz(2)
 kx = sz(3)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -108,8 +128,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_clear
@@ -132,9 +154,12 @@ ix = sz(1)
 jx = sz(2)
 kx = sz(3)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -145,8 +170,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_copy
@@ -170,9 +197,12 @@ ix = sz(1)
 jx = sz(2)
 kx = sz(3)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j=1,jx
 do i=1,ix
@@ -183,8 +213,9 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
 
 
 return
@@ -229,9 +260,12 @@ flop = flop + 2.0d0    &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -242,8 +276,9 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
 
 return
 end subroutine blas_triad
@@ -260,7 +295,7 @@ end subroutine blas_triad
 !<
 subroutine blas_dot1(r, p, sz, idx, g, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer, dimension(3)                                  ::  sz
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
@@ -269,10 +304,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p
 double precision                                       ::  flop
 real                                                   ::  q, r
 !dir$ assume_aligned p:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -288,10 +319,13 @@ flop = flop + 2.0d0    &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(+:r) PRIVATE(q)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3) private(q) reduction(+:r)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
+!$OMP REDUCTION(+:r) PRIVATE(q)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -303,8 +337,9 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
 
 return
 end subroutine blas_dot1
@@ -322,7 +357,7 @@ end subroutine blas_dot1
 !<
 subroutine blas_dot2(r, p, q, sz, idx, g, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer, dimension(3)                                  ::  sz
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
@@ -331,10 +366,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, q
 double precision                                       ::  flop
 real                                                   ::  r
 !dir$ assume_aligned p:64, q:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -350,10 +381,12 @@ flop = flop + 2.0d0    &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
-!$OMP REDUCTION(+:r)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3) reduction(+:r)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) REDUCTION(+:r)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -364,8 +397,9 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
 
 return
 end subroutine blas_dot2
@@ -385,7 +419,7 @@ end subroutine blas_dot2
 !<
 subroutine blas_bicg_1(p, r, q, beta, omg, sz, idx, g, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer, dimension(3)                                  ::  sz
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
@@ -394,10 +428,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  p, r, q
 double precision                                       ::  flop
 real                                                   ::  beta, omg
 !dir$ assume_aligned p:64, q:64, r:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -411,9 +441,12 @@ flop = flop + 4.0d0    &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -424,8 +457,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_bicg_1
@@ -445,7 +480,7 @@ end subroutine blas_bicg_1
 !<
 subroutine blas_bicg_2(z, x, y, a, b, sz, idx, g, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer, dimension(3)                                  ::  sz
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
@@ -454,10 +489,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, y, z
 double precision                                       ::  flop
 real                                                   ::  a, b
 !dir$ assume_aligned x:64, y:64, z:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -471,9 +502,11 @@ flop = flop + 4.0d0    &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -484,8 +517,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_bicg_2
@@ -503,7 +538,7 @@ end subroutine blas_bicg_2
 !<
 subroutine blas_calc_ax(ap, p, sz, idx, g, cf, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer, dimension(3)                                  ::  sz
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
@@ -513,10 +548,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  ap, p
 double precision                                       ::  flop
 real, dimension(7)                                     ::  cf
 !dir$ assume_aligned ap:64, p:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -538,9 +569,12 @@ flop = flop + 13.0d0   &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3) private(ss)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -557,8 +591,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_calc_ax
@@ -577,7 +613,7 @@ end subroutine blas_calc_ax
 !<
 subroutine blas_calc_rk(r, p, b, sz, idx, g, cf, flop)
 implicit none
-integer                                                ::  i, j, k, ix, jx, kx, g
+integer                                                ::  i, j, k, g
 integer                                                ::  ist, jst, kst
 integer                                                ::  ied, jed, ked
 integer, dimension(3)                                  ::  sz
@@ -587,10 +623,6 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  r, p, b
 double precision                                       ::  flop
 real, dimension(7)                                     ::  cf
 !dir$ assume_aligned r:64, p:64, b:64
-
-ix = sz(1)
-jx = sz(2)
-kx = sz(3)
 
 ist = idx(0)
 ied = idx(1)
@@ -612,9 +644,12 @@ flop = flop + 14.0d0   &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(3) private(ss)
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -631,8 +666,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine blas_calc_rk
@@ -679,12 +716,15 @@ flop = flop + 63.0d0   &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(3)
+#else
 !$OMP PARALLEL DO Collapse(2) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
-#ifdef _OPENACC
-!$acc kernels
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -729,8 +769,10 @@ enddo
 enddo
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 
 return
@@ -776,12 +818,15 @@ flop = flop + 63.0d0   &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(3)
+#else
 !$OMP PARALLEL DO Collapse(2) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
-#ifdef _OPENACC
-!$acc kernels
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -826,8 +871,10 @@ enddo
 enddo
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine calc_ax_maf
@@ -865,13 +912,16 @@ jed = idx(3)
 kst = idx(4)
 ked = idx(5)
 
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(3)
+#else
 !$OMP PARALLEL DO Collapse(2) &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
 !$OMP PRIVATE(s1, s2, s3, s4, s5, s6, s7, ss)
-#ifdef _OPENACC
-!$acc kernels
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -918,8 +968,10 @@ enddo
 enddo
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END PARALLEL DO
+#endif
+
 
 return
 end subroutine search_pivot

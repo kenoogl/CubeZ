@@ -36,13 +36,18 @@ kx = sz(3)
 pi = 2.0*asin(1.0)
 
 ! スレッド同期のオーバーヘッド抑制のため，単一のparallel regionとする
+#ifndef _OPENACC
 !$OMP PARALLEL
+#endif
 
 ! ZMINUS Dirichlet
 if( nID(K_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #endif
 do j=1,jx
 do i=1,ix
@@ -53,16 +58,20 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! ZPLUS Dirichlet
 if( nID(K_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #endif
 do j=1,jx
 do i=1,ix
@@ -73,16 +82,20 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
 
 ! XMINUS
 if( nID(I_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do j=1,jx
@@ -91,16 +104,20 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! XPLUS
 if( nID(I_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do j=1,jx
@@ -109,16 +126,20 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
 
 ! YMINUS
 if( nID(J_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do i=1,ix
@@ -127,16 +148,20 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! YPLUS
 if( nID(J_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(2)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do i=1,ix
@@ -145,11 +170,14 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
+#ifndef _OPENACC
 !$OMP END PARALLEL
+#endif
 
 return
 end subroutine bc_k
@@ -280,11 +308,14 @@ flop = flop + 18.0  &
             * dble(jed-jst+1) &
             * dble(ked-kst+1)
 
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop collapse(3) reduction(+:res1)
+#else
 !$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
 !$OMP REDUCTION(+:res1)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
-#ifdef _OPENACC
-!$acc kernels
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -306,12 +337,16 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
+#else
+!$OMP END DO NOWAIT
 #endif
-!$OMP END DO
 
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
+
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop collapse(3)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -322,10 +357,11 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
-
 !$OMP END PARALLEL
+#endif
+
 
 res = res + real(res1, kind=8)
 
@@ -386,9 +422,7 @@ flop = flop + 18.0d0*0.5d0  &
      * dble(jed-jst+1) &
      * dble(ked-kst+1)
 
-!$OMP PARALLEL REDUCTION(+:res1) &
-!$OMP PRIVATE(pp, bb, ss, dp, pn)
-!$OMP DO SCHEDULE(static) COLLAPSE(2) 
+
 #ifdef _OPENACC
 !$acc kernels
 !$acc loop independent gang reduction(+:res1)
@@ -398,9 +432,10 @@ do i=ist,ied
 !$acc loop independent vector(128) reduction(+:res1)
 do k=kst+mod(i+j+kp,2), ked, 2
 #else
-!pgi$ ivdep
+!$OMP PARALLEL REDUCTION(+:res1) &
+!$OMP PRIVATE(pp, bb, ss, dp, pn)
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 do j=jst,jed
-!pgi$ novector
 do i=ist,ied
 !dir$ vector aligned
 !dir$ simd
@@ -425,9 +460,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
 !$OMP END PARALLEL
+#endif
 
 res = res + real(res1, kind=8)
 
@@ -494,6 +530,7 @@ ip = ofst + color
 
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(2) gang private(a, c, d, a1, c1, d1) reduction(+:res)
 #else
 !$OMP PARALLEL &
 !$OMP reduction(+:res) &
@@ -533,6 +570,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
+!$acc loop seq
 do p=1, pn-1
 s = 2**(p-1)
 
@@ -566,6 +604,7 @@ s = 2**(pn-1)
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
+!$acc loop independent
 do k = kst, kst+s-1
 kl = max(k-s, kst-1)
 kr = min(k+s, ked+1)
@@ -589,6 +628,7 @@ end do
 ! Relaxation
 !dir$ vector aligned
 !dir$ simd
+!$acc loop reduction(+:res)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -601,9 +641,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
 !$OMP END PARALLEL
+#endif
 
 !res = res + real(res1, kind=8)
 
@@ -650,6 +691,7 @@ flop = flop + dble(          &
 
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(2) private(a, c, d, a1, c1, d1) reduction(+:res1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
@@ -691,6 +733,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
+!$acc loop seq
 do p=1, pn-1
 s = 2**(p-1)
 
@@ -727,6 +770,7 @@ s = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
+!$acc loop independent
 do k = kst, kst+s-1
 kl = max(k-s, kst-1)
 kr = min(k+s, ked+1)
@@ -752,6 +796,7 @@ end do
 !dir$ vector aligned
 !dir$ simd
 !pgi$ ivdep
+!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -803,13 +848,12 @@ ked = idx(5)
 
 res1 = 0.0
 r = 1.0/6.0
-s = 2**(pn-1)
 
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
 + (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ s*9.0                 &
++ 2**(pn-1)*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )
@@ -829,6 +873,8 @@ end do
 
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(2) reduction(+:res1)
+!$acc firstprivate(a, c, d) private(a1, c1, d1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, s, p, k, pp, dp) &
@@ -868,6 +914,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
+!$acc loop seq
 do p=1, pn-1
 s = 2**(p-1)
 
@@ -901,6 +948,7 @@ s = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
+!$acc loop independent
 do k = kst, kst+s-1 ! 2, 2+256-1=257
 cc1 = c(k)
 aa2 = a(k+s)
@@ -923,6 +971,7 @@ end do
 !dir$ vector aligned
 !dir$ simd
 !pgi$ ivdep
+!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -989,6 +1038,8 @@ flop = flop + dble(          &
 
 #ifdef _OPENACC
 !$acc kernels
+!$acc loop independent collapse(2) gang reduction(+:res1)
+!$acc firstprivate(a, c, d) private(a1, c1, d1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
@@ -1028,6 +1079,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
+!$acc loop seq
 do p=1, pn-1
 ss = 2**(p-1)
 
@@ -1061,6 +1113,7 @@ ss = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
+!$acc loop independent
 do k = kst, kst+ss-1 ! 2, 2+256-1=257
 cc1 = c(k)
 aa2 = a(k+ss)
@@ -1083,6 +1136,7 @@ end do
 !dir$ vector aligned
 !dir$ simd
 !pgi$ ivdep
+!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -1147,10 +1201,11 @@ ip = ofst + color
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent gang reduction(+:res1)
+!$acc loop independent collapse(2) gang reduction(+:res1)
+!$acc firstprivate(a, c, d) private(a1, c1, d1)
 do j=jst, jed
-!$acc loop independent vector(128) reduction(+:res1)
-do i=ist+mod(j+ip,2), ied, 2
+do i=ist, ied
+if(mod(i+j,2) /= color) cycle
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
@@ -1191,6 +1246,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
+!$acc loop seq
 do p=1, pn-1
 ss = 2**(p-1)
 
@@ -1222,6 +1278,7 @@ ss = 2**(pn-1)
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
+!$acc loop independent
 do k = kst, kst+s-1
 cc1 = c(k)
 aa2 = a(k+ss)
@@ -1243,6 +1300,7 @@ end do
 ! Relaxation
 !dir$ vector aligned
 !dir$ simd
+!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -1254,10 +1312,10 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
-
 !$OMP END PARALLEL
+#endif
 
 res = res + real(res1, kind=8)
 

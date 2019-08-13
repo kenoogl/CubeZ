@@ -15,7 +15,7 @@
 
 extern "C" {
 
-// cz_lsolver.f90
+// cz_solver.f90
 
 void bc_k_    (int* sz,
                int* g,
@@ -324,6 +324,7 @@ void tdma_1_ (int* nx,
                 REAL_TYPE* w);
   
 // cz_lsor.f90
+  /*
 void lsor_pcr_kij_(int* sz,
                    int* idx,
                    int* g,
@@ -413,7 +414,7 @@ void lsor_pcr_kij6_(int* sz,
                     REAL_TYPE* omg,
                     double* res,
                     double* flop);
-  
+  */
 
 
 // cz_blas.f90

@@ -1,5 +1,13 @@
 # Memo for CubeZ
 
+####  Version 1.1.9
+- CMakeLists.txt のACCからnofmaを削除
+- nVidiaTools用のマクロ挿入 PUSH_RANGE, POP_RANGE
+- メモリアロケート時点以降の全てにOpenACCディレクティブを入れる
+- nvtx.f90
+- cz_lsor.f90を外す
+- openaccでOMPと同じくfirstprivateに変更
+
 ####  Version 1.1.8
 - Autrora maf用のコンパイラオプション -static-nec
 

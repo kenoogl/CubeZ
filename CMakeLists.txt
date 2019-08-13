@@ -78,8 +78,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.1.8")
-set(LIB_REVISION "20190812_1430")
+set(PROJECT_VERSION "1.1.9")
+set(LIB_REVISION "20190812_2130")
 #######
 
 
@@ -200,9 +200,9 @@ ENDIF()
 
 if(with_ACC)
   if (with_ACC STREQUAL "Pascal")
-    SET(ACC "-ta=tesla,cc60,cuda10.1,nofma,managed")
+    SET(ACC "-ta=tesla,cc60,cuda10.1,managed")
   elseif (with_ACC STREQUAL "Volta")
-    SET(ACC "-ta=tesla,cc70,cuda10.1,nofma,managed")
+    SET(ACC "-ta=tesla,cc70,cuda10.1,managed")
   endif()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -acc ${ACC}")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -acc ${ACC}")

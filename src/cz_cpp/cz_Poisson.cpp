@@ -57,10 +57,12 @@
         TIMING_stop("VRtmp_Init", 0.0);
 #endif
         
+        PUSH_RANGE("jacobi_maf", 8);
         TIMING_start("JACOBI_MAF_kernel");
         flop_count = 0.0;
         jacobi_maf_(X, size, innerFidx, &gc, xc, yc, zc, &ac1, B, &res, WRK, vrtmp, &flop_count);
         TIMING_stop("JACOBI_MAF_kernel", flop_count);
+        POP_RANGE;
       }
       else
       {
@@ -595,6 +597,7 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
       TIMING_stop("VRtmp_Init", 0.0);
 #endif
       
+      PUSH_RANGE("pcr_rb_maf", 7);
       TIMING_start("PCR_RB_MAF");
       for (int color=0; color<2; color++)
       {
@@ -603,6 +606,7 @@ int CZ::LSOR_PCR_RB(double& res, REAL_TYPE* X, REAL_TYPE* B,
                     &ac1, &res, vrtmp, &flop_count);
       }
       TIMING_stop("PCR_RB_MAF", flop_count);
+      POP_RANGE;
     }
     else
     {

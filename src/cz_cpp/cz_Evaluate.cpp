@@ -232,6 +232,9 @@ int CZ::Evaluate(int argc, char **argv)
 
   // アロケートのためのダミー型
   REAL_TYPE var_type=0;
+  
+  // nVidiaTools 定義されなければ何もしない
+  PUSH_RANGE("memory allocation", 1);
 
   if( (RHS = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (P   = czAllocR_S3D(size,var_type)) == NULL ) return 0;
@@ -308,7 +311,8 @@ int CZ::Evaluate(int argc, char **argv)
     L_Memory += ( kk * 3 ) * (double)sizeof(REAL_TYPE);
   }
   
-
+  POP_RANGE; // nVIdiaTools
+  
 
   // メモリ消費量の情報を表示
   Hostonly_
@@ -325,36 +329,65 @@ int CZ::Evaluate(int argc, char **argv)
   ItrMax = atoi(argv[5]);
   
   
+  // nVidiaTools
+  PUSH_RANGE("initialize grid", 2);
+  
+  
   // 一次元格子  何か値をいれておく
+#ifdef _OPENACC
+#pragma acc kernels
+#pragma acc loop independent
+#endif
   for (int i=0; i<size[0]+2*GUIDE; i++)
   {
     xc[i] = (REAL_TYPE)(i-1) * pitch[0];
   }
   
+#ifdef _OPENACC
+#pragma acc kernels
+#pragma acc loop independent
+#endif
   for (int i=0; i<size[1]+2*GUIDE; i++)
   {
     yc[i] = (REAL_TYPE)(i-1) * pitch[1];
   }
   
+#ifdef _OPENACC
+#pragma acc kernels
+#pragma acc loop independent
+#endif
   for (int i=0; i<size[2]+2*GUIDE; i++)
   {
     zc[i] = (REAL_TYPE)(i-1) * pitch[2];
   }
   
+  POP_RANGE;  // nVidiaTools
+  
   // 行の最大値の逆数
+  PUSH_RANGE("search_pivot", 3);
   search_pivot_(pvt, size, innerFidx, &gc, xc, yc, zc);
+  POP_RANGE;
   
 
   // Apply BC
+  PUSH_RANGE("bc_k", 4);
   bc_k_(size, &gc, P, pitch, origin, nID);
+  POP_RANGE;
+  
   if ( !Comm_S(P, 1) ) return 0;
-    
+  
+  
   // source term >> ソース項ゼロ
+  PUSH_RANGE("bc_k", 4);
   bc_k_(size, &gc, RHS, pitch, origin, nID);
+  POP_RANGE;
+  
   if ( !Comm_S(RHS, 1) ) return 0;
-    
+  
+  
+  PUSH_RANGE("imask_k", 5);
   imask_k_(MSK, size, innerFidx, &gc);
-
+  POP_RANGE;
 
 
 #ifndef DISABLE_PMLIB
@@ -376,6 +409,7 @@ int CZ::Evaluate(int argc, char **argv)
   double flop=0.0; // dummy
 
 
+  PUSH_RANGE("main loop",6);
   switch (ls_type)
   {
     case LS_JACOBI:
@@ -444,6 +478,8 @@ int CZ::Evaluate(int argc, char **argv)
     default:
       break;
   }
+  POP_RANGE;
+  
 
   Hostonly_ {
     printf("\n=================================\n");
