@@ -1,8 +1,12 @@
 # Memo for CubeZ
 
+#### Version 1.2.3
+- OpenACC private変数の追加指定　　>>　PCR系
+
+
 #### Version 1.2.2
 - bug fix : pcr_rb系のOpenACCとOMPのループの実装に注意 1.1.6-1.2.1は非推奨
-
+- EDAはOpenACC不可なので削除
 
 #### Version 1.2.1
 

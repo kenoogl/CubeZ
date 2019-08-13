@@ -480,7 +480,11 @@ tmp = 0.0
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) gang private(a, c, d, aw, cw, dw) reduction(+:res1)
+!$acc loop independent collapse(2) gang reduction(+:res1) &
+!$acc& private(a, c, d, aw, cw, dw) &
+!$acc& private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$acc& private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 #else
 !$OMP PARALLEL &
 #ifdef _SVR
@@ -705,7 +709,11 @@ tmp = 0.0
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) private(a, c, d, aw, cw, dw) reduction(+:res1)
+!$acc loop independent collapse(2) reduction(+:res1) &
+!$acc& private(a, c, d, aw, cw, dw) &
+!$acc& private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$acc& private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 #else
 !$OMP PARALLEL &
 #ifdef _SVR
@@ -936,10 +944,6 @@ d(k) = 0.0
 end do
 
 
-#ifdef _OPENACC
-!$acc kernels
-!$acc loop independent collapse(2) private(a, c, d, aw, cw, dw) reduction(+:res1)
-#else
 !$OMP PARALLEL &
 #ifdef _SVR
 !$OMP REDUCTION(+:tmp) &
@@ -952,7 +956,6 @@ end do
 !$OMP firstprivate(a, c, d) &
 !$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 !$OMP DO SCHEDULE(static) Collapse(2)
-#endif
 do j=jst, jed
 do i=ist, ied
 
@@ -1013,7 +1016,6 @@ d(ked) = ( d(ked) + (aw(ked) + 0.5 * cw(ked)) * dw(ked) * x(ked+1, i, j) ) * msk
 
 
 ! PCR  最終段の一つ手前で停止
-!$acc loop seq
 do p=1, pn-1
 s = 2**(p-1)
 
@@ -1047,7 +1049,6 @@ s = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
-!$acc loop independent
 do k = kst, kst+s-1
 cc1 = c(k)
 aa2 = a(k+s)
@@ -1070,7 +1071,6 @@ end do  ! >>  9 flops
 ! Relaxation
 !dir$ vector aligned
 !dir$ simd
-!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( dw(k) - pp ) * omg * msk(k, i, j)
@@ -1086,12 +1086,8 @@ end do  !  >> 6 flops
 
 end do
 end do
-#ifdef _OPENACC
-!$acc end kernels
-#else
 !$OMP END DO
 !$OMP END PARALLEL
-#endif
 
 #ifdef _SVR
 do k = kst, ked
@@ -1156,7 +1152,11 @@ flop = flop + dble(           &
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) private(a, c, d, aw, cw, dw) reduction(+:res1)
+!$acc loop independent collapse(2) reduction(+:res1) &
+!$acc& private(a, c, d, aw, cw, dw) &
+!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$acc& private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 #else
 !$OMP PARALLEL &
 #ifdef _SVR
@@ -1376,7 +1376,11 @@ tmp = 0.0
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) private(a, c, d, aw, cw, dw) reduction(+:res1)
+!$acc loop independent collapse(2) reduction(+:res1) &
+!$acc& private(a, c, d, aw, cw, dw) &
+!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
+!$acc& private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
 #else
 !$OMP PARALLEL &
 #ifdef _SVR

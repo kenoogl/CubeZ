@@ -654,7 +654,10 @@ flop = flop + dble(          &
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) private(a, c, d, a1, c1, d1) reduction(+:res1)
+!$acc loop independent collapse(2) reduction(+:res1) &
+!$acc& private(a, c, d, a1, c1, d1) &
+!$acc& private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
@@ -834,17 +837,13 @@ d(k) = 0.0
 end do
 
 
-#ifdef _OPENACC
-!$acc kernels
-!$acc loop independent collapse(2) reduction(+:res1) private(a, c, d, a1, c1, d1)
-#else
+
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
 !$OMP DO SCHEDULE(static) Collapse(2)
-#endif
 do j=jst, jed
 do i=ist, ied
 
@@ -876,7 +875,6 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
 ! PCR  最終段の一つ手前で停止
-!$acc loop seq
 do p=1, pn-1
 s = 2**(p-1)
 
@@ -910,7 +908,6 @@ s = 2**(pn-1)
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
-!$acc loop independent
 do k = kst, kst+s-1 ! 2, 2+256-1=257
 cc1 = c(k)
 aa2 = a(k+s)
@@ -933,7 +930,6 @@ end do
 !dir$ vector aligned
 !dir$ simd
 !pgi$ ivdep
-!$acc loop reduction(+:res1)
 do k = kst, ked
 pp =   x(k, i, j)
 dp = ( d1(k) - pp ) * omg * msk(k, i, j)
@@ -943,12 +939,9 @@ end do
 
 end do
 end do
-#ifdef _OPENACC
-!$acc end kernels
-#else
 !$OMP END DO
 !$OMP END PARALLEL
-#endif
+
 
 deallocate(a)
 deallocate(c)
@@ -1000,7 +993,10 @@ flop = flop + dble(          &
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) gang reduction(+:res1) private(a, c, d, a1, c1, d1)
+!$acc loop independent collapse(2) gang reduction(+:res1) &
+!$acc& private(a, c, d, a1, c1, d1) &
+!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
@@ -1162,7 +1158,10 @@ ip = ofst + color
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) gang reduction(+:res1) private(a, c, d, a1, c1, d1)
+!$acc loop independent collapse(2) gang reduction(+:res1) &
+!$acc& private(a, c, d, a1, c1, d1) &
+!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
