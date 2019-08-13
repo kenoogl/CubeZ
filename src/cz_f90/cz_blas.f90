@@ -64,7 +64,7 @@ end do
 #ifdef _OPENACC
 !$acc end kernels
 #else
-!$OMP END DO NOWAIT
+!$OMP END DO
 #endif
 
 

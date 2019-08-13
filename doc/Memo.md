@@ -1,5 +1,9 @@
 # Memo for CubeZ
 
+#### Version 1.2.2
+- bug fix : pcr_rb系のOpenACCとOMPのループの実装に注意 1.1.6-1.2.1は非推奨
+
+
 #### Version 1.2.1
 
 #####  sor2smaの実装 >> インデクスでの実装でベクトル化する
@@ -35,7 +39,9 @@ P------>  do j=jst, jed
 ||        if(mod(i+j,2) /= color) cycle
 ~~~
 
-- pcr_rb系の実装はcycleｂ文で実装
+- pcr_rb系の実装は最内側のベクトル化対象ループではないのでif文で実装し、並列可能性をコンパイラが判断しやすくする方がよい。Aurora, Skylake(Intel 18.0)の両方で効果あり
+
+- SVRの効果はAuroraでは有意、Skylake(Intel18.0)では無し
 
 
 #### Version 1.2.0
@@ -48,7 +54,7 @@ P------>  do j=jst, jed
 - メモリアロケート時点以降の全てにOpenACCディレクティブを入れる
 - nvtx.f90
 - cz_lsor.f90を外す
-- openaccでOMPと同じくfirstprivateに変更
+
 
 ####  Version 1.1.8
 - Autrora maf用のコンパイラオプション -static-nec

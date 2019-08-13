@@ -36,151 +36,124 @@ kx = sz(3)
 pi = 2.0*asin(1.0)
 
 ! スレッド同期のオーバーヘッド抑制のため，単一のparallel regionとする
-#ifndef _OPENACC
 !$OMP PARALLEL
-#endif
 
 ! ZMINUS Dirichlet
 if( nID(K_MINUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #endif
 do j=1,jx
 do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(1,i,j) = sin(pi*x)*sin(pi*y)
+x = org(1) + dh*real(i-1)
+y = org(2) + dh*real(j-1)
+p(1,i,j) = sin(pi*x)*sin(pi*y)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO NOWAIT
 #endif
+!$OMP END DO NOWAIT
 endif
 
 
 ! ZPLUS Dirichlet
 if( nID(K_PLUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #endif
 do j=1,jx
 do i=1,ix
-  x = org(1) + dh*real(i-1)
-  y = org(2) + dh*real(j-1)
-  p(kx,i,j) = sin(pi*x)*sin(pi*y)
+x = org(1) + dh*real(i-1)
+y = org(2) + dh*real(j-1)
+p(kx,i,j) = sin(pi*x)*sin(pi*y)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO
 #endif
+!$OMP END DO
 endif
 
 
 ! XMINUS
 if( nID(I_MINUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do j=1,jx
-  p(k,1,j) = 0.0 !p(2, j,k)
+p(k,1,j) = 0.0 !p(2, j,k)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO NOWAIT
 #endif
+!$OMP END DO NOWAIT
 endif
 
 
 ! XPLUS
 if( nID(I_PLUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do j=1,jx
-  p(k,ix,j) = 0.0 !p(ix-1,j,k)
+p(k,ix,j) = 0.0 !p(ix-1,j,k)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO
 #endif
+!$OMP END DO
 endif
 
 
 ! YMINUS
 if( nID(J_MINUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do i=1,ix
-  p(k,i,1) = 0.0 !p(i,2, k)
+p(k,i,1) = 0.0 !p(i,2, k)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO NOWAIT
 #endif
+!$OMP END DO NOWAIT
 endif
 
 
 ! YPLUS
 if( nID(J_PLUS) < 0 ) then
-
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop collapse(2)
-#else
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #endif
 do k=1,kx
 do i=1,ix
-  p(k,i,jx) = 0.0 !p(i,jx-1,k)
+p(k,i,jx) = 0.0 !p(i,jx-1,k)
 end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#else
-!$OMP END DO
 #endif
+!$OMP END DO
 endif
 
-#ifndef _OPENACC
 !$OMP END PARALLEL
-#endif
 
 return
 end subroutine bc_k
+
 
 
 !> ********************************************************************
@@ -431,9 +404,7 @@ do j=jst,jed
 do i=ist,ied
 !$acc loop independent vector(128) reduction(+:res1)
 do k=kst+mod(i+j+kp,2), ked, 2
-
 #else
-
 !$OMP PARALLEL REDUCTION(+:res1) &
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
@@ -527,7 +498,12 @@ ip = ofst + color
 do j=jst, jed
 do i=ist, ied
 if(mod(i+j,2) /= color) cycle
+
 ! do i=ist+mod(j+ip,2), ied, 2
+
+!do i=ist, ied
+!if(mod(i+j,2) /= color) cycle
+
 
 ! Reflesh coef. due to override
 a(kst) = 0.0
@@ -860,8 +836,7 @@ end do
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) reduction(+:res1)
-!$acc firstprivate(a, c, d) private(a1, c1, d1)
+!$acc loop independent collapse(2) reduction(+:res1) private(a, c, d, a1, c1, d1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, s, p, k, pp, dp) &
@@ -1025,8 +1000,7 @@ flop = flop + dble(          &
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) gang reduction(+:res1)
-!$acc firstprivate(a, c, d) private(a1, c1, d1)
+!$acc loop independent collapse(2) gang reduction(+:res1) private(a, c, d, a1, c1, d1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
@@ -1188,11 +1162,7 @@ ip = ofst + color
 
 #ifdef _OPENACC
 !$acc kernels
-!$acc loop independent collapse(2) gang reduction(+:res1)
-!$acc firstprivate(a, c, d) private(a1, c1, d1)
-do j=jst, jed
-do i=ist, ied
-if(mod(i+j,2) /= color) cycle
+!$acc loop independent collapse(2) gang reduction(+:res1) private(a, c, d, a1, c1, d1)
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(ap, cp, e, ss, p, k, pp, dp) &
@@ -1200,11 +1170,13 @@ if(mod(i+j,2) /= color) cycle
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
 !$OMP DO SCHEDULE(static) collapse(2)
+#endif
 do j=jst, jed
 do i=ist, ied
 if(mod(i+j,2) /= color) cycle
-!  do i=ist+mod(j+ip,2), ied, 2
-#endif
+
+!do i=ist+mod(j+ip,2), ied, 2
+
 
 ! Reflesh coef. due to override
 !a(kst) = 0.0
