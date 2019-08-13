@@ -329,6 +329,18 @@ flop = flop + 66.0d0*0.5d0  &
 * dble(ked-kst+1)
 
 
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent gang reduction(+:res1)
+do j=jst,jed
+!$acc loop independent gang reduction(+:res1)
+do i=ist,ied
+!$acc loop independent vector(128) reduction(+:res1)
+do k=kst+mod(i+j+kp,2), ked, 2
+
+#else
+
 !$OMP PARALLEL DO Collapse(2) &
 #ifdef _SVR
 !$OMP REDUCTION(+:tmp) &
@@ -339,16 +351,6 @@ flop = flop + 66.0d0*0.5d0  &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
-#ifdef _OPENACC
-!$acc kernels
-!$acc loop independent gang reduction(+:res1)
-do j=jst,jed
-!$acc loop independent gang reduction(+:res1)
-do i=ist,ied
-!$acc loop independent vector(128) reduction(+:res1)
-do k=kst+mod(i+j+kp,2), ked, 2
-#else
-!pgi$ ivdep
 do j=jst,jed
 !pgi$ novector
 do i=ist,ied
@@ -495,9 +497,11 @@ if(mod(i+j,2) /= color) cycle
 !$OMP private(jj, dd1, dd2, aa2, aa3, cc1, cc2, f1, f2, f3) &
 !$OMP private(a, c, d, aw, cw, dw) &
 !$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
-!$OMP DO SCHEDULE(static)
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
-do i=ist+mod(j+ip,2), ied, 2
+do i=ist, ied
+if(mod(i+j,2) /= color) cycle
+!  do i=ist+mod(j+ip,2), ied, 2
 #endif
 
 GX =  2.0 / (XX(i+1) - XX(i-1))
@@ -1380,7 +1384,11 @@ tmp = 0.0
 !$acc kernels
 !$acc loop independent collapse(2) gang reduction(+:res1)
 !$acc firstprivate(a, c, d) private(aw, cw, dw)
+do j=jst, jed
+do i=ist, ied
+if(mod(i+j,2) /= color) cycle
 #else
+
 !$OMP PARALLEL &
 #ifdef _SVR
 !$OMP REDUCTION(+:tmp) &
@@ -1392,14 +1400,11 @@ tmp = 0.0
 !$OMP private(aw, cw, dw) &
 !$OMP firstprivate(a, c, d) &
 !$OMP private(C1, C2, C7, C8, GX, EY, TZ, ZTT)
-!$OMP DO SCHEDULE(static)
-#endif
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
-#ifdef _OPENACC
 do i=ist, ied
 if(mod(i+j,2) /= color) cycle
-#else
-do i=ist+mod(j+ip,2), ied, 2
+! do i=ist+mod(j+ip,2), ied, 2
 #endif
 
 GX =  2.0 / (XX(i+1) - XX(i-1))

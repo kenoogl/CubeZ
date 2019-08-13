@@ -9,6 +9,10 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-8-13 Version 1.2.1
+- Yet Another Implemantation : pcr_rb_*
+
+---
 - 2019-8-13 Version 1.2.0
 - Yet Another Implemantation : SVR init
 

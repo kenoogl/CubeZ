@@ -431,7 +431,9 @@ do j=jst,jed
 do i=ist,ied
 !$acc loop independent vector(128) reduction(+:res1)
 do k=kst+mod(i+j+kp,2), ked, 2
+
 #else
+
 !$OMP PARALLEL REDUCTION(+:res1) &
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
@@ -511,23 +513,6 @@ flop = flop + dble(          &
 ip = ofst + color
 
 
-! #ifdef _OPENACC
-! !$acc kernels
-! !$acc loop independent gang reduction(+:res1)
-! do j=jst, jed
-! !$acc loop independent vector(128) reduction(+:res1)
-! do i=ist+mod(j+ip,2), ied, 2
-! #else
-! !$OMP PARALLEL reduction(+:res1) &
-! !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
-! !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
-! !$OMP private(a, c, d, a1, c1, d1)
-! !$OMP DO SCHEDULE(static)
-! !pgi$ ivdep
-! do j=jst, jed
-! do i=ist+mod(j+ip,2), ied, 2
-! #endif
-
 #ifdef _OPENACC
 !$acc kernels
 !$acc loop independent collapse(2) gang private(a, c, d, a1, c1, d1) reduction(+:res)
@@ -537,10 +522,12 @@ ip = ofst + color
 !$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
-!$OMP DO SCHEDULE(static)
+!$OMP DO SCHEDULE(static) collapse(2)
 #endif
 do j=jst, jed
-do i=ist+mod(j+ip,2), ied, 2
+do i=ist, ied
+if(mod(i+j,2) /= color) cycle
+! do i=ist+mod(j+ip,2), ied, 2
 
 ! Reflesh coef. due to override
 a(kst) = 0.0
@@ -1212,10 +1199,11 @@ if(mod(i+j,2) /= color) cycle
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
-!$OMP DO SCHEDULE(static)
-!pgi$ ivdep
+!$OMP DO SCHEDULE(static) collapse(2)
 do j=jst, jed
-do i=ist+mod(j+ip,2), ied, 2
+do i=ist, ied
+if(mod(i+j,2) /= color) cycle
+!  do i=ist+mod(j+ip,2), ied, 2
 #endif
 
 ! Reflesh coef. due to override

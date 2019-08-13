@@ -1,5 +1,43 @@
 # Memo for CubeZ
 
+#### Version 1.2.1
+
+#####  sor2smaの実装 >> インデクスでの実装でベクトル化する
+1) ベクトル化されている
+~~~
+Y------>  do j=jst,jed
+|+----->  do i=ist,ied
+||V---->  do k=kst+mod(i+j+kp,2), ked, 2
+~~~
+
+2) ベクトル化できていない
+~~~
+Y------>  do j=jst,jed
+|+----->  do i=ist,ied
+||+---->  do k=kst,ked
+|||       if(mod(i+j+k,2) /= color) cycle
+~~~
+
+#####  pcr_rbの実装　Auroraではif文の実装が性能高い
+
+1) インデクスループで計算 >> 部分並列
+
+~~~
+Y------>  do j=jst, jed
+|+----->   !do i=ist+mod(j+ip,2), ied, 2
+~~~
+
+2) if文 >> 並列化されている
+
+~~~
+P------>  do j=jst, jed
+|+----->  do i=ist, ied
+||        if(mod(i+j,2) /= color) cycle
+~~~
+
+- pcr_rb系の実装はcycleｂ文で実装
+
+
 #### Version 1.2.0
 - mretain-none復活
 - SVRの初期化はFortran内で
