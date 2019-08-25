@@ -1,6 +1,10 @@
 # Memo for CubeZ
 
 
+#### Version 1.2.5
+- pcr_rb_maf_esa, pcr_rb_esaで最終段のループ範囲がsqであるべきところがsだった => 収束性が少々悪い程度
+- 変数ssはs と見間違うので、sqに変更
+
 #### Version 1.2.4
 - LSOR_PCR_RB_ESAでSA配列を渡すべきところWA配列を渡していた
 - pcr_j_esaをGPU用に追加

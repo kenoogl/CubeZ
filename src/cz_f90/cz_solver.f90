@@ -550,8 +550,6 @@ if(mod(i+j,2) /= color) cycle
 
 ! do i=ist+mod(j+ip,2), ied, 2
 
-!do i=ist, ied
-!if(mod(i+j,2) /= color) cycle
 
 
 ! Reflesh coef. due to override
@@ -1014,7 +1012,7 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, p, ss, s
+integer                                  ::  i, j, k, p, sq, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
@@ -1044,11 +1042,11 @@ flop = flop + dble(          &
 !$acc kernels
 !$acc loop independent collapse(2) gang reduction(+:res1) &
 !$acc& private(a, c, d, a1, c1, d1) &
-!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(ap, cp, e, sq, p, k, pp, dp) &
 !$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(ap, cp, e, sq, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
@@ -1087,7 +1085,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 ! PCR  最終段の一つ手前で停止
 !$acc loop seq
 do p=1, pn-1
-ss = 2**(p-1)
+sq = 2**(p-1)
 
 !dir$ vector aligned
 !dir$ simd
@@ -1095,10 +1093,10 @@ ss = 2**(p-1)
 do k = kst, ked
 ap = a(k)
 cp = c(k)
-e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
-a1(k) =   -e * ap * a(k-ss)
-c1(k) =   -e * cp * c(k+ss)
-d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
+e = 1.0 / ( 1.0 - ap * c(k-sq) - cp * a(k+sq) )
+a1(k) =   -e * ap * a(k-sq)
+c1(k) =   -e * cp * c(k+sq)
+d1(k) =   e * ( d(k) - ap * d(k-sq) - cp * d(k+sq) )
 end do
 
 !dir$ vector aligned
@@ -1112,24 +1110,24 @@ end do
 end do ! p反復
 
 
-! 最終段の反転 512のとき pn=9, ss=256
-ss = 2**(pn-1)
+! 最終段の反転 512のとき pn=9, sq=256
+sq = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
 !$acc loop independent
-do k = kst, kst+ss-1 ! 2, 2+256-1=257
+do k = kst, kst+sq-1 ! 2, 2+256-1=257
 cc1 = c(k)
-aa2 = a(k+ss)
+aa2 = a(k+sq)
 f1  = d(k)
-f2  = d(k+ss)
+f2  = d(k+sq)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
 d1(k   ) = dd1
-d1(k+ss) = dd2
+d1(k+sq) = dd2
 end do
 
 
@@ -1176,7 +1174,7 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, p, color, ip, ofst, ss, s
+integer                                  ::  i, j, k, p, color, ip, ofst, sq, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(-1:sz(3)+2)              ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
@@ -1209,11 +1207,11 @@ ip = ofst + color
 !$acc kernels
 !$acc loop independent collapse(2) gang reduction(+:res1) &
 !$acc& private(a, c, d, a1, c1, d1) &
-!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(ap, cp, e, sq, p, k, pp, dp) &
 !$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(ap, cp, e, sq, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
@@ -1256,17 +1254,17 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 ! PCR  最終段の一つ手前で停止
 !$acc loop seq
 do p=1, pn-1
-ss = 2**(p-1)
+sq = 2**(p-1)
 
 !dir$ vector aligned
 !dir$ simd
 do k = kst, ked
 ap = a(k)
 cp = c(k)
-e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
-a1(k) =   -e * ap * a(k-ss)
-c1(k) =   -e * cp * c(k+ss)
-d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
+e = 1.0 / ( 1.0 - ap * c(k-sq) - cp * a(k+sq) )
+a1(k) =   -e * ap * a(k-sq)
+c1(k) =   -e * cp * c(k+sq)
+d1(k) =   e * ( d(k) - ap * d(k-sq) - cp * d(k+sq) )
 end do
 
 !dir$ vector aligned
@@ -1281,22 +1279,22 @@ end do ! p反復
 
 
 ! 最終段の反転
-ss = 2**(pn-1)
+sq = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
 !$acc loop independent
-do k = kst, kst+s-1
+do k = kst, kst+sq-1
 cc1 = c(k)
-aa2 = a(k+ss)
+aa2 = a(k+sq)
 f1  = d(k)
-f2  = d(k+ss)
+f2  = d(k+sq)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
 d1(k   ) = dd1
-d1(k+ss) = dd2
+d1(k+sq) = dd2
 end do
 
 
@@ -1342,7 +1340,7 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs, src, wrk
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, p, ss, s
+integer                                  ::  i, j, k, p, sq, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
@@ -1403,11 +1401,11 @@ end do ! 6 flops
 !$acc kernels
 !$acc loop independent collapse(2) gang reduction(+:res1) &
 !$acc& private(a, c, d, a1, c1, d1) &
-!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(ap, cp, e, sq, p, k, pp, dp) &
 !$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP DO SCHEDULE(static) Collapse(2) reduction(+:res1) &
-!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(ap, cp, e, sq, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
 !$OMP private(a1, c1, d1) &
 !$OMP firstprivate(a, c, d)
@@ -1439,7 +1437,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 ! PCR  最終段の一つ手前で停止
 !$acc loop seq
 do p=1, pn-1
-ss = 2**(p-1)
+sq = 2**(p-1)
 
 !dir$ vector aligned
 !dir$ simd
@@ -1448,10 +1446,10 @@ ss = 2**(p-1)
 do k = kst, ked
 ap = a(k)
 cp = c(k)
-e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
-a1(k) =   -e * ap * a(k-ss)
-c1(k) =   -e * cp * c(k+ss)
-d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
+e = 1.0 / ( 1.0 - ap * c(k-sq) - cp * a(k+sq) )
+a1(k) =   -e * ap * a(k-sq)
+c1(k) =   -e * cp * c(k+sq)
+d1(k) =   e * ( d(k) - ap * d(k-sq) - cp * d(k+sq) )
 end do
 
 !dir$ vector aligned
@@ -1465,24 +1463,24 @@ end do
 end do ! p反復
 
 
-! 最終段の反転 512のとき pn=9, ss=256
-ss = 2**(pn-1)
+! 最終段の反転 512のとき pn=9, sq=256
+sq = 2**(pn-1)
 
 !dir$ vector aligned
 !dir$ simd
 !NEC$ IVDEP
 !pgi$ ivdep
 !$acc loop independent
-do k = kst, kst+ss-1 ! 2, 2+256-1=257
+do k = kst, kst+sq-1 ! 2, 2+256-1=257
 cc1 = c(k)
-aa2 = a(k+ss)
+aa2 = a(k+sq)
 f1  = d(k)
-f2  = d(k+ss)
+f2  = d(k+sq)
 jj  = 1.0 / (1.0 - aa2 * cc1)
 dd1 = (f1 - cc1 * f2) * jj
 dd2 = (f2 - aa2 * f1) * jj
 d1(k   ) = dd1
-d1(k+ss) = dd2
+d1(k+sq) = dd2
 end do
 
 

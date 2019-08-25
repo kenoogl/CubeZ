@@ -9,6 +9,11 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-8-20 Version 1.2.5
+- bug_fix : pcr_rb_esa, pcr_rb_maf_esa
+
+
+---
 - 2019-8-14 Version 1.2.4
 - bug_fix : LSOR_PCR_RB_ESA
 
