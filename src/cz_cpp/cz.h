@@ -117,6 +117,7 @@ public:
   REAL_TYPE* P;      ///< 圧力
   REAL_TYPE* RHS;    ///< Poissonのソース項
   REAL_TYPE* MSK;    ///< マスク配列
+  REAL_TYPE* SRC;    ///< PCR_Jのワーク
 
   REAL_TYPE* EXS;    ///< 厳密解
   REAL_TYPE* ERR;    ///< 誤差
@@ -467,6 +468,14 @@ private:
                   double& flop,
                   int s_type,
                   bool converge_check=true);
+  
+  int LSOR_PCR_J_ESA(double& res,
+                      REAL_TYPE* X,
+                      REAL_TYPE* B,
+                      const int itr_max,
+                      double& flop,
+                      int s_type,
+                      bool converge_check=true);
   
   REAL_TYPE Fdot1(REAL_TYPE* x, double& flop);
 

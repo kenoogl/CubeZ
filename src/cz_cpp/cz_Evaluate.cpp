@@ -241,6 +241,7 @@ int CZ::Evaluate(int argc, char **argv)
   if( (WRK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (MSK = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   if( (pvt = czAllocR_S3D(size,var_type)) == NULL ) return 0;
+  if( (SRC = czAllocR_S3D(size,var_type)) == NULL ) return 0;
   
   if( (xc = czAllocR(size[0]+2*GUIDE, var_type)) == NULL ) return 0;
   if( (yc = czAllocR(size[1]+2*GUIDE, var_type)) == NULL ) return 0;
@@ -474,7 +475,13 @@ int CZ::Evaluate(int argc, char **argv)
       if ( 0 == (itr=LSOR_PCR_RB_ESA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
       TIMING_stop("LSOR", flop);
       break;
-      
+    
+    case LS_PCR_J_ESA:
+      TIMING_start("LSOR");
+      if ( 0 == (itr=LSOR_PCR_J_ESA(res, P, RHS, ItrMax, flop, ls_type)) ) return 0;
+      TIMING_stop("LSOR", flop);
+    break;
+    
     default:
       break;
   }
@@ -577,6 +584,9 @@ void CZ::setStrPre()
   else if ( !strcasecmp(precon.c_str(), "pcr_rb_esa") ) {
     pc_type = LS_PCR_RB_ESA;
   }
+  else if ( !strcasecmp(precon.c_str(), "pcr_j_esa") ) {
+    pc_type = LS_PCR_J_ESA;
+  }
   else if ( !strcasecmp(precon.c_str(), "pcr") ) {
     pc_type = LS_PCR;
   }
@@ -636,6 +646,9 @@ std::string CZ::printMethod(int type)
   }
   else if ( type == LS_PCR_RB_ESA ) {
     str = "pcr_rb_esa";
+  }
+  else if ( type == LS_PCR_J_ESA ) {
+    str = "pcr_j_esa";
   }
   else if ( type == LS_JACOBI_MAF ) {
     str = "jacobi_maf";
@@ -698,6 +711,12 @@ void CZ::setLS(char* q, char* fname)
   else if ( !strcasecmp(q, "pcr_rb_esa") ) {
     ls_type = LS_PCR_RB_ESA;
     strcpy(fname, "pcr_rb_esa.txt");
+    SW_esa = 1;
+  }
+  
+  else if ( !strcasecmp(q, "pcr_j_esa") ) {
+    ls_type = LS_PCR_J_ESA;
+    strcpy(fname, "pcr_j_esa.txt");
     SW_esa = 1;
   }
   

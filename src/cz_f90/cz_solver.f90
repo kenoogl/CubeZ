@@ -40,9 +40,14 @@ pi = 2.0*asin(1.0)
 
 ! ZMINUS Dirichlet
 if( nID(K_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static) PRIVATE(x, y)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+#endif
 #endif
 do j=1,jx
 do i=1,ix
@@ -53,16 +58,22 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! ZPLUS Dirichlet
 if( nID(K_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static) PRIVATE(x, y)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2) PRIVATE(x, y)
+#endif
 #endif
 do j=1,jx
 do i=1,ix
@@ -73,16 +84,22 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
 
 ! XMINUS
 if( nID(I_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do k=1,kx
 do j=1,jx
@@ -91,16 +108,22 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! XPLUS
 if( nID(I_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do k=1,kx
 do j=1,jx
@@ -109,16 +132,22 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
 
 ! YMINUS
 if( nID(J_MINUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do k=1,kx
 do i=1,ix
@@ -127,16 +156,22 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO NOWAIT
+#endif
 endif
 
 
 ! YPLUS
 if( nID(J_PLUS) < 0 ) then
-!$OMP DO SCHEDULE(static) COLLAPSE(2)
 #ifdef _OPENACC
 !$acc kernels
+#else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do k=1,kx
 do i=1,ix
@@ -145,8 +180,9 @@ end do
 end do
 #ifdef _OPENACC
 !$acc end kernels
-#endif
+#else
 !$OMP END DO
+#endif
 endif
 
 !$OMP END PARALLEL
@@ -288,7 +324,12 @@ flop = flop + 18.0  &
 #else
 !$OMP PARALLEL PRIVATE(pp, bb, ss, dp, pn) &
 !$OMP REDUCTION(+:res1)
+! auroraはここにcollapseを入れると完全に並列化しない
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -319,7 +360,11 @@ end do
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -407,7 +452,11 @@ do k=kst+mod(i+j+kp,2), ked, 2
 #else
 !$OMP PARALLEL REDUCTION(+:res1) &
 !$OMP PRIVATE(pp, bb, ss, dp, pn)
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 do j=jst,jed
 do i=ist,ied
 !dir$ vector aligned
@@ -1280,3 +1329,210 @@ res = res + real(res1, kind=8)
 
 return
 end subroutine pcr_rb_esa
+
+!********************************************************************************
+! pcr for vector (Aurora and GPU)
+subroutine pcr_j_esa (sz, idx, g, pn, s, x, msk, rhs, a, c, d, a1, c1, d1, src, wrk, omg, res, flop)
+implicit none
+!args
+integer, dimension(3)                                  ::  sz
+integer, dimension(0:5)                                ::  idx
+integer                                                ::  g, pn
+real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs, src, wrk
+real                                                   ::  omg
+double precision                                       ::  res, flop
+! work
+integer                                  ::  i, j, k, p, ss, s
+integer                                  ::  ist, ied, jst, jed, kst, ked
+real, dimension(1-g:sz(3)+g)             ::  a1, c1, d1
+real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
+real                                     ::  r, ap, cp, e, pp, dp, res1
+real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
+
+ist = idx(0)
+ied = idx(1)
+jst = idx(2)
+jed = idx(3)
+kst = idx(4)
+ked = idx(5)
+
+res1 = 0.0
+r = 1.0/6.0
+
+flop = flop + dble(          &
+(jed-jst+1)*(ied-ist+1)* ( &
+(ked-kst+1)* 6.0        &  ! Source
++ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
++ 2**(pn-1)*9.0                 &
++ (ked-kst+1)*6.0         &  ! Relaxation
++ 6.0 )                 &  ! BC
+)
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(3)
+#else
+!$OMP PARALLEL
+! auroraはここにcollapseを入れると完全に並列化しない
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
+#endif
+do j=jst, jed
+do i=ist, ied
+do k=kst, ked
+  src(k,i,j) = ( ( x(k, i  , j-1)        &
+             +     x(k, i  , j+1)        &
+             +     x(k, i-1, j  )        &
+             +     x(k, i+1, j  ) - rhs(k, i, j) ) * r ) &
+             *   msk(k, i, j)
+end do
+end do
+end do ! 6 flops
+#ifdef _OPENACC
+!$acc end kernels
+#else
+!$OMP END DO
+#endif
+
+
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(2) gang reduction(+:res1) &
+!$acc& private(a, c, d, a1, c1, d1) &
+!$acc& private(ap, cp, e, ss, p, k, pp, dp) &
+!$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
+#else
+!$OMP DO SCHEDULE(static) Collapse(2) reduction(+:res1) &
+!$OMP private(ap, cp, e, ss, p, k, pp, dp) &
+!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+!$OMP private(a1, c1, d1) &
+!$OMP firstprivate(a, c, d)
+#endif
+do j=jst, jed
+do i=ist, ied
+
+! Reflesh coef. due to override
+!a(kst) = 0.0
+do k=kst+1, ked
+a(k) = -r
+end do
+
+do k=kst, ked-1
+c(k) = -r
+end do
+!c(ked) = 0.0
+
+! Source
+do k = kst, ked
+  d(k) = src(k, i, j)
+end do ! 6 flops
+
+! BC  6 flops
+d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
+d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
+
+
+! PCR  最終段の一つ手前で停止
+!$acc loop seq
+do p=1, pn-1
+ss = 2**(p-1)
+
+!dir$ vector aligned
+!dir$ simd
+!pgi$ ivdep
+!$acc loop independent
+do k = kst, ked
+ap = a(k)
+cp = c(k)
+e = 1.0 / ( 1.0 - ap * c(k-ss) - cp * a(k+ss) )
+a1(k) =   -e * ap * a(k-ss)
+c1(k) =   -e * cp * c(k+ss)
+d1(k) =   e * ( d(k) - ap * d(k-ss) - cp * d(k+ss) )
+end do
+
+!dir$ vector aligned
+!dir$ simd
+do k = kst, ked
+a(k) = a1(k)
+c(k) = c1(k)
+d(k) = d1(k)
+end do
+
+end do ! p反復
+
+
+! 最終段の反転 512のとき pn=9, ss=256
+ss = 2**(pn-1)
+
+!dir$ vector aligned
+!dir$ simd
+!NEC$ IVDEP
+!pgi$ ivdep
+!$acc loop independent
+do k = kst, kst+ss-1 ! 2, 2+256-1=257
+cc1 = c(k)
+aa2 = a(k+ss)
+f1  = d(k)
+f2  = d(k+ss)
+jj  = 1.0 / (1.0 - aa2 * cc1)
+dd1 = (f1 - cc1 * f2) * jj
+dd2 = (f2 - aa2 * f1) * jj
+d1(k   ) = dd1
+d1(k+ss) = dd2
+end do
+
+
+! Relaxation
+!dir$ vector aligned
+!dir$ simd
+!pgi$ ivdep
+!$acc loop reduction(+:res1)
+do k = kst, ked
+pp =   x(k, i, j)
+dp = ( d1(k) - pp ) * omg * msk(k, i, j)
+wrk(k, i, j) = pp + dp
+res1 = res1 + dp*dp
+end do
+
+end do
+end do
+#ifdef _OPENACC
+!$acc end kernels
+#else
+!$OMP END DO NOWAIT
+#endif
+
+
+#ifdef _OPENACC
+!$acc kernels
+!$acc loop independent collapse(3)
+#else
+! auroraはここにcollapseを入れると完全に並列化しない
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
+#endif
+do j=jst, jed
+do i=ist, ied
+do k=kst, ked
+x(k,i,j) = wrk(k,i,j)
+end do
+end do
+end do
+#ifdef _OPENACC
+!$acc end kernels
+#else
+!$OMP END DO
+!$OMP END PARALLEL
+#endif
+
+res = res + real(res1, kind=8)
+
+return
+end subroutine pcr_j_esa

@@ -688,7 +688,7 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
       {
         pcr_rb_esa_maf_(size, innerFidx, &gc, &pn, &ip, &color, &ss,
                         X, MSK, B, xc, yc, zc,
-                    WA, WC, WD, WAA, WCC, WDD,
+                    SA, SC, SD, WAA, WCC, WDD,
                     &ac1, &res, vrtmp, &flop_count);
       }
       TIMING_stop("PCR_RB_MAF", flop_count);
@@ -700,7 +700,7 @@ int CZ::LSOR_PCR_RB_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
       {
         pcr_rb_esa_(size, innerFidx, &gc, &pn, &ip, &color, &ss,
                     X, MSK, B,
-                WA, WC, WD, WAA, WCC, WDD,
+                SA, SC, SD, WAA, WCC, WDD,
                 &ac1, &res, &flop_count);
       }
       TIMING_stop("PCR_RB", flop_count);
@@ -976,6 +976,96 @@ int CZ::LSOR_PCR_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
                X, MSK, B, SA, SC, SD, WA, WC, WD,
                &ac1, &res, &flop_count);
       TIMING_stop("PCR", flop_count);
+    }
+    flop += flop_count;
+    
+    
+    if ( !Comm_S(X, 1, "Comm_Poisson") ) return 0;
+    
+    if ( converge_check ) {
+      if ( !Comm_SUM_1(&res, "Comm_Res_Poisson") ) return 0;
+      
+      res *= res_normal;
+      res = sqrt(res);
+      Hostonly_ {
+        fprintf(fph, "%6d, %13.6e\n", itr, res);
+        fflush(fph);
+      }
+      
+      TIMING_start("BoundaryCondition");
+      bc_k_(size, &gc, X, pitch, origin, nID);
+      TIMING_stop("BoundaryCondition");
+      
+      if ( res < eps ) break;
+    }
+    
+  } // Iteration
+  
+  return itr;
+}
+
+
+int CZ::LSOR_PCR_J_ESA(double& res, REAL_TYPE* X, REAL_TYPE* B,
+                        const int itr_max, double& flop,
+                        int s_type,
+                        bool converge_check)
+{
+  int itr;
+  double flop_count = 0.0;
+  int NI = size[0];
+  int NJ = size[1];
+  int NK = size[2];
+  int gc = GUIDE;
+  int kst = innerFidx[K_minus];
+  int ked = innerFidx[K_plus];
+  int n = ked - kst + 1;
+  int pn;
+  int ss;
+  
+  // Nを超える最小の2べき数の乗数 pn
+  if ( -1 == (pn=getNumStage(n))) {
+    printf("error : number of stage\n");
+    exit(0);
+  }
+  
+  ss = pow(2, pn-2);
+  int kk = ked - kst+ 2*ss + 1;
+  
+#ifdef __NEC__
+  for (int i=0; i<kk; i++)
+  {
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
+  }
+#else
+#pragma omp parallel for
+  for (int i=0; i<kk; i++)
+  {
+    SA[i] = 0.0;
+    SC[i] = 0.0;
+    SD[i] = 0.0;
+  }
+#endif
+  
+
+  
+  for (itr=1; itr<=itr_max; itr++)
+  {
+    flop_count = 0.0;
+    res = 0.0;
+    
+    if (s_type==LS_PCR_J_ESA)
+    {
+      TIMING_start("PCR_J");
+      pcr_j_esa_(size, innerFidx, &gc, &pn, &ss,
+                  X, MSK, B,
+                  SA, SC, SD, WA, WC, WD, SRC, WRK,
+                  &ac1, &res, &flop_count);
+      TIMING_stop("PCR_J", flop_count);
+    }
+    else
+    {
     }
     flop += flop_count;
     

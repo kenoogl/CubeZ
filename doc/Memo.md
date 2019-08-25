@@ -1,5 +1,12 @@
 # Memo for CubeZ
 
+
+#### Version 1.2.4
+- LSOR_PCR_RB_ESAでSA配列を渡すべきところWA配列を渡していた
+- pcr_j_esaをGPU用に追加
+- Jacobi, RB-SORにAurora用のディレクティブ、完全並列化
+- cz_blas.f90内のサブルーチンも同様
+
 #### Version 1.2.3
 - OpenACC private変数の追加指定　　>>　PCR系
 

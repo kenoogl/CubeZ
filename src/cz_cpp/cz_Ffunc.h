@@ -145,6 +145,27 @@ void pcr_esa_(int* sz,
               double* res,
               double* flop);
   
+void pcr_j_esa_(int* sz,
+                int* idx,
+                int* g,
+                int* pn,
+                int* s,
+                REAL_TYPE* x,
+                REAL_TYPE* msk,
+                REAL_TYPE* rhs,
+                REAL_TYPE* SA,
+                REAL_TYPE* SC,
+                REAL_TYPE* SD,
+                REAL_TYPE* WA,
+                REAL_TYPE* WC,
+                REAL_TYPE* WD,
+                REAL_TYPE* SRC,
+                REAL_TYPE* WRK,
+                REAL_TYPE* omg,
+                double* res,
+                double* flop);
+  
+  
 // cz_maf.f90
 void jacobi_maf_   (REAL_TYPE* p,
                     int* sz,

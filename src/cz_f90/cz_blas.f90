@@ -52,7 +52,11 @@ ked = idx(5)
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -72,7 +76,11 @@ end do
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -117,7 +125,11 @@ kx = sz(3)
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -159,7 +171,11 @@ kx = sz(3)
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j=1-g,jx+g
 do i=1-g,ix+g
@@ -202,7 +218,11 @@ kx = sz(3)
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j=1,jx
 do i=1,ix
@@ -265,7 +285,11 @@ flop = flop + 2.0d0    &
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -324,7 +348,11 @@ flop = flop + 2.0d0    &
 !$acc kernels
 !$acc loop independent collapse(3) private(q) reduction(+:r)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static) &
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
+#endif
 !$OMP REDUCTION(+:r) PRIVATE(q)
 #endif
 do j = jst, jed
@@ -386,7 +414,11 @@ flop = flop + 2.0d0    &
 !$acc kernels
 !$acc loop independent collapse(3) reduction(+:r)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static) REDUCTION(+:r)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) REDUCTION(+:r)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -446,7 +478,11 @@ flop = flop + 4.0d0    &
 !$acc kernels
 !$acc loop independent collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -506,7 +542,11 @@ flop = flop + 4.0d0    &
 !$acc kernels
 !$acc loop independent collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -574,7 +614,11 @@ flop = flop + 13.0d0   &
 !$acc kernels
 !$acc loop independent collapse(3) private(ss)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static) PRIVATE(ss)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -649,7 +693,11 @@ flop = flop + 14.0d0   &
 !$acc kernels
 !$acc loop independent collapse(3) private(ss)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static) PRIVATE(ss)
+#else
 !$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) PRIVATE(ss)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -721,7 +769,11 @@ flop = flop + 63.0d0   &
 !$acc kernels
 !$acc loop independent collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO &
+#else
 !$OMP PARALLEL DO Collapse(2) &
+#endif
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
@@ -823,7 +875,11 @@ flop = flop + 63.0d0   &
 !$acc kernels
 !$acc loop independent collapse(3)
 #else
+#ifdef __NEC__
+!$OMP PARALLEL DO &
+#else
 !$OMP PARALLEL DO Collapse(2) &
+#endif
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
@@ -917,7 +973,12 @@ ked = idx(5)
 !$acc kernels
 !$acc loop independent collapse(3)
 #else
-!$OMP PARALLEL DO Collapse(2) &
+!$OMP PARALLEL
+#ifdef __NEC__
+!$OMP DO &
+#else
+!$OMP DO Collapse(2) &
+#endif
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9) &
@@ -969,7 +1030,8 @@ enddo
 #ifdef _OPENACC
 !$acc end kernels
 #else
-!$OMP END PARALLEL DO
+!$OMP END DO
+!$OMP END PARALLEL
 #endif
 
 

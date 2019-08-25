@@ -179,7 +179,11 @@ flop = flop + 66.0d0  &
 !$OMP PRIVATE(XG, YE, ZT, XGG, YEE, ZTT) &
 !$OMP PRIVATE(GX, EY, TZ, YJA, YJAI) &
 !$OMP PRIVATE(C1, C2, C3, C7, C8, C9)
-!$OMP DO SCHEDULE(static) Collapse(2)
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
+!$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -245,7 +249,11 @@ enddo
 !$acc kernels
 !$acc loop collapse(3)
 #else
+#ifdef __NEC__
+!$OMP DO SCHEDULE(static)
+#else
 !$OMP DO SCHEDULE(static) COLLAPSE(2)
+#endif
 #endif
 do j = jst, jed
 do i = ist, ied
@@ -339,7 +347,11 @@ do i=ist,ied
 !$acc loop independent vector(128) reduction(+:res1)
 do k=kst+mod(i+j+kp,2), ked, 2
 #else
-!$OMP PARALLEL DO Collapse(2) &
+#ifdef __NEC__
+!$OMP PARALLEL DO SCHEDULE(static) &
+#else
+!$OMP PARALLEL DO SCHEDULE(static) COLLAPSE(2) &
+#endif
 #ifdef _SVR
 !$OMP REDUCTION(+:tmp) &
 #else

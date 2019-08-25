@@ -244,6 +244,7 @@ using namespace pm_lib;
   set_label("PCR_MAF",     PerfMonitor::CALC, true);
   set_label("PCR_RB",         PerfMonitor::CALC, true);
   set_label("PCR_RB_MAF",     PerfMonitor::CALC, true);
+  set_label("PCR_J",         PerfMonitor::CALC, true);
 
   set_label("Comm_Poisson",     PerfMonitor::COMM);
   set_label("Comm_Res_Poisson", PerfMonitor::COMM);
