@@ -33,7 +33,7 @@ macro (AddOptimizeOption)
   elseif (USE_F_TCS STREQUAL "YES")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,ocl,preex,simd=2,array_private,parallel,optmsg=2 -V -Nsrc -x0 -Xg")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast,ocl,preex,simd=2,array_private,parallel,optmsg=2 -V -Nsrc -x0 -Xg")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Kfast,ocl,preex,simd=2,array_private,parallel,optmsg=2 -V")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Cpp -Kfast,ocl,preex,simd=2,array_private,parallel,optmsg=2 -V")
     # -Xg   : gcc compatible flag
     # -fPIC : PIC flag
 
@@ -86,6 +86,9 @@ macro (FreeForm)
 
   elseif(CMAKE_Fortran_COMPILER MATCHES ".*frtpx$")
     #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}")
+
+  elseif (USE_F_TCS STREQUAL "YES")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")
 
   elseif(TARGET_ARCH STREQUAL "INTEL_F_TCS")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")

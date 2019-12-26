@@ -9,6 +9,12 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-12-11 Version 1.2.6
+- add -Cpp option for USE_F_TCS
+- add compile script for F_TCS in Reame.md
+- replace Toolchain_K.cmake to Toolchain_F_TCS.cmake
+
+---
 - 2019-8-20 Version 1.2.5
 - bug_fix : pcr_rb_esa, pcr_rb_maf_esa
 

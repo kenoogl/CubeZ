@@ -470,7 +470,7 @@ ked = idx(5)
 
 flop = flop + dble(           &
   (jed-jst+1)*(ied-ist+1)* (  &
-    ( 24.0d0 +                & ! metrics
+    ( 24.0d0                  & ! metrics
      + 3.0 * 2.0 + 12.0       & ! coef BC
     )                         &
    + (ked-kst+1)* (11.0+10.0) & ! coef + Source
@@ -703,8 +703,8 @@ s = 2**(pn-1)
 
 flop = flop + dble(           &
 (jed-jst+1)*(ied-ist+1)* (  &
-( 24.0d0 +                & ! metrics
-+ 3.0 * 2.0 + 12.0       & ! coef BC
+( 24.0d0                  & ! metrics
+ + 3.0 * 2.0 + 12.0       & ! coef BC
 )                         &
 + (ked-kst+1)* (11.0+10.0) & ! coef + Source
 + (ked-kst-1)* 6.0d0       & ! coef
@@ -932,8 +932,8 @@ s = 2**(pn-1)
 
 flop = flop + dble(           &
 (jed-jst+1)*(ied-ist+1)* (  &
-( 24.0d0 +                & ! metrics
-+ 3.0 * 2.0 + 12.0       & ! coef BC
+( 24.0d0                  & ! metrics
+ + 3.0 * 2.0 + 12.0       & ! coef BC
 )                         &
 + (ked-kst+1)* (11.0+10.0) & ! coef + Source
 + (ked-kst-1)* 6.0d0       & ! coef
@@ -1151,8 +1151,8 @@ tmp = 0.0
 
 flop = flop + dble(           &
 (jed-jst+1)*(ied-ist+1)* (  &
-( 24.0d0 +                & ! metrics
-+ 3.0 * 2.0 + 12.0       & ! coef BC
+( 24.0d0                  & ! metrics
+ + 3.0 * 2.0 + 12.0       & ! coef BC
 )                         &
 + (ked-kst+1)* (11.0+10.0) & ! coef + Source
 + (ked-kst-1)* 6.0d0       & ! coef
@@ -1367,8 +1367,8 @@ ked = idx(5)
 
 flop = flop + dble(           &
 (jed-jst+1)*(ied-ist+1)* (  &
-( 24.0d0 +                & ! metrics
-+ 3.0 * 2.0 + 12.0       & ! coef BC
+( 24.0d0                  & ! metrics
+ + 3.0 * 2.0 + 12.0       & ! coef BC
 )                         &
 + (ked-kst+1)* (11.0+10.0) & ! coef + Source
 + (ked-kst-1)* 6.0d0       & ! coef

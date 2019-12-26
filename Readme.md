@@ -174,6 +174,18 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_CBR=OFF ..
 ~~~
 
+#### Fujitsu TCS environment
+
+~~~
+cmake -DINSTALL_DIR=${HOME}/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_F_TCS.cmake \
+-Dwith_MPI=no \
+-Dwith_PM=${HOME}/opt/PMlib/intel-2018_papi-gcc-4.8.5 \
+-Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
+-Dwith_SIMD=256 \
+-Dwith_ACC=OFF \
+-Dwith_CBR=OFF ..
+~~~
 
 ### Aurora without PAPI
 
