@@ -9,10 +9,20 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2019-12-25 Version 1.2.7
+- F_TCS用のプロファイラコール, Compiler option USE_F_TCSを変更 -Nfjcex 追加 >> 未解決
+- rename : CB_Define.h >> CB_Define_stub.h
+- rename : CB_SubDomain.h >> CB_SubDomain_stub.h
+- #ifndef DISABLE_MPIでserialのstubと切り替え
+- define REAL_TYPE in cz_Define.h and remove from CB_Define_stab.h
+- update cz_comm.cpp
+
+---
 - 2019-12-11 Version 1.2.6
 - add -Cpp option for USE_F_TCS
 - add compile script for F_TCS in Reame.md
 - replace Toolchain_K.cmake to Toolchain_F_TCS.cmake
+- cz_maf.f90のflop countの演算子の重複を修正
 
 ---
 - 2019-8-20 Version 1.2.5

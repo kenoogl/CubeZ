@@ -16,7 +16,7 @@ CubeZ is a platform for testing iterative solvers.
 - MPI library (if parallel)
 - PMlib
 - PAPI (Optional)
-- CBrick (Even compiling without MPI, a header file CB_Define.h is essential. See serial build.)
+- CBrick (In case of parallel)
 
 
 ## How to build
@@ -88,8 +88,8 @@ In following examples, assuming that TextParser, PMlib, and CBrick are installed
 
 
 ### Serial build
-When even compiling without MPI, the heaｄder files `CB_Define.h` and `CB_SubDomain.h` in CBrick library are required.
-Copy them form CBrick directory into cz_cpp, then make. In this case, specify `-D with_CBR=OFF` to suppress linking to CBrick library.
+When even compiling without MPI, the header files `CB_Define_stub.h` and `CB_SubDomain_stub.h` are used instead of ones in CBrick library.
+In this case, specify `-D with_CBR=OFF` to suppress linking to CBrick library.
 
 In case of some Intel compiler environment, please specify environment variables before compilation.
 `export CC=icc CXX=icpc F90=ifort FC=ifort`

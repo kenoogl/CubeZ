@@ -28,8 +28,8 @@ bool CZ::Comm_S(REAL_TYPE* sa, int gc, const string label)
   if (!label.empty()) TIMING_start(label);
 
 #ifndef DISABLE_MPI
-  if ( !CM.Comm_S_nonblocking(sa, gc, req) ) flag=false;
-  if ( !CM.Comm_S_wait_nonblocking(sa, gc, req) ) flag=false;
+  if ( !CM.Comm_S_node(sa, gc, req) ) flag=false;
+  if ( !CM.Comm_S_wait_node(sa, gc, req) ) flag=false;
 #endif
 
   if (!label.empty()) TIMING_stop(label, comm_size);
@@ -53,33 +53,11 @@ bool CZ::Comm_V(REAL_TYPE* va, int gc, const string label)
 
   bool flag = true;
   if (!label.empty()) TIMING_start(label);
-
-#if 0
 #ifndef DISABLE_MPI
-  // 各成分の先頭アドレス
-  size_t p_u = 0;
-  size_t p_v = (size[0]+2*GUIDE) * (size[1]+2*GUIDE) * (size[2]+2*GUIDE);
-  size_t p_w = (size[0]+2*GUIDE) * (size[1]+2*GUIDE) * (size[2]+2*GUIDE) * 2;
-
-  if ( !CM.Comm_S_nonblocking(&va[p_u], gc, req) ) return false;
-  if ( !CM.Comm_S_wait_nonblocking(&va[p_u], gc, req) ) return false;
-  if ( MPI_SUCCESS != MPI_Barrier(MPI_COMM_WORLD) ) return false;
-
-  if ( !CM.Comm_S_nonblocking(&va[p_v], gc, req) ) return false;
-  if ( !CM.Comm_S_wait_nonblocking(&va[p_v], gc, req) ) return false;
-  if ( MPI_SUCCESS != MPI_Barrier(MPI_COMM_WORLD) ) return false;
-
-  if ( !CM.Comm_S_nonblocking(&va[p_w], gc, req) ) return false;
-  if ( !CM.Comm_S_wait_nonblocking(&va[p_w], gc, req) ) return false;
-  if ( MPI_SUCCESS != MPI_Barrier(MPI_COMM_WORLD) ) return false;
+  if ( !CM.Comm_V_node(va, gc, req) ) flag=false;
+  if ( !CM.Comm_V_wait_node(va, gc, req) ) flag=false;
 #endif
-#endif
-
-
-#ifndef DISABLE_MPI
-  if ( !CM.Comm_V_nonblocking(va, gc, req) ) flag=false;
-  if ( !CM.Comm_V_wait_nonblocking(va, gc, req) ) flag=false;
-#endif
+  if (!label.empty()) TIMING_stop(label, comm_size*3.0);
 
   if (!label.empty()) TIMING_stop(label, comm_size*3.0);
   return (flag)?true:false;

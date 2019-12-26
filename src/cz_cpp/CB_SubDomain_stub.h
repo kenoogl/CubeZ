@@ -22,8 +22,15 @@
 
 #include <string>
 #include <stdlib.h>
-#include "CB_Define.h"
-#include "CB_Version.h"
+
+#ifndef DISABLE_MPI
+#include <CB_Define.h>
+#include <CB_Version.h>
+#else
+#include "CB_Define_stub.h"
+#endif
+
+
 
 // 分割モード auto_div
 #define AUTO 0

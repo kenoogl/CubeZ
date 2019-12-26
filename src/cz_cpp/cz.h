@@ -32,9 +32,7 @@
 
 
 // FX10 profiler
-#if defined __K_FPCOLL
-#include <fjcoll.h>
-#elif defined __FX_FAPP
+#if defined __FX_FAPP
 #include <fj_tool/fjcoll.h>
 #endif
 
@@ -512,10 +510,8 @@ private:
 
     const char* s_label = key.c_str();
 
-    // Venus FX profiler
-#if defined __K_FPCOLL
-    start_collection( s_label );
-#elif defined __FX_FAPP
+    // F_TCS
+#if defined __FX_FAPP
     fapp_start( s_label, 0, 0);
 #endif
 
@@ -535,9 +531,7 @@ private:
     // Venus FX profiler
     const char* s_label = key.c_str();
 
-#if defined __K_FPCOLL
-    stop_collection( s_label );
-#elif defined __FX_FAPP
+#if defined __FX_FAPP
     fapp_stop( s_label, 0, 0);
 #endif
 

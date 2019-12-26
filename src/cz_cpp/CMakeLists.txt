@@ -52,11 +52,7 @@ add_library(CZ STATIC ${cz_files})
 
 if(with_MPI)
   if(with_CBR)
-    if(real_type STREQUAL "double")
-      set(cz_libs "-lCBrick_d")
-    else()
-      set(cz_libs "-lCBrick_f")
-    endif()
+    set(cz_libs "-lCBrick")
   endif()
 
   if(with_PM)

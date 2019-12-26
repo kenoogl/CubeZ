@@ -13,7 +13,7 @@
 */
 
 /**
- * @file   CB_Define.h
+ * @file   CB_Define_stub.h
  * @brief  CBrick Definition Header
  */
 
@@ -25,17 +25,6 @@
 #include <omp.h>
 #endif
 
-// precision
-#ifdef _REAL_IS_DOUBLE_
-#define REAL_TYPE double
-#else
-/** 実数型の指定
- * - デフォルトでは、REAL_TYPE=float
- * - コンパイル時オプション-D_REAL_IS_DOUBLE_を付与することで
- *   REAL_TYPE=doubleになる
- */
-#define REAL_TYPE float
-#endif
 
 #define _SIZE_DOUBLE_ 8
 

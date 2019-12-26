@@ -311,7 +311,7 @@ int CZ::Evaluate(int argc, char **argv)
     if( (SD = czAllocR(kk, var_type)) == NULL ) return 0;
     L_Memory += ( kk * 3 ) * (double)sizeof(REAL_TYPE);
   }
-  
+
   POP_RANGE; // nVIdiaTools
   
 
