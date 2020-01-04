@@ -3,7 +3,7 @@
 #
 # CubeZ
 #
-# Copyright (C) 2018 Research Institute for Information Technology(RIIT), Kyushu University.
+# Copyright (C) 2018-2020 Research Institute for Information Technology(RIIT), Kyushu University.
 # All rights reserved.
 #
 ###################################################################################
@@ -15,6 +15,8 @@
 #ifndef DISABLE_MPI
 #include <CB_SubDomain.h> // 先頭にmpi.h
 #include <CB_Comm.h>
+#else
+#include "CB_SubDomain_stub.h"
 #endif
 
 #include <stdio.h>

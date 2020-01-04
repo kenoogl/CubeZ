@@ -2,7 +2,7 @@
 #
 # CubeZ
 #
-# Copyright (C) 2018 Research Institute for Information Technology(RIIT), Kyushu University.
+# Copyright (C) 2018-2020 Research Institute for Information Technology(RIIT), Kyushu University.
 # All rights reserved.
 #
 ###################################################################################
@@ -78,8 +78,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.2.7")
-set(LIB_REVISION "20191225_1500")
+set(PROJECT_VERSION "1.2.8")
+set(LIB_REVISION "20200104_1230")
 #######
 
 

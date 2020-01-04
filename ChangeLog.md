@@ -9,6 +9,13 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2020-01-04 Version 1.2.8
+- copyright 2020
+- bug fix for serial >> #include <CB_SubDomain_stub.h> in cz.h
+- cz_Define.hで定義していたMPIのスタブをCB_Define_stub.hへう移動
+
+
+---
 - 2019-12-25 Version 1.2.7
 - F_TCS用のプロファイラコール, Compiler option USE_F_TCSを変更 -Nfjcex 追加 >> 未解決
 - rename : CB_Define.h >> CB_Define_stub.h

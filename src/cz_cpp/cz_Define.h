@@ -6,7 +6,7 @@
 #
 # CubeZ
 #
-# Copyright (C) 2018 Research Institute for Information Technology(RIIT), Kyushu University.
+# Copyright (C) 2018-2020 Research Institute for Information Technology(RIIT), Kyushu University.
 # All rights reserved.
 #
 ###################################################################################
@@ -36,28 +36,6 @@
 #define REAL_TYPE float
 #endif
 
-
-#ifdef DISABLE_MPI
-  typedef int MPI_Op;
-  typedef int MPI_Comm;
-  typedef int MPI_Request;
-  typedef int MPI_Datatype;
-
-  #define MPI_COMM_WORLD 0
-  #define MPI_INT  1
-  #define MPI_CHAR 2
-  #define MPI_SUCCESS true
-  #define MPI_MAX 100
-  #define MPI_MIN 101
-  #define MPI_SUM (MPI_Op)(0x58000003) // defined in PMlib
-
-  inline int MPI_Allreduce(void *sendbuf, void *recvbuf, int count,
-                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
-  {
-    return 0;
-  }
-
-#endif
 
 #define GUIDE 2  ///< ガイドセル数
 

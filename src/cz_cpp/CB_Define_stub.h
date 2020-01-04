@@ -1,12 +1,12 @@
-#ifndef _CB_DEFINE_H_
-#define _CB_DEFINE_H_
+#ifndef _CB_DEFINE_STUB_H_
+#define _CB_DEFINE_STUB_H_
 
 /*
 ###################################################################################
 #
 # CBrick
 #
-# Copyright (c) 2017-2018 Research Institute for Information Technology(RIIT),
+# Copyright (c) 2017-2020 Research Institute for Information Technology(RIIT),
 #                    Kyushu University.  All rights reserved.
 #
 ####################################################################################
@@ -36,6 +36,29 @@
 
 #define ON 1
 #define OFF 0
+
+
+#ifdef DISABLE_MPI
+  typedef int MPI_Op;
+  typedef int MPI_Comm;
+  typedef int MPI_Request;
+  typedef int MPI_Datatype;
+
+  #define MPI_COMM_WORLD 0
+  #define MPI_INT  1
+  #define MPI_CHAR 2
+  #define MPI_SUCCESS true
+  #define MPI_MAX 100
+  #define MPI_MIN 101
+  #define MPI_SUM (MPI_Op)(0x58000003) // defined in PMlib
+
+  inline int MPI_Allreduce(void *sendbuf, void *recvbuf, int count,
+                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+  {
+    return 0;
+  }
+
+#endif
 
 
 enum DIRection {
@@ -154,4 +177,4 @@ enum DIRection {
 #define Exit(x) \
 ((void)printf("exit at %s:%u\n", __FILE__, __LINE__), exit((x)))
 
-#endif // _CB_DEFINE_H_
+#endif // _CB_DEFINE_STUB_H_

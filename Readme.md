@@ -6,7 +6,7 @@ CubeZ is a platform for testing iterative solvers.
 
 
 ## Copyright
-- Copyright (c) 2018-2019 Research Institute for Information Technology(RIIT), Kyushu University. All rights reserved.
+- Copyright (c) 2018-2020 Research Institute for Information Technology(RIIT), Kyushu University. All rights reserved.
 
 
 
@@ -88,12 +88,26 @@ In following examples, assuming that TextParser, PMlib, and CBrick are installed
 
 
 ### Serial build
-When even compiling without MPI, the header files `CB_Define_stub.h` and `CB_SubDomain_stub.h` are used instead of ones in CBrick library.
-In this case, specify `-D with_CBR=OFF` to suppress linking to CBrick library.
 
-In case of some Intel compiler environment, please specify environment variables before compilation.
+When even compiling without MPI, specify `-D with_CBR=OFF` to suppress linking to CBrick library.
+In the case of some Intel compiler environment, please specify environment variables before compilation.
 `export CC=icc CXX=icpc F90=ifort FC=ifort`
-`export CZ_HOME=hoge`
+
+
+#### Mac gnu serial /wo PAPI
+
+~~~
+$ module load gcc
+$ echo $CC $CXX $FC $F90
+gcc-9 g++-9 gfortran-9 gfortran-9
+
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
+-Dwith_MPI=OFF \
+-Dwith_PM=${HOME}/CubeZ/PMlib \
+-Dwith_SIMD=256 \
+-Dwith_CBR=OFF ..
+~~~
+
 
 #### INTEL/GNU compiler serial without PAPI
 

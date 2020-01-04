@@ -1,24 +1,22 @@
-#ifndef _CB_SUBDOMAIN_H_
-#define _CB_SUBDOMAIN_H_
+#ifndef _CB_SUBDOMAIN_STUB_H_
+#define _CB_SUBDOMAIN_STUB_H_
 
 /*
 ###################################################################################
 #
 # CBrick
 #
-# Copyright (c) 2017-2018 Research Institute for Information Technology(RIIT),
+# Copyright (c) 2017-2020 Research Institute for Information Technology(RIIT),
 #                    Kyushu University.  All rights reserved.
 #
 ####################################################################################
 */
 
 /**
- * @file   CB_SubDomain.h
+ * @file   CB_SubDomain_stub.h
  * @brief  SubDomain class Header
  * @todo sort >> k>j スレッド化のためのオプション、オプションの与え方
  */
-
-#include <mpi.h>
 
 #include <string>
 #include <stdlib.h>
@@ -493,4 +491,4 @@ private:
 
 };
 
-#endif // _CB_SUBDOMAIN_H_
+#endif // _CB_SUBDOMAIN_STUB_H_
