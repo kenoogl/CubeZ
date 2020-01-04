@@ -52,6 +52,9 @@ $ sudo make install
 `-D with_PM=` {*Installed_Directory* | OFF}
 > Specify the directory path that PMlib is installed, or OFF.
 
+`-D with_FAPP=` {OFF | ON}
+> Specify using Fujitsu profiler.
+
 `-D with_CBR=` *Installed_Directory*
 > Specify the directory path that CBrick is installed.
 
@@ -60,6 +63,9 @@ $ sudo make install
 
 `-D with_SIMD=` {OFF |256|512}
 > Specify SIMD length. The default is OFF. If you want to use AVX512 specify 512.
+
+`-D with_ACC=`{off|Pascal|Volta}
+> Specify using open acc directives.
 
 `-D with_Ftrace=` (off | on)
 > In the case of Aurora, if you want to use Ftrace option, specify turn on this option.
@@ -74,8 +80,10 @@ with_MPI = ON
 enable_OPENMP = ON
 real_type = float
 with_PAPI = OFF
+with_FAPP = OFF
 with_SIMD = OFF
 with_Ftrace = OFF
+with_ACC = OFF
 enable_VectorReduction = ON
 ~~~
 
@@ -94,7 +102,9 @@ In the case of some Intel compiler environment, please specify environment varia
 `export CC=icc CXX=icpc F90=ifort FC=ifort`
 
 
-#### Mac gnu serial /wo PAPI
+### Mac
+
+#### gnu serial /w PMlib /wo PAPI
 
 ~~~
 $ module load gcc
@@ -108,45 +118,44 @@ $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
 -Dwith_CBR=OFF ..
 ~~~
 
+#### PGI serial /w PMlib /wo PAPI
 
-#### INTEL/GNU compiler serial without PAPI
-
-~~~
-$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--Dwith_MPI=no \
--Dwith_PM=${HOME}/CubeZ/PMlib \
--Dwith_SIMD=256 \
--Dwith_CBR=OFF ..
-~~~
-
-#### Mac PGI
 ~~~
 $ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
-~~~
 
-~~~
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--Dwith_MPI=no \
--Dreal_type=float \
--Denable_OPENMP=yes \
+-Dwith_MPI=OFF \
 -Dwith_PM=${HOME}/CubeZ/PMlib_PGI \
 -Dwith_SIMD=256 \
 -Dwith_CBR=OFF ..
 ~~~
 
 
-### ITO
+#### INTEL serial /w PMlib /wo PAPI
 
-#### A/B Intel with PAPI
+~~~
+$ module load intel
+$ export CC=icc CXX=icpc F90=ifort FC=ifort
+
+$ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
+-Dwith_MPI=OFF \
+-Dwith_PM=${HOME}/CubeZ/PMlib \
+-Dwith_SIMD=256 \
+-Dwith_CBR=OFF ..
+~~~
+
+
+
+### ITO subsystem A/B
+
+####  Intel serial /w PMlib /w PAPI
 
 ~~~
 $ module load intel/2018
 $ export CC=icc CXX=icpc F90=ifort FC=ifort
-~~~
 
-~~~
-cmake -DINSTALL_DIR=${HOME}/CZ \
+$ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_MPI=no \
 -Dwith_PM=${HOME}/opt/PMlib/intel-2018_papi-gcc-4.8.5 \
 -Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
@@ -154,6 +163,81 @@ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_ACC=OFF \
 -Dwith_CBR=OFF ..
 ~~~
+
+#### Intel MPI /w PMlib /w PAPI
+
+- 2019-12-25 性能はとれるが、計算結果が不正で反復回数が増加する
+
+~~~
+$ module load intel/2018.3 openmpi/3.1.3-nocuda-intel18.3
+
+>> PAPI-5.7.0
+$ export CC=mpiicc CXX=mpiicpc F90=mpiifort FC=mpiifort
+$ ./configure --prefix=${HOME}/CZ_INTL/PAPI
+$ make
+$ make install
+
+>> PMlib-6.4.4
+$ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/PMlib \
+-Denable_OPENMP=yes \
+-Dwith_MPI=yes \
+-Denable_Fortran=no \
+-Dwith_example=no \
+-Dwith_PAPI=${HOME}/CZ_INTL/PAPI \
+-Dwith_OTF=no \
+-Denable_PreciseTimer=yes ..
+
+>> CBrick-1.4.2
+$ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/CBrick \
+      -Denable_OPENMP=yes \
+      -Dwith_example=no \
+      -Dwith_Diagonal=no ..
+      
+>> CubeZ-1.2.7
+$ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/CZ \
+-Denable_OPENMP=yes \
+-Dwith_MPI=yes \
+-Dwith_PM=${HOME}/CZ_INTL/PMlib \
+-Dwith_PAPI=${HOME}/CZ_INTL/PAPI \
+-Dwith_SIMD=256 \
+-Dwith_ACC=OFF \
+-Dwith_CBR=${HOME}/CZ_INTL/CBrick ..
+~~~
+
+#### Fujitsu TCS serial /wo PMlib /w FAPP
+
+- 2020-01-04 
+
+~~~
+>> CubeZ-1.2.9
+$ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Denable_OPENMP=ON
+-Dwith_FAPP=ON \
+-Dwith_SIMD=256 ..
+~~~
+
+#### Fujitsu TCS parallel /wo PMlib /w FAPP
+
+- 2020-01-04 
+
+~~~
+>> CBrick-1.4.3
+$ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CBrick \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Denable_OPENMP=ON ..
+
+>> CubeZ-1.2.9
+$ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CZ \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Dwith_MPI=ON \
+-Dwith_FAPP=ON \
+-Dwith_SIMD=256 \
+-Dwith_CBR=
+~~~
+
+
+
 
 #### PGI OpenACC with PAPI
 
@@ -188,18 +272,8 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ \
 -Dwith_CBR=OFF ..
 ~~~
 
-#### Fujitsu TCS environment
 
-~~~
-cmake -DINSTALL_DIR=${HOME}/CZ \
--DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_F_TCS.cmake \
--Dwith_MPI=no \
--Dwith_PM=${HOME}/opt/PMlib/intel-2018_papi-gcc-4.8.5 \
--Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
--Dwith_SIMD=256 \
--Dwith_ACC=OFF \
--Dwith_CBR=OFF ..
-~~~
+
 
 ### Aurora without PAPI
 

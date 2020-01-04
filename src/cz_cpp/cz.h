@@ -33,9 +33,9 @@
 #include "DomainInfo.h"
 
 
-// FX10 profiler
-#if defined __FX_FAPP
-#include <fj_tool/fjcoll.h>
+// Fujitsu profiler
+#ifdef ENABLE_FAPP
+#include <fj_tool/fapp.h>
 #endif
 
 #ifndef DISABLE_PMLIB
@@ -493,12 +493,11 @@ private:
 #ifndef DISABLE_PMLIB
   // タイミング測定区間にラベルを与えるラッパー
   void set_label(const string label, pm_lib::PerfMonitor::Type type, bool exclusive=true);
-#endif
-
 
   // タイミング測定区間にラベルを与える
   void set_timing_label();
 
+#endif
 
   /**
    * @brief タイミング測定開始
@@ -506,18 +505,16 @@ private:
    */
   inline void TIMING_start(const string key)
   {
-#ifndef DISABLE_PMLIB
     // PMlib Intrinsic profiler
+#ifndef DISABLE_PMLIB
     PM.start(key);
-
+#endif // DISABLE_PMLIB
+    
+    // Fujitsu profiler
+#ifdef ENABLE_FAPP
     const char* s_label = key.c_str();
-
-    // F_TCS
-#if defined __FX_FAPP
     fapp_start( s_label, 0, 0);
 #endif
-
-#endif // DISABLE_PMLIB
   }
 
 
@@ -529,15 +526,14 @@ private:
    */
   inline void TIMING_stop(const string key, double flopPerTask=0.0, int iterationCount=1)
   {
-#ifndef DISABLE_PMLIB
-    // Venus FX profiler
+    // Fujitsu profiler
+#ifdef ENABLE_FAPP
     const char* s_label = key.c_str();
-
-#if defined __FX_FAPP
     fapp_stop( s_label, 0, 0);
 #endif
 
     // PMlib Intrinsic profiler
+#ifndef DISABLE_PMLIB
     PM.stop(key, flopPerTask, (unsigned)iterationCount);
 #endif // DISABLE_PMLIB
   }

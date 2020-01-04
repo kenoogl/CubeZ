@@ -391,11 +391,12 @@ int CZ::Evaluate(int argc, char **argv)
   POP_RANGE;
 
 
+  setParallelism();
+  
 #ifndef DISABLE_PMLIB
   // タイミング測定の初期化
   PM.initialize( PM_NUM_MAX );
   PM.setRankInfo( myRank );
-  setParallelism();
   PM.setParallelMode(Parallel_str, numThreads, numProc);
   set_timing_label();
 #endif

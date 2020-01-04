@@ -25,10 +25,10 @@ macro (AddOptimizeOption)
     set(CMAKE_Fortran_FLAGS "-fpp -Wall -O3 -proginf -report-all -fdiag-parallel=2 -fdiag-vector=2 -std=f95 -cxxlib -static-nec -mretain-none")
     # In order to link objects by Fortran driver, add '-cxxlib' to CMAKE_Fortran_FLAGS
 
-  elseif (TARGET_ARCH STREQUAL "INTEL_F_TCS")
+  elseif (TARGET_ARCH STREQUAL "ITO_TCS")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,parallel,optmsg=2 -V -Xg")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast,parallel,optmsg=2 -Xg")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Kfast,parallel,optmsg=2 -V")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Cpp -Kfast,parallel,optmsg=2 -V")
 
   elseif (USE_F_TCS STREQUAL "YES")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast,ocl,preex,simd=2,array_private,parallel,optmsg=2 -V -Nsrc -x0 -Xg -Nfjcex")
@@ -90,7 +90,7 @@ macro (FreeForm)
   elseif (USE_F_TCS STREQUAL "YES")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")
 
-  elseif(TARGET_ARCH STREQUAL "INTEL_F_TCS")
+  elseif(TARGET_ARCH STREQUAL "ITO_TCS")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Free")
 
   elseif(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")

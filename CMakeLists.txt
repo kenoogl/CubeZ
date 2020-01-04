@@ -23,11 +23,13 @@
 #
 # -D enable_OPENMP=(OFF|ON)
 #
-# -D with_PM=installed_directory or OFF
+# -D with_PM=OFF or installed_directory
 #
-# -D with_CBR=installed_directory or OFF
+# -D with_CBR=OFF or installed_directory
 #
-# -D with_PAPI=installed_directory or OFF
+# -D with_PAPI=OFF or installed_directory
+#
+# -D with_FAPP={OFF|ON}
 #
 # -D with_SIMD=(OFF|256|512)
 #
@@ -45,14 +47,17 @@ cmake_minimum_required(VERSION 2.6)
 # Build options
 #######
 
-option(with_MPI "Enable MPI" "ON")
-option(enable_OPENMP "Enable OpenMP" "ON")
+option(with_MPI "Enable MPI" "OFF")
+option(enable_OPENMP "Enable OpenMP" "OFF")
 option(real_type "Type of floating point" "OFF")
 option(with_PAPI "Enable PAPI" "OFF")
+option(with_PM "Enable PMlib" "OFF")
+option(with_CBR "Enable CBrick" "OFF")
+option(with_FAPP "Enable Fujitsu profiler" "OFF")
 option(with_SIMD "SIMD Width" "OFF")
 option(with_Ftrace "with_Ftrace Option" "OFF")
 option(with_ACC "OpenACC Option" "OFF")
-option(enable_VectorReduction "Enable VectorReduction" "ON")
+option(enable_VectorReduction "Enable VectorReduction" "OFF")
 
 #######
 # Project setting
@@ -78,8 +83,8 @@ cmake_policy(SET CMP0012 NEW)
 
 
 #######
-set(PROJECT_VERSION "1.2.8")
-set(LIB_REVISION "20200104_1230")
+set(PROJECT_VERSION "1.2.9")
+set(LIB_REVISION "20200104_1500")
 #######
 
 
@@ -132,6 +137,11 @@ if(NOT with_MPI)
 endif()
 
 
+# Fujitsu profiler
+if(with_FAPP)
+  SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -DENABLE_FAPP")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_FAPP")
+endif()
 
 if(USE_F_TCS STREQUAL "YES")
 else()
@@ -215,7 +225,6 @@ endif()
 ####
 
 if(enable_VectorReduction STREQUAL "ON")
-else()
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SVR")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -D_SVR")
 endif()

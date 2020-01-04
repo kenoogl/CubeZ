@@ -75,7 +75,7 @@ P------>  do j=jst, jed
 - Autrora maf用のコンパイラオプション -static-nec
 
 ####  Version 1.1.7
-- Autrora maf用のVectorReductionの配列の初期化コスト >> "VRtmp_Init"
+- Aurora maf用のVectorReductionの配列の初期化コスト >> "VRtmp_Init"
 - 対象コードをmafのみに修正（バグ）
 
 

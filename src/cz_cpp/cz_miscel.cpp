@@ -145,7 +145,7 @@ void CZ::MemoryRequirement(const char* mode, const double Memory, const double l
  * @brief タイミング測定区間にラベルを与えるラッパー
  * @param [in] label     ラベル
  * @param [in] type      測定対象タイプ(COMM or CALC)
- * @param [in] exclusive 排他測定フラグ(ディフォルトtrue)
+ * @param [in] exclusive 排他測定フラグ(デフォルトtrue)
  */
 void CZ::set_label(const string label, pm_lib::PerfMonitor::Type type, bool exclusive)
 {
@@ -164,13 +164,12 @@ void CZ::set_label(const string label, pm_lib::PerfMonitor::Type type, bool excl
     printf("\tWarning: Length of timing label must be less than %d\n", TM_LABEL_MAX-1);
   }
 
+  
   // Performance Monitorへの登録
   PM.setProperties(label, type, exclusive);
 }
-#endif
 
 
-#ifndef DISABLE_PMLIB
 // #################################################################
 /**
  * @brief タイミング測定区間にラベルを与える
@@ -262,4 +261,3 @@ using namespace pm_lib;
   set_label("LJCB",             PerfMonitor::CALC, false);
 }
 #endif
-

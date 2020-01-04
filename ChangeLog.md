@@ -9,10 +9,19 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2020-01-04 Version 1.2.9
+- プロファイリングのモード変更
+  - with_PMlib={on|off}でPMlibによるプロファイリングを制御
+  - with_FAPP={on|off}により、Fujitsu profilerをPMlibとは独立に指定
+- ENABLE_FAPPを導入
+- Toolchain_intel_F_TCS.cmake >> Toolchain_ITO_TCS.cmake
+- オプションのデフォルトをOFFへ変更
+
+---
 - 2020-01-04 Version 1.2.8
 - copyright 2020
 - bug fix for serial >> #include <CB_SubDomain_stub.h> in cz.h
-- cz_Define.hで定義していたMPIのスタブをCB_Define_stub.hへう移動
+- cz_Define.hで定義していたMPIのスタブをCB_Define_stub.hへ移動
 
 
 ---
