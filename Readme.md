@@ -112,10 +112,9 @@ $ echo $CC $CXX $FC $F90
 gcc-9 g++-9 gfortran-9 gfortran-9
 
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--Dwith_MPI=OFF \
+-Denable_OPENMP=ON \
 -Dwith_PM=${HOME}/CubeZ/PMlib \
--Dwith_SIMD=256 \
--Dwith_CBR=OFF ..
+-Dwith_SIMD=256 ..
 ~~~
 
 #### PGI serial /w PMlib /wo PAPI
@@ -125,10 +124,9 @@ $ module load pgi/19.4
 $ export CC=pgcc CXX=pgc++ F90=pgf90 FC=pgf90
 
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--Dwith_MPI=OFF \
+-Denable_OPENMP=ON \
 -Dwith_PM=${HOME}/CubeZ/PMlib_PGI \
--Dwith_SIMD=256 \
--Dwith_CBR=OFF ..
+-Dwith_SIMD=256 ..
 ~~~
 
 
@@ -139,10 +137,9 @@ $ module load intel
 $ export CC=icc CXX=icpc F90=ifort FC=ifort
 
 $ cmake -DINSTALL_DIR=${HOME}/CubeZ/CZ \
--Dwith_MPI=OFF \
+-Denable_OPENMP=ON \
 -Dwith_PM=${HOME}/CubeZ/PMlib \
--Dwith_SIMD=256 \
--Dwith_CBR=OFF ..
+-Dwith_SIMD=256 ..
 ~~~
 
 
@@ -156,12 +153,10 @@ $ module load intel/2018
 $ export CC=icc CXX=icpc F90=ifort FC=ifort
 
 $ cmake -DINSTALL_DIR=${HOME}/CZ \
--Dwith_MPI=no \
+-Denable_OPENMP=ON \
 -Dwith_PM=${HOME}/opt/PMlib/intel-2018_papi-gcc-4.8.5 \
 -Dwith_PAPI=${HOME}/opt/PAPI/gcc-4.8.5 \
--Dwith_SIMD=256 \
--Dwith_ACC=OFF \
--Dwith_CBR=OFF ..
+-Dwith_SIMD=256 ..
 ~~~
 
 #### Intel MPI /w PMlib /w PAPI
@@ -177,51 +172,90 @@ $ ./configure --prefix=${HOME}/CZ_INTL/PAPI
 $ make
 $ make install
 
->> PMlib-6.4.4
+>> PMlib-6.4.5
 $ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/PMlib \
--Denable_OPENMP=yes \
--Dwith_MPI=yes \
+-Denable_OPENMP=ON \
+-Dwith_MPI=ON \
+-Dwith_PAPI=${HOME}/CZ_INTL/PAPI \
 -Denable_Fortran=no \
 -Dwith_example=no \
--Dwith_PAPI=${HOME}/CZ_INTL/PAPI \
 -Dwith_OTF=no \
 -Denable_PreciseTimer=yes ..
 
->> CBrick-1.4.2
+>> CBrick-1.4.3
 $ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/CBrick \
-      -Denable_OPENMP=yes \
-      -Dwith_example=no \
-      -Dwith_Diagonal=no ..
-      
->> CubeZ-1.2.7
+      -Denable_OPENMP=ON ..
+
+>> CubeZ-1.2.9
 $ cmake -DINSTALL_DIR=${HOME}/CZ_INTL/CZ \
--Denable_OPENMP=yes \
--Dwith_MPI=yes \
+-Denable_OPENMP=ON \
+-Dwith_MPI=ON \
 -Dwith_PM=${HOME}/CZ_INTL/PMlib \
 -Dwith_PAPI=${HOME}/CZ_INTL/PAPI \
 -Dwith_SIMD=256 \
--Dwith_ACC=OFF \
 -Dwith_CBR=${HOME}/CZ_INTL/CBrick ..
 ~~~
 
-#### Fujitsu TCS serial /wo PMlib /w FAPP
+#### Fujitsu TCS serial /w PMlib /w PAPI /w FAPP
 
-- 2020-01-04 
+- 2020-01-07
 
 ~~~
+>> PAPI-5.7.0
+$ module load gcc
+$ export CC=gcc F77=gfortran
+$ ./configure --prefix=${HOME}/CZ_TCS/PAPI
+$ make
+$ make install
+
+$ export CC=fcc CXX=FCC F90=frt FC=frt
+
+>> PMlib-6.4.5
+$ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/PMlib \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Denable_OPENMP=yes \
+-Dwith_MPI=no \
+-Denable_Fortran=no \
+-Dwith_example=no \
+-Dwith_PAPI=${HOME}/CZ_TCS/PAPI \
+-Dwith_OTF=no \
+-Denable_PreciseTimer=OFF ..
+
 >> CubeZ-1.2.9
 $ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
--Denable_OPENMP=ON
+-Denable_OPENMP=ON \
+-Dwith_PAPI=${HOME}/CZ_TCS/PAPI \
+-Dwith_PM=${HOME}/CZ_TCS/PMlib \
 -Dwith_FAPP=ON \
 -Dwith_SIMD=256 ..
 ~~~
 
 #### Fujitsu TCS parallel /wo PMlib /w FAPP
 
-- 2020-01-04 
+- 2020-01-07
 
 ~~~
+>> PAPI-5.7.0
+$ module load gcc
+$ export CC=gcc F77=gfortran
+$ ./configure --prefix=${HOME}/CZ_TCS/PAPI
+$ make
+$ make install
+
+$ export CC=mpifcc CXX=mpiFCC F90=mpifrt FC=mpifrt
+
+>> PMlib-6.4.5
+$ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/PMlib \
+-DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Denable_OPENMP=ON \
+-Dwith_MPI=ON \
+-Denable_Fortran=OFF \
+-Dwith_example=OFF \
+-Dwith_PAPI=${HOME}/CZ_TCS/PAPI \
+-Dwith_OTF=OFF \
+-Denable_PreciseTimer=OFF ..
+
 >> CBrick-1.4.3
 $ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CBrick \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
@@ -230,10 +264,13 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CBrick \
 >> CubeZ-1.2.9
 $ cmake -DINSTALL_DIR=${HOME}/CZ_TCS/CZ \
 -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_ITO_TCS.cmake \
+-Denable_OPENMP=ON \
 -Dwith_MPI=ON \
+-Dwith_PAPI=${HOME}/CZ_TCS/PAPI \
+-Dwith_PM=${HOME}/CZ_TCS/PMlib \
 -Dwith_FAPP=ON \
 -Dwith_SIMD=256 \
--Dwith_CBR=
+-Dwith_CBR=${HOME}/CZ_TCS/CBrick ..
 ~~~
 
 
@@ -291,39 +328,6 @@ $ cmake -DINSTALL_DIR=${HOME}/CZ \
 ~~~
 
 
-
-
-
-### FUJITSU compiler / FX100, K computer on login nodes (Cross compilation) and Fujitsu TCS environment for intel PC
-
-~~~
-$ cmake -DINSTALL_DIR=${CZ_HOME}/RAinWATER \
-        -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_fx100.cmake \
-        -Dreal_type=float \
-        -Denable_OPENMP=yes \
-        -Dwith_MPI=yes \
-        -Dwith_PM=${CZ_HOME}/PMlib \
-        -Dwith_PAPI=OFF \
-        -Dwith_CBR=${CZ_HOME}/CBrick ..
-
-$ cmake -DINSTALL_DIR=${CZ_HOME}/RAinWATER \
-        -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_K.cmake \
-        -Dreal_type=float \
-        -Denable_OPENMP=yes \
-        -Dwith_MPI=yes \
-        -Dwith_PM=${CZ_HOME}/PMlib \
-        -Dwith_PAPI=OFF \
-        -Dwith_CBR=${CZ_HOME}/CBrick ..
-
-$ cmake -DINSTALL_DIR=${CZ_HOME}/RAinWATER \
-        -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain_intel_F_TCS.cmake \
-        -Dreal_type=float \
-        -Denable_OPENMP=yes \
-        -Dwith_MPI=yes \
-        -Dwith_PM=${CZ_HOME}/PMlib \
-        -Dwith_PAPI=OFF \
-        -Dwith_CBR=${CZ_HOME}/CBrick ..
-~~~
 
 ##### Note
 - On Fujitsu machines(K, fx100), confirm appropriate directory path for compiler environment.

@@ -9,6 +9,12 @@ bicgの前処理性能をテスト、pcrは少ない回数でよいか？
 ## REVISION HISTORY
 
 ---
+- 2020-01-07 Version 1.3.0
+- TCS並列コンパイル
+- FAPP
+
+
+---
 - 2020-01-04 Version 1.2.9
 - プロファイリングのモード変更
   - with_PMlib={on|off}でPMlibによるプロファイリングを制御
