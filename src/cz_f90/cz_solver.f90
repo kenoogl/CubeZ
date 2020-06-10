@@ -673,11 +673,14 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, kl, kr, s, p
+integer                                  ::  i, j, k, kl, km, kr, s, p
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp, res1
-real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
+real                                     ::  jj, dd1, dd2, dd3, dd4, aa2, aa3, aa4, &
+                                             cc1, cc2, cc3, f1, f2
+real :: detA, detA1, detA2, detA3, detA4
+
 
 ist = idx(0)
 ied = idx(1)
@@ -692,7 +695,7 @@ r = 1.0/6.0
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
-+ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
++ (ked-kst+1)*(pn-2)*72.0 & ! PCR4x4
 + 2**(pn-1)*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
@@ -716,6 +719,8 @@ do j=jst, jed
 do i=ist, ied
 
 ! Reflesh coef. due to override
+! 係数行列a[1-g:sz(3)+g]を初期化
+! r = 1.0 / 6.0
 a(kst) = 0.0
 do k=kst+1, ked
 a(k) = -r
@@ -747,7 +752,7 @@ d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 ! PCR  最終段の一つ手前で停止
 !$acc loop seq
-do p=1, pn-1
+do p=1, pn-2
 s = 2**(p-1)
 
 !dir$ vector aligned
@@ -785,17 +790,53 @@ s = 2**(pn-1)
 !pgi$ ivdep
 !$acc loop independent
 do k = kst, kst+s-1
-kl = max(k-s, kst-1)
-kr = min(k+s, ked+1)
+kl = min(k+  s, ked+1)
+km = min(k+2*s, ked+1)
+kr = min(k+3*s, ked+1)
+
+! A = \\
+! \begin{pmatrix}
+! 1   & cc1 & 0   & 0   \\
+! aa2 & 1   & cc2 & 0   \\
+! 0   & aa3 & 1   & cc3 \\
+! 0   & 0   & aa4 & 1   \\
+! \end{pmatrix}
 cc1 = c(k)
-aa2 = a(kr)
-f1  = d(k)
-f2  = d(kr)
-jj  = 1.0 / (1.0 - aa2 * cc1)
-dd1 = (f1 - cc1 * f2) * jj
-dd2 = (f2 - aa2 * f1) * jj
-d1(k ) = dd1
-d1(kr) = dd2
+cc2 = c(kl)
+cc3 = c(km)
+aa2 = a(kl)
+aa3 = a(km)
+aa4 = a(kr)
+
+! (dd1, dd2, dd3, dd4 ) = ( d(k) & d(kl) & d(km) & d(kr) )
+dd1 = d(k)
+dd2 = d(kl)
+dd3 = d(km)
+dd3 = d(kr)
+
+! |A|
+detA = 1.0 - aa4*cc3 - aa3*cc2 - aa2*cc1*(1.0 - cc3*aa4)
+
+! |A_i|
+! A_i = A の第 i-列 (i = 1, 2, …, n) を系の右辺である d で置き換えて得られる行列
+detA1 = -cc3*((aa4*dd1+cc1*cc2*dd4)-aa4*cc1*dd2) &
++       dd1+cc1*cc2*dd3 - aa3*cc2*dd1 - cc1*dd2
+
+detA2 = dd2 + cc2*cc3*dd4 - aa4*cc3*dd2 - cc2*dd3 &
+-       aa2*(dd1 - aa4*cc3*dd1)
+
+detA3 = dd3 - cc3*dd4 - aa3*dd2 &
+-       aa2*(cc1*dd3 - cc1*cc3*dd4 - aa3*dd1)
+
+detA4 = dd4 + aa3*aa4*dd2 - aa4*dd3 - aa3*cc2*dd4 &
+-       aa2*(cc1*dd4 + aa3*aa4*dd1 - aa4*cc1*dd3)
+
+
+! Cramer's rule
+d1(k)  = detA1 / detA
+d1(kl) = detA2 / detA
+d1(km) = detA3 / detA
+d1(kr) = detA4 / detA
 end do
 
 
