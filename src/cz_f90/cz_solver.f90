@@ -710,8 +710,8 @@ flop = flop + dble(          &
 !$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(kl, kr, ap, cp, e, s, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+!$OMP private(kl, km, kr, ap, cp, e, s, p, k, pp, dp) &
+!$OMP private(jj, dd1, dd2, aa2, aa3, aa4, cc1, cc2, cc3, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
@@ -812,7 +812,7 @@ aa4 = a(kr)
 dd1 = d(k)
 dd2 = d(kl)
 dd3 = d(km)
-dd3 = d(kr)
+dd4 = d(kr)
 
 ! |A|
 detA = 1.0 - aa4*cc3 - aa3*cc2 - aa2*cc1*(1.0 - cc3*aa4)
