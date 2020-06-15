@@ -677,9 +677,8 @@ integer                                  ::  i, j, k, kl, km, kr, s, p
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a, c, d, a1, c1, d1
 real                                     ::  r, ap, cp, e, pp, dp, res1
-real                                     ::  jj, dd1, dd2, dd3, dd4, aa2, aa3, aa4, &
-                                             cc1, cc2, cc3, f1, f2
-real :: detA, detA1, detA2, detA3, detA4
+real                                     ::  jj, dd1, dd2, dd3, dd4, aa2, aa3, aa4, cc1, cc2, cc3
+real                                     ::  inv_detA, detA1, detA2, detA3, detA4
 
 
 ist = idx(0)
@@ -695,7 +694,7 @@ r = 1.0/6.0
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
-+ (ked-kst+1)*(pn-2)*72.0 & ! PCR4x4
++ (ked-kst+1)*(pn-2)*74.0 & ! PCR4x4
 + 2**(pn-1)*9.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
@@ -711,9 +710,9 @@ flop = flop + dble(          &
 #else
 !$OMP PARALLEL reduction(+:res1) &
 !$OMP private(kl, km, kr, ap, cp, e, s, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, aa3, aa4, cc1, cc2, cc3, f1, f2) &
-!$OMP private(a, c, d, a1, c1, d1)
-!$OMP private(detA, detA1, detA2, detA3, detA4)
+!$OMP private(jj, dd1, dd2, aa2, aa3, aa4, cc1, cc2, cc3) &
+!$OMP private(a, c, d, a1, c1, d1) &
+!$OMP private(inv_detA, detA1, detA2, detA3, detA4)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
 do j=jst, jed
@@ -782,7 +781,7 @@ end do ! p反復
 
 
 ! 最終段の反転
-s = 2**(pn-1)
+s = 2**(pn-2)
 
 
 !dir$ vector aligned
@@ -815,13 +814,13 @@ dd2 = d(kl)
 dd3 = d(km)
 dd4 = d(kr)
 
-! |A|
-detA = 1.0 - aa4*cc3 - aa3*cc2 - aa2*cc1*(1.0 - cc3*aa4)
+! 1.0 / |A|
+inv_detA= 1.0 / (1.0 - aa4*cc3 - aa3*cc2 - aa2*cc1*(1.0 - cc3*aa4))
 
 ! |A_i|
 ! A_i = A の第 i-列 (i = 1, 2, …, n) を系の右辺である d で置き換えて得られる行列
-detA1 = -cc3*((aa4*dd1+cc1*cc2*dd4)-aa4*cc1*dd2) &
-+       dd1+cc1*cc2*dd3 - aa3*cc2*dd1 - cc1*dd2
+detA1 = -cc3*(aa4*dd1 + cc1*cc2*dd4 - aa4*cc1*dd2) &
++       dd1 + cc1*cc2*dd3 - aa3*cc2*dd1 - cc1*dd2
 
 detA2 = dd2 + cc2*cc3*dd4 - aa4*cc3*dd2 - cc2*dd3 &
 -       aa2*(dd1 - aa4*cc3*dd1)
@@ -834,10 +833,10 @@ detA4 = dd4 + aa3*aa4*dd2 - aa4*dd3 - aa3*cc2*dd4 &
 
 
 ! Cramer's rule
-d1(k)  = detA1 / detA
-d1(kl) = detA2 / detA
-d1(km) = detA3 / detA
-d1(kr) = detA4 / detA
+d1(k)  = detA1 * inv_detA
+d1(kl) = detA2 * inv_detA
+d1(km) = detA3 * inv_detA
+d1(kr) = detA4 * inv_detA
 end do
 
 
