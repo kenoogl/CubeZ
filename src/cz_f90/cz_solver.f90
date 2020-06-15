@@ -713,6 +713,7 @@ flop = flop + dble(          &
 !$OMP private(kl, km, kr, ap, cp, e, s, p, k, pp, dp) &
 !$OMP private(jj, dd1, dd2, aa2, aa3, aa4, cc1, cc2, cc3, f1, f2) &
 !$OMP private(a, c, d, a1, c1, d1)
+!$OMP private(detA, detA1, detA2, detA3, detA4)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
 do j=jst, jed
