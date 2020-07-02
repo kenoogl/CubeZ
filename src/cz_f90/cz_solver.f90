@@ -1053,12 +1053,14 @@ real, dimension(1-g:sz(3)+g, 1-g:sz(1)+g, 1-g:sz(2)+g) ::  x, msk, rhs
 real                                                   ::  omg
 double precision                                       ::  res, flop
 ! work
-integer                                  ::  i, j, k, p, sq, s
+integer                                  ::  i, j, k, kl, km, kr, p, sq, s
 integer                                  ::  ist, ied, jst, jed, kst, ked
 real, dimension(1-g:sz(3)+g)             ::  a1, c1, d1
 real, dimension(idx(4)-s:idx(5)+s)       ::  a, c, d
 real                                     ::  r, ap, cp, e, pp, dp, res1
-real                                     ::  jj, dd1, dd2, aa2, cc1, cc2, f1, f2
+real                                     ::  jj, dd1, dd2, dd3, dd4
+real                                     ::  aa2, aa3, aa4, cc1, cc2, cc3
+real                                     ::  inv_detA, detA1, detA2, detA3, detA4
 
 ist = idx(0)
 ied = idx(1)
@@ -1073,8 +1075,8 @@ r = 1.0/6.0
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
-+ (ked-kst+1)*(pn-1)*14.0 &  ! PCR
-+ 2**(pn-1)*9.0                 &
++ (ked-kst+1)*(pn-2)*14.0 &  ! PCR
++ 2**(pn-2)*78.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )
@@ -1087,9 +1089,10 @@ flop = flop + dble(          &
 !$acc& private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2)
 #else
 !$OMP PARALLEL reduction(+:res1) &
-!$OMP private(ap, cp, e, sq, p, k, pp, dp) &
-!$OMP private(jj, dd1, dd2, aa2, cc1, cc2, f1, f2) &
+!$OMP private(ap, cp, e, sq, p, k, km, kl, kr, pp, dp) &
+!$OMP private(jj, dd1, dd2, dd3, dd4, aa2, aa3, aa4, cc1, cc2, cc3) &
 !$OMP private(a1, c1, d1) &
+!$OMP private(inv_detA, detA1, detA2, detA3, detA4) &
 !$OMP firstprivate(a, c, d)
 !$OMP DO SCHEDULE(static) Collapse(2)
 #endif
@@ -1097,15 +1100,25 @@ do j=jst, jed
 do i=ist, ied
 
 ! Reflesh coef. due to override
-!a(kst) = 0.0
+do k=kst-s, kst
+a(k) = 0.0
+end do
 do k=kst+1, ked
 a(k) = -r
 end do
+do k=ked+1, ked+s
+a(k) = 0.0
+end do
 
+do k=kst-s, kst-1
+c(k) = 0.0
+end do
 do k=kst, ked-1
 c(k) = -r
 end do
-!c(ked) = 0.0
+do k=ked, ked+s
+c(k) = 0.0
+end do
 
 ! Source
 !dir$ vector aligned
@@ -1123,9 +1136,9 @@ d(kst) = ( d(kst) + x(kst-1, i, j) * r ) * msk(kst, i, j)
 d(ked) = ( d(ked) + x(ked+1, i, j) * r ) * msk(ked, i, j)
 
 
-! PCR  最終段の一つ手前で停止
+! PCR  最終段の2つ手前で停止
 !$acc loop seq
-do p=1, pn-1
+do p=1, pn-2
 sq = 2**(p-1)
 
 !dir$ vector aligned
@@ -1152,7 +1165,7 @@ end do ! p反復
 
 
 ! 最終段の反転 512のとき pn=9, sq=256
-sq = 2**(pn-1)
+sq = 2**(pn-2)
 
 !dir$ vector aligned
 !dir$ simd
@@ -1160,15 +1173,46 @@ sq = 2**(pn-1)
 !pgi$ ivdep
 !$acc loop independent
 do k = kst, kst+sq-1 ! 2, 2+256-1=257
+kl = k + sq
+km = k + 2*sq
+kr = k + 3*sq
+
 cc1 = c(k)
-aa2 = a(k+sq)
-f1  = d(k)
-f2  = d(k+sq)
-jj  = 1.0 / (1.0 - aa2 * cc1)
-dd1 = (f1 - cc1 * f2) * jj
-dd2 = (f2 - aa2 * f1) * jj
-d1(k   ) = dd1
-d1(k+sq) = dd2
+cc2 = c(kl)
+cc3 = c(km)
+aa2 = a(kl)
+aa3 = a(km)
+aa4 = a(kr)
+
+! (dd1, dd2, dd3, dd4 ) = ( d(k) & d(kl) & d(km) & d(kr) )
+dd1 = d(k)
+dd2 = d(kl)
+dd3 = d(km)
+dd4 = d(kr)
+
+! 1.0 / |A|
+inv_detA= 1.0 / (1.0 - aa4*cc3 - aa3*cc2 - aa2*cc1*(1.0 - cc3*aa4))
+
+! |A_i|
+! A_i = A の第 i-列 (i = 1, 2, …, n) を系の右辺である d で置き換えて得られる行列
+detA1 = -cc3*(aa4*dd1 + cc1*cc2*dd4 - aa4*cc1*dd2) &
++       dd1 + cc1*cc2*dd3 - aa3*cc2*dd1 - cc1*dd2
+
+detA2 = dd2 + cc2*cc3*dd4 - aa4*cc3*dd2 - cc2*dd3 &
+-       aa2*(dd1 - aa4*cc3*dd1)
+
+detA3 = dd3 - cc3*dd4 - aa3*dd2 &
+-       aa2*(cc1*dd3 - cc1*cc3*dd4 - aa3*dd1)
+
+detA4 = dd4 + aa3*aa4*dd2 - aa4*dd3 - aa3*cc2*dd4 &
+-       aa2*(cc1*dd4 + aa3*aa4*dd1 - aa4*cc1*dd3)
+
+
+! Cramer's rule
+d1(k)  = detA1 * inv_detA
+d1(kl) = detA2 * inv_detA
+d1(km) = detA3 * inv_detA
+d1(kr) = detA4 * inv_detA
 end do
 
 
