@@ -721,15 +721,19 @@ do i=ist, ied
 ! Reflesh coef. due to override
 ! 係数行列a[1-g:sz(3)+g]を初期化
 ! r = 1.0 / 6.0
+a(kst-1) = 0.0
 a(kst) = 0.0
 do k=kst+1, ked
 a(k) = -r
 end do
+a(ked+1) = 0.0
 
+c(kst-1) = 0.0
 do k=kst, ked-1
 c(k) = -r
 end do
 c(ked) = 0.0
+c(ked+1) = 0.0
 
 ! Source
 !dir$ vector aligned
