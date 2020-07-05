@@ -694,8 +694,8 @@ r = 1.0/6.0
 flop = flop + dble(          &
 (jed-jst+1)*(ied-ist+1)* ( &
 (ked-kst+1)* 6.0        &  ! Source
-+ (ked-kst+1)*(pn-2)*74.0 & ! PCR4x4
-+ 2**(pn-1)*9.0                 &
++ (ked-kst+1)*(pn-2)*14.0 & ! PCR4x4
++ 2**(pn-2)*74.0                 &
 + (ked-kst+1)*6.0         &  ! Relaxation
 + 6.0 )                 &  ! BC
 )
