@@ -1060,15 +1060,23 @@ do j=jst, jed
 do i=ist, ied
 
 ! Reflesh coef. due to override
-!a(kst) = 0.0
+do sq=0, s
+a(kst-sq) = 0.0
+a(ked+sq) = 0.0
+end do
+! override a(ked) = -r
 do k=kst+1, ked
 a(k) = -r
 end do
 
+do sq=0, s
+c(kst-sq) = 0.0
+c(ked+sq) = 0.0
+end do
 do k=kst, ked-1
 c(k) = -r
 end do
-!c(ked) = 0.0
+! over write c(kst)
 
 ! Source
 !dir$ vector aligned
