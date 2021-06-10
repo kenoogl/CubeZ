@@ -77,7 +77,7 @@ macro (AddOptimizeOption)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-    set(CMAKE_Fortran_FLAGS "-O3 -cpp")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O3 -cpp -Mfree")
 
   else()
     message("using default option")
